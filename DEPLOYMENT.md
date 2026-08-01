@@ -19,15 +19,17 @@
 
 ## 現在の運用状況
 
-現時点（2026-08-01時点）ではVercelプロジェクトとGitHubリポジトリのGit連携は未設定で、`master`へのpushだけでは自動デプロイされない。`vercel git connect`の実行時に「Vercelアカウントに対するGitHubログイン連携が必要」（`Login Connection`）というエラーが出るため、まず下記の方法Aの手順1をアカウント所有者が行う必要がある。それまでの間は方法B（CLIからの手動デプロイ）で本番に反映する。
+2026-08-01付けでVercelプロジェクトとGitHubリポジトリ [Compass-1024/gyaku-fukushou-app](https://github.com/Compass-1024/gyaku-fukushou-app) のGit連携（`vercel git connect`）が完了した。以降は**方法A（`master`へのpushで自動デプロイ）が既定の運用**となる。設定に至るまでの経緯は以下の通り。
 
-### 方法A: GitHub連携（推奨・自動デプロイ、要アカウント側の一度きりの設定）
+1. `vercel git connect`実行時、最初は「Vercelアカウントに対するGitHubログイン連携が必要」エラーが発生 → [Account Settings → Login Connections](https://vercel.com/account/login-connections) でGitHubログイン連携を追加して解消。
+2. 次に「リポジトリへのアクセス権がない」エラーが発生 → [https://github.com/apps/vercel](https://github.com/apps/vercel) からVercelのGitHub Appをインストールし、対象リポジトリへのアクセスを許可して解消（ログイン連携とGitHub Appのインストールは別物であることに注意）。
+3. `npx vercel git connect`を再実行して接続完了。
 
-1. Vercelダッシュボードの [Account Settings → Login Connections](https://vercel.com/account/login-connections) でGitHubアカウントとの連携を追加する（これはブラウザでのログイン操作が必要なため、CLIからは実行できない）。
-2. 連携後、`npx vercel git connect`を実行するか、Vercelダッシュボードでプロジェクト設定からGitHubリポジトリ [Compass-1024/gyaku-fukushou-app](https://github.com/Compass-1024/gyaku-fukushou-app) を接続する。
-3. 以降、`master`ブランチへのpushで自動的に本番デプロイが走る。プルリクエストごとにプレビューデプロイも自動生成される。
+### 方法A: GitHub連携（現在の既定の運用・自動デプロイ）
 
-### 方法B: Vercel CLIから手動デプロイ（現在の運用方法）
+`master`ブランチへのpushで自動的に本番デプロイが走る。プルリクエストごとにプレビューデプロイも自動生成される。追加の操作は不要。
+
+### 方法B: Vercel CLIから手動デプロイ（緊急時・検証用）
 
 ```bash
 npx vercel login   # 初回のみ
