@@ -104,6 +104,12 @@ function entryOn(timestamp: string): HistoryEntry {
   return { mode: 'word', level: 1, correct: 1, total: 1, timestamp }
 }
 
+// タイムゾーンによる日付ずれを避けるため、現地時刻の正午を使って
+// 特定の暦日を指すHistoryEntryを作る
+function entryOnLocalDate(year: number, month: number, day: number): HistoryEntry {
+  return entryOn(new Date(year, month - 1, day, 12).toISOString())
+}
+
 function localKeyDaysAgo(n: number): string {
   const d = new Date()
   d.setDate(d.getDate() - n)
@@ -158,6 +164,23 @@ describe('getStreakDays', () => {
       entryOn(daysAgo(6)),
     ]
     expect(getStreakDays(history)).toBe(3)
+  })
+
+  it('resets the freeze budget independently per calendar month', () => {
+    // 2026年8月分の猶予を8/3・8/1で使い切っていても、月をまたいだ7/30の
+    // 欠落は7月分の猶予として独立に消費されるため引き続き橋渡しされる
+    const now = new Date(2026, 7, 5, 12) // 2026-08-05
+    const history = [
+      entryOnLocalDate(2026, 8, 5),
+      entryOnLocalDate(2026, 8, 4),
+      // 2026-08-03 欠落（8月の猶予 1/2）
+      entryOnLocalDate(2026, 8, 2),
+      // 2026-08-01 欠落（8月の猶予 2/2、上限到達）
+      entryOnLocalDate(2026, 7, 31),
+      // 2026-07-30 欠落（7月の猶予 1/2。8月の上限とは独立）
+      entryOnLocalDate(2026, 7, 29),
+    ]
+    expect(getStreakDays(history, now)).toBe(5)
   })
 })
 
@@ -245,6 +268,23 @@ describe('getWeakestAreas', () => {
     ]
     const weakest = getWeakestAreas(history, 1, reference)
     expect(weakest[0]).toMatchObject({ mode: 'word', level: 1 })
+  })
+
+  it('breaks a tied score by preferring the area with more attempts', () => {
+    const reference = new Date('2026-08-01T00:00:00Z')
+    const ts = new Date('2026-07-31T00:00:00Z').toISOString() // 両者とも最終挑戦日時は同じ
+    const history: HistoryEntry[] = [
+      // word level1: 2回挑戦して正答率50%
+      { mode: 'word', level: 1, correct: 1, total: 2, timestamp: ts },
+      { mode: 'word', level: 1, correct: 1, total: 2, timestamp: ts },
+      // digit(reverse) level1: 4回挑戦して同じく正答率50%（より確からしい）
+      { mode: 'digit', gameType: 'reverse', level: 1, correct: 1, total: 2, timestamp: ts },
+      { mode: 'digit', gameType: 'reverse', level: 1, correct: 1, total: 2, timestamp: ts },
+      { mode: 'digit', gameType: 'reverse', level: 1, correct: 1, total: 2, timestamp: ts },
+      { mode: 'digit', gameType: 'reverse', level: 1, correct: 1, total: 2, timestamp: ts },
+    ]
+    const weakest = getWeakestAreas(history, 2, reference)
+    expect(weakest[0]).toMatchObject({ mode: 'digit', gameType: 'reverse', level: 1 })
   })
 })
 

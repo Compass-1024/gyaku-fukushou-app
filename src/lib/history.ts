@@ -95,10 +95,13 @@ const MAX_STREAK_FREEZES_PER_MONTH = 2
 // MAX_STREAK_FREEZES_PER_MONTH 回まで、1日だけの欠落（前後は挑戦している）
 // を「フリーズ」として自動的に穴埋めし、連続記録を途切れさせない。
 // 2日以上連続で欠落した場合はフリーズでは救済しない。
-export function getStreakDays(history: HistoryEntry[]): number {
+export function getStreakDays(
+  history: HistoryEntry[],
+  now: Date = new Date(),
+): number {
   if (history.length === 0) return 0
   const days = new Set(history.map((e) => localDateKey(new Date(e.timestamp))))
-  const cursor = new Date()
+  const cursor = new Date(now)
   if (!days.has(localDateKey(cursor))) {
     cursor.setDate(cursor.getDate() - 1)
     if (!days.has(localDateKey(cursor))) return 0
