@@ -24,6 +24,10 @@
 - E2Eテストを追加（結果表示中のEnterキー操作、ことばモードのテキスト入力フォールバック）
 - SEO/SNSシェア対応として`index.html`にmeta description・OGP・Twitter Cardタグを追加
 
+### Performance
+
+- `GameScreen`/`DigitGameScreen`/`NBackGameScreen`を`React.lazy`による遅延読み込みに変更。初期表示に必要なJSバンドルを約253KB→約234KB（gzip: 約76.7KB→約72.9KB）に削減し、モバイル回線での初回表示を高速化
+
 ### Fixed
 
 - `index.html`のviewport metaに`viewport-fit=cover`を追加。これが無いとiOS Safariで`env(safe-area-inset-*)`が常に0として扱われ、App.tsxで指定していたノッチ・ホームインジケーター避けのpaddingが実質的に無効化されていた

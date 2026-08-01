@@ -1,12 +1,9 @@
-import { useEffect, useRef, useState } from 'react'
+import { lazy, Suspense, useEffect, useRef, useState } from 'react'
 import { TopScreen } from './components/TopScreen'
 import { LevelSelect } from './components/LevelSelect'
-import { GameScreen } from './components/GameScreen'
 import { DigitTypeSelect } from './components/DigitTypeSelect'
 import { DigitLevelSelect } from './components/DigitLevelSelect'
-import { DigitGameScreen } from './components/DigitGameScreen'
 import { NBackLevelSelect } from './components/NBackLevelSelect'
-import { NBackGameScreen } from './components/NBackGameScreen'
 import { SettingsScreen } from './components/SettingsScreen'
 import { StatsScreen } from './components/StatsScreen'
 import { PrivacyScreen } from './components/PrivacyScreen'
@@ -15,6 +12,22 @@ import { useThemeMode } from './hooks/useThemeMode'
 import { loadHistory } from './lib/history'
 import type { AreaStats } from './lib/history'
 import type { DigitGameType, HistoryEntry, Level } from './types'
+
+// プレイ画面本体（音声合成・音声認識・出題ロジックを含む）は初回表示に
+// 必要ないため、モード選択後に必要になった時点で遅延読み込みする
+const GameScreen = lazy(() =>
+  import('./components/GameScreen').then((m) => ({ default: m.GameScreen })),
+)
+const DigitGameScreen = lazy(() =>
+  import('./components/DigitGameScreen').then((m) => ({
+    default: m.DigitGameScreen,
+  })),
+)
+const NBackGameScreen = lazy(() =>
+  import('./components/NBackGameScreen').then((m) => ({
+    default: m.NBackGameScreen,
+  })),
+)
 
 type View =
   | { screen: 'top' }
@@ -219,7 +232,17 @@ function App() {
         aria-hidden
         className="pointer-events-none absolute -bottom-24 left-1/4 h-72 w-72 rounded-full bg-indigo-300/30 blur-3xl dark:bg-indigo-600/15"
       />
-      <div className="relative">{content}</div>
+      <div className="relative">
+        <Suspense
+          fallback={
+            <p className="py-12 text-center text-sm text-gray-500 dark:text-gray-400">
+              読み込み中…
+            </p>
+          }
+        >
+          {content}
+        </Suspense>
+      </div>
     </main>
   )
 }
