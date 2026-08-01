@@ -206,6 +206,20 @@ export function GameScreen({ level, onExit, onSelectLevel }: GameScreenProps) {
     setPhase('listening')
   }
 
+  // 結果表示中はEnterキーでも次の問題へ進めるようにし、テンポよく周回できるようにする
+  useEffect(() => {
+    if (phase !== 'result') return
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Enter') {
+        e.preventDefault()
+        handleNext()
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phase, currentResult])
+
   function handleRetry() {
     setQuestions(pickQuestionSet(level))
     setCurrentIndex(0)

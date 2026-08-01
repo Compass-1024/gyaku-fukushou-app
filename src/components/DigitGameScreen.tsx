@@ -140,7 +140,16 @@ export function DigitGameScreen({
 
   function handleDigitPress(d: string) {
     if (loadSettings().soundEnabled) playButtonTap()
-    setTyped((prev) => (prev.length >= maxAnswerLength ? prev : prev + d))
+    setTyped((prev) => {
+      if (prev.length >= maxAnswerLength) return prev
+      const next = prev + d
+      // 「逆から」モードは正解の桁数が既知のため、入力が揃った時点で
+      // 決定ボタンを押さずとも自動的に採点し、タップ数を減らす
+      if (gameType === 'reverse' && next.length === maxAnswerLength) {
+        finalizeAnswer(next)
+      }
+      return next
+    })
   }
 
   function handleBackspacePress() {
@@ -164,6 +173,20 @@ export function DigitGameScreen({
     return () => window.removeEventListener('keydown', handleKeyDown)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phase])
+
+  // 結果表示中はEnterキーでも次の問題へ進めるようにし、テンポよく周回できるようにする
+  useEffect(() => {
+    if (phase !== 'result') return
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Enter') {
+        e.preventDefault()
+        handleNext()
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phase, currentResult])
 
   // setTyped の関数形更新の中で読むことで、直前の入力を確実に拾ってから採点する
   function commitAnswer() {
