@@ -66,9 +66,17 @@ export async function subscribeToPush(): Promise<SubscribeResult> {
     const response = await postJson('/api/push/subscribe', {
       subscription: subscription.toJSON(),
     })
-    if (!response.ok) return { ok: false, reason: 'error' }
+    if (!response.ok) {
+      console.error(
+        '[push] failed to register subscription with server',
+        response.status,
+      )
+      return { ok: false, reason: 'error' }
+    }
     return { ok: true }
-  } catch {
+  } catch (error) {
+    // 原因調査用。ここで握りつぶすと利用者側で失敗理由が全く分からなくなるため
+    console.error('[push] subscribeToPush failed', error)
     return { ok: false, reason: 'error' }
   }
 }
