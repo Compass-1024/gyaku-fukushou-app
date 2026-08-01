@@ -244,6 +244,6 @@ React描画時の例外は`src/components/ErrorBoundary.tsx`で捕捉し、`wind
 - [ROADMAP.md](ROADMAP.md) — 今後の開発候補・バックログ
 - [CHANGELOG.md](CHANGELOG.md) — バージョンごとの変更履歴
 - [ACCESSIBILITY.md](ACCESSIBILITY.md) — アクセシビリティ方針
-- [PRIVACY.md](PRIVACY.md) — プライバシーポリシー
+- [PRIVACY.md](PRIVACY.md) — プライバシーポリシー（リポジトリ用。公開URLは`/privacy.html`＝`public/privacy.html`、ストア審査等でJS起動なしに直接開ける静的ページ。アプリ内には設定画面から遷移できる要約画面もある）
 - [ERROR_HANDLING.md](ERROR_HANDLING.md) — エラー監視・ロギング方針
 - [DEPLOYMENT.md](DEPLOYMENT.md) — デプロイ手順

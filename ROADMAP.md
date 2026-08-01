@@ -23,5 +23,6 @@
 - [x] E2Eテストの導入（Playwright、`e2e/`配下に主要導線のスモークテスト、CI統合、2026-08-01）
 - [x] エラー監視・ロギング方針の実装（`ErrorBoundary`＋グローバルエラーハンドラ、[ERROR_HANDLING.md](ERROR_HANDLING.md)、2026-08-01）
 - [x] アクセシビリティ方針の明文化と対応（[ACCESSIBILITY.md](ACCESSIBILITY.md)、aria-label/aria-live/フォーカス管理の見直し、2026-08-01）
-- [x] プライバシーポリシーの作成（[PRIVACY.md](PRIVACY.md)＋アプリ内画面、2026-08-01）
+- [x] プライバシーポリシーの作成（[PRIVACY.md](PRIVACY.md)＋アプリ内画面＋静的ページ`public/privacy.html`、連絡先メール記載、2026-08-01）
 - [x] デプロイ手順書の作成（[DEPLOYMENT.md](DEPLOYMENT.md)、2026-08-01）
+- [x] Vercel⇔GitHub のGit連携設定（push時の自動デプロイ化、2026-08-01）

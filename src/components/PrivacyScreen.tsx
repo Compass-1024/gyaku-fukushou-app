@@ -60,15 +60,23 @@ export function PrivacyScreen({ onBack }: PrivacyScreenProps) {
           </p>
         </section>
 
+        <section className="flex flex-col gap-1">
+          <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400">
+            お問い合わせ
+          </h2>
+          <p>
+            プライバシーに関するご質問・ご懸念は
+            <a href="mailto:nakasho4949@gmail.com" className="underline">
+              nakasho4949@gmail.com
+            </a>
+            までご連絡ください。
+          </p>
+        </section>
+
         <p className="text-xs text-gray-400 dark:text-gray-500">
-          詳細な内容は
-          <a
-            href="https://github.com/Compass-1024/gyaku-fukushou-app/blob/master/PRIVACY.md"
-            target="_blank"
-            rel="noreferrer"
-            className="underline"
-          >
-            リポジトリのPRIVACY.md
+          このページは要約です。詳細な内容は
+          <a href="/privacy.html" target="_blank" rel="noreferrer" className="underline">
+            プライバシーポリシー全文
           </a>
           を参照してください。
         </p>
