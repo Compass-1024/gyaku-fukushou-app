@@ -17,21 +17,22 @@
 | Install Command | `npm ci`（デフォルト） |
 | Node.js Version | 24.x を推奨（[CI](.github/workflows/ci.yml)と揃える） |
 
-## デプロイ方法
+## 現在の運用状況
 
-### 方法A: GitHub連携（推奨・自動デプロイ）
+現時点（2026-08-01時点）ではVercelプロジェクトとGitHubリポジトリのGit連携は未設定で、`master`へのpushだけでは自動デプロイされない。`vercel git connect`の実行時に「Vercelアカウントに対するGitHubログイン連携が必要」（`Login Connection`）というエラーが出るため、まず下記の方法Aの手順1をアカウント所有者が行う必要がある。それまでの間は方法B（CLIからの手動デプロイ）で本番に反映する。
 
-1. Vercelダッシュボードで「Add New Project」→ GitHubリポジトリ [Compass-1024/gyaku-fukushou-app](https://github.com/Compass-1024/gyaku-fukushou-app) を選択してインポートする。
-2. Framework PresetがViteとして自動検出されることを確認し、上表の設定のままデプロイする。
+### 方法A: GitHub連携（推奨・自動デプロイ、要アカウント側の一度きりの設定）
+
+1. Vercelダッシュボードの [Account Settings → Login Connections](https://vercel.com/account/login-connections) でGitHubアカウントとの連携を追加する（これはブラウザでのログイン操作が必要なため、CLIからは実行できない）。
+2. 連携後、`npx vercel git connect`を実行するか、Vercelダッシュボードでプロジェクト設定からGitHubリポジトリ [Compass-1024/gyaku-fukushou-app](https://github.com/Compass-1024/gyaku-fukushou-app) を接続する。
 3. 以降、`master`ブランチへのpushで自動的に本番デプロイが走る。プルリクエストごとにプレビューデプロイも自動生成される。
 
-### 方法B: Vercel CLIから手動デプロイ
+### 方法B: Vercel CLIから手動デプロイ（現在の運用方法）
 
 ```bash
-npm install -g vercel
-vercel login
-vercel link   # 初回のみ。既存のVercelプロジェクトと紐付ける
-vercel --prod
+npx vercel login   # 初回のみ
+npx vercel link    # 初回のみ。既存のVercelプロジェクトと紐付ける
+npx vercel --prod
 ```
 
 `vercel link`で生成される`.vercel/`ディレクトリはプロジェクトID等を含むため`.gitignore`済み。コミットしないこと。
