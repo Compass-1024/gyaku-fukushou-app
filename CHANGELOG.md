@@ -6,6 +6,7 @@
 
 ### Added
 
+- 学習データのバックアップ（エクスポート/インポート）機能を追加。設定画面からトレーニング履歴・アプリ設定をJSONファイルとして書き出し・復元できる。localStorageのみに依存する構成でのデータ消失リスクに対応（`src/lib/backup.ts`、不正なデータ形式は検証して拒否）
 - 統計画面に学習カレンダー（GitHub風ヒートマップ）を追加。日曜始まりの週単位グリッドで直近18週間の日別セット数を可視化し、継続の実感を後押しする（`getActivityCalendar`）
 - CI（GitHub Actions）を導入し、push/PR時にlint・test・buildを自動実行
 - ROADMAP.md、CHANGELOG.mdを追加
