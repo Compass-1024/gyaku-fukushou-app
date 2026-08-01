@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Overview
 
-**逆復唱トレーニング**（`gyaku-fukushou-app`）は、ワーキングメモリ（作業記憶）を鍛えるトレーニングアプリ。「ことば」「すうじ」「Nバック」「空間」「変化検出」「音・色」の6モードを提供する。UIは日本語のみ。バックエンドを持たないSPAで、全データはブラウザの`localStorage`に保存する。PWA対応でホーム画面に追加してネイティブアプリ風に利用可能。デプロイ先: https://gyaku-fukushou-app.vercel.app/
+**逆復唱トレーニング**（`gyaku-fukushou-app`）は、ワーキングメモリ（作業記憶）を鍛えるトレーニングアプリ。「ことば」「すうじ」「Nバック」「空間」「変化検出」「音・色」の6モードを提供する。UIは日本語のみ。トレーニング機能自体はバックエンドを持たないSPAで、全データはブラウザの`localStorage`に保存する。**例外として、オプトインの「リマインド通知」機能のみ、Vercel Serverless Functions + Redisストレージを使う最小限のバックエンドを持つ**（詳細は「プッシュ通知リマインダー」セクションを参照）。PWA対応でホーム画面に追加してネイティブアプリ風に利用可能。デプロイ先: https://gyaku-fukushou-app.vercel.app/
 
 ## Commands
 
@@ -26,6 +26,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 | テスト | Vitest（`environment: 'node'`、ロジック層のみ対象。UIコンポーネントのテストはなし） |
 | Lint | oxlint |
 | 状態管理 | Reactの`useState`＋localStorage永続化のみ（外部状態管理ライブラリなし） |
+| バックエンド（通知機能のみ） | Vercel Serverless Functions（`api/`配下、Node.jsランタイム）＋ Redisストレージ（`@upstash/redis`、Vercel経由）＋ Vercel Cron |
 
 ## Screen structure / navigation
 
@@ -259,6 +260,26 @@ Web Audio APIによる完全プログラム生成のシンセサイザー方式�
 - 音声合成の声・速度
 - 効果音ON/OFF
 - 1日の目標セット数
+- リマインド通知（後述）
+
+### プッシュ通知リマインダー（`src/lib/push.ts`, `src/lib/reminder.ts`, `src/sw.ts`, `api/`配下）
+
+継続利用率向上のための、既定オフのオプトイン機能。その日1回もプレイしていないユーザーに、設定画面で指定した時刻（JST）にプッシュ通知でリマインドする。この機能のみ、アプリ全体の「バックエンドを持たないSPA」という方針の例外として最小限のサーバーサイド機構を持つ。
+
+- **クライアント側** (`src/lib/push.ts`):
+  - `isPushSupported()`: `PushManager`/`Notification`/`VITE_VAPID_PUBLIC_KEY`の有無に加え、iOSは`display-mode: standalone`（ホーム画面追加済み）でない場合は非対応として扱う
+  - `subscribeToPush(notifyHourJst)`: 通知許可ダイアログ→`pushManager.subscribe`→`POST /api/push/subscribe`
+  - `unsubscribeFromPush()` / `updateNotifyHour(hour)`: それぞれ`POST /api/push/unsubscribe` / `POST /api/push/settings`
+  - `syncPushState()`: 各モードのGameScreenが1セット完了時（`appendHistoryEntry`直後）に呼び、購読中であれば「今日プレイした」ことを`POST /api/push/sync`でサーバーへ同期する
+- **Service Worker** (`src/sw.ts`): `vite-plugin-pwa`を`generateSW`から`injectManifest`戦略に切替え、`push`/`notificationclick`イベントを独自ハンドリング（型チェックはDOM libと衝突するため`tsconfig.sw.json`を独立させている）
+- **サーバー側** (`api/`配下、Node.js Serverless Functions、`tsconfig.api.json`で型チェック):
+  - `api/_lib/kv.ts`: ストレージ抽象化（内部で`@upstash/redis`を使用。プロバイダ変更時はこの1ファイルのみ差し替える）
+  - `api/_lib/reminder.ts`: `src/lib/reminder.ts`の複製（判定・メッセージ生成ロジック。ビルド設定を独立させるため意図的に複製している。**変更時は両方を更新すること**）
+  - `api/push/subscribe.ts` / `sync.ts` / `unsubscribe.ts` / `settings.ts`: 購読の作成・同期・削除・時刻変更
+  - `api/cron/reminder.ts`: `vercel.json`のVercel Cron（毎時0分）から呼ばれ、`CRON_SECRET`で認証。各購読者について「今日未プレイ」かつ「現在のJST時が希望時刻と一致」なら送信し、期限切れ購読（404/410）は削除する
+- **送信条件**: 今日1回もプレイしていない場合にのみ送信（目標セット数への到達有無は問わない）。二重送信防止のため送信済み日付も記録する
+- **必要な環境変数**: `VITE_VAPID_PUBLIC_KEY`（クライアント、ビルド時埋め込み）、`VAPID_PUBLIC_KEY`／`VAPID_PRIVATE_KEY`／`VAPID_SUBJECT`（サーバー、`web-push`用）、`CRON_SECRET`（Cron認証）、Redis接続用の環境変数（Vercel連携時に自動付与）。セットアップ手順は[DEPLOYMENT.md](DEPLOYMENT.md)を参照
+- VAPID公開鍵が未設定（ビルド時に`VITE_VAPID_PUBLIC_KEY`が空）の場合、`isPushSupported()`が`false`を返し設定画面には非対応メッセージが表示される（機能自体は壊れない）
 
 ## Data model (localStorage)
 
@@ -285,12 +306,16 @@ interface AppSettings {
   voiceURI: string | null
   soundEnabled: boolean
   dailyGoal: number
+  notificationsEnabled: boolean
+  notifyHourJst: number // 0-23
 }
 ```
 
-デフォルト設定: `{ themeMode: 'system', speechRate: 0.95, voiceURI: null, soundEnabled: true, dailyGoal: 3 }`
+デフォルト設定: `{ themeMode: 'system', speechRate: 0.95, voiceURI: null, soundEnabled: true, dailyGoal: 3, notificationsEnabled: false, notifyHourJst: 21 }`
 
 読み込み・保存とも`try/catch`でlocalStorage利用不可（プライベートモード等）を許容し、失敗時はデフォルト値やno-opにフォールバックする。
+
+`notificationsEnabled`/`notifyHourJst`はローカル設定であり、実際のプッシュ購読状態はサーバー側（Redisストレージ）が真実の情報源。両者がズレた場合（例: 別端末で解除した等）、次回`syncPushState()`やトグル操作時に自然に収束する設計だが、厳密な整合性は保証していない。
 
 ## Non-functional requirements
 
@@ -312,7 +337,9 @@ interface AppSettings {
 ## Testing
 
 - **ユニットテスト（Vitest）**: `src/lib/`配下にロジック層のテストを併置している（UIコンポーネントの単体テストはなし）:
-  `reverse.test.ts` / `digits.test.ts` / `kana.test.ts` / `difficulty.test.ts` / `theme.test.ts` / `history.test.ts` / `nback.test.ts` / `achievements.test.ts` / `logger.test.ts` / `backup.test.ts` / `spatial.test.ts` / `pattern.test.ts` / `tone.test.ts`
+  `reverse.test.ts` / `digits.test.ts` / `kana.test.ts` / `difficulty.test.ts` / `theme.test.ts` / `history.test.ts` / `nback.test.ts` / `achievements.test.ts` / `logger.test.ts` / `backup.test.ts` / `spatial.test.ts` / `pattern.test.ts` / `tone.test.ts` / `reminder.test.ts`
+
+  加えて`api/_lib/reminder.ts`（`src/lib/reminder.ts`の複製）にも同期確認用の軽量テスト`api/_lib/reminder.test.ts`がある。
   新しいロジックを`src/lib/`に追加する場合は、同ディレクトリに`*.test.ts`を併置してVitestでカバーすること。`vitest.config.ts`で`e2e/`ディレクトリは除外している。
 - **E2Eテスト（Playwright）**: `e2e/`配下に主要な画面遷移・操作フローのスモークテストを配置している（`playwright.config.ts`、本番ビルドを`vite preview`で配信して実行）。新しい画面や主要フローを追加した場合は、ここにスモークテストを追加することを検討する。
 

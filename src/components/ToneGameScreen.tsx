@@ -18,6 +18,7 @@ import {
 import { confirmExit } from '../lib/confirmExit'
 import { getSuggestedLevel } from '../lib/difficulty'
 import { loadSettings } from '../lib/settings'
+import { syncPushState } from '../lib/push'
 import {
   playCorrectSound,
   playIncorrectSound,
@@ -177,6 +178,7 @@ export function ToneGameScreen({
       correct: correctCount,
       total: results.length,
     })
+    syncPushState()
     const after = loadHistory()
     const newly = getNewlyUnlockedAchievements(before, after)
     setNewAchievements(newly)

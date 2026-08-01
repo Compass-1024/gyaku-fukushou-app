@@ -7,6 +7,12 @@ import {
   parseBackupJson,
   serializeBackup,
 } from '../lib/backup'
+import {
+  isPushSupported,
+  subscribeToPush,
+  unsubscribeFromPush,
+  updateNotifyHour,
+} from '../lib/push'
 import type { AppSettings, ThemeMode } from '../types'
 
 interface SettingsScreenProps {
@@ -30,6 +36,8 @@ const RATE_OPTIONS: { value: number; label: string }[] = [
 
 const DAILY_GOAL_OPTIONS = [1, 3, 5, 10]
 
+const NOTIFY_HOUR_OPTIONS = [18, 19, 20, 21, 22, 23]
+
 export function SettingsScreen({
   themeMode,
   onChangeTheme,
@@ -44,6 +52,10 @@ export function SettingsScreen({
     text: string
   } | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const [notificationMessage, setNotificationMessage] = useState<string | null>(
+    null,
+  )
+  const [notificationBusy, setNotificationBusy] = useState(false)
 
   useEffect(() => {
     if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
@@ -135,6 +147,39 @@ export function SettingsScreen({
       type: 'success',
       text: 'インポートしました。トップ画面に戻ると反映されます。',
     })
+  }
+
+  async function handleToggleNotifications() {
+    setNotificationBusy(true)
+    setNotificationMessage(null)
+    try {
+      if (!settings.notificationsEnabled) {
+        const result = await subscribeToPush(settings.notifyHourJst)
+        if (result.ok) {
+          updateSettings({ notificationsEnabled: true })
+        } else if (result.reason === 'permission-denied') {
+          setNotificationMessage(
+            '通知の使用が許可されていません。ブラウザの設定で通知への許可を有効にしてください。',
+          )
+        } else if (result.reason === 'unsupported') {
+          setNotificationMessage('この端末・ブラウザは通知に対応していません。')
+        } else {
+          setNotificationMessage(
+            '通知の設定に失敗しました。時間をおいて再度お試しください。',
+          )
+        }
+      } else {
+        await unsubscribeFromPush()
+        updateSettings({ notificationsEnabled: false })
+      }
+    } finally {
+      setNotificationBusy(false)
+    }
+  }
+
+  async function handleChangeNotifyHour(hour: number) {
+    updateSettings({ notifyHourJst: hour })
+    await updateNotifyHour(hour)
   }
 
   function handleTestVoice() {
@@ -273,6 +318,66 @@ export function SettingsScreen({
         >
           {settings.soundEnabled ? 'オン' : 'オフ'}
         </button>
+      </section>
+
+      <section className="flex flex-col gap-3 rounded-lg border border-gray-200 px-4 py-3 dark:border-gray-700">
+        <div className="flex items-center justify-between">
+          <span className="text-sm font-medium text-gray-800 dark:text-gray-100">
+            リマインド通知
+          </span>
+          <button
+            type="button"
+            onClick={handleToggleNotifications}
+            disabled={notificationBusy || !isPushSupported()}
+            className={`touch-manipulation rounded-full px-4 py-1.5 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-50 ${
+              settings.notificationsEnabled
+                ? 'bg-emerald-500 text-white'
+                : 'bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-300'
+            }`}
+          >
+            {settings.notificationsEnabled ? 'オン' : 'オフ'}
+          </button>
+        </div>
+        {!isPushSupported() && (
+          <p className="text-xs text-gray-500 dark:text-gray-400">
+            この端末・ブラウザは通知に対応していません（iOSはホーム画面に追加したアプリのみ対応しています）。
+          </p>
+        )}
+        {isPushSupported() && (
+          <p className="text-xs text-gray-500 dark:text-gray-400">
+            その日にまだ1回もプレイしていない場合、指定した時刻にリマインドを送ります。
+          </p>
+        )}
+        {settings.notificationsEnabled && (
+          <div className="flex items-center gap-2">
+            <label
+              htmlFor="notify-hour"
+              className="text-xs text-gray-500 dark:text-gray-400"
+            >
+              送信時刻
+            </label>
+            <select
+              id="notify-hour"
+              value={settings.notifyHourJst}
+              onChange={(e) => handleChangeNotifyHour(Number(e.target.value))}
+              className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+            >
+              {NOTIFY_HOUR_OPTIONS.map((hour) => (
+                <option key={hour} value={hour}>
+                  {hour}時
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+        {notificationMessage && (
+          <p
+            role="status"
+            className="text-xs text-amber-600 dark:text-amber-400"
+          >
+            {notificationMessage}
+          </p>
+        )}
       </section>
 
       <section className="flex flex-col gap-2">

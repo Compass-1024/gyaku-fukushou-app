@@ -23,9 +23,19 @@ export function PrivacyScreen({ onBack }: PrivacyScreenProps) {
             データの保存先
           </h2>
           <p>
-            本アプリはサーバーを持たず、トレーニング履歴やアプリ設定はすべて
+            本アプリの大部分の機能はサーバーを持たず、トレーニング履歴やアプリ設定はすべて
             お使いの端末のブラウザ（localStorage）にのみ保存されます。運営者を含む
-            第三者にデータが送信されることはありません。
+            第三者にデータが送信されることはありません（「リマインド通知」をオンにした場合を除く。下記参照）。
+          </p>
+        </section>
+
+        <section className="flex flex-col gap-1">
+          <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400">
+            リマインド通知について
+          </h2>
+          <p>
+            「設定」画面の「リマインド通知」は既定でオフのオプトイン機能です。オンにすると、その日プレイしたかどうか・通知希望時刻・プッシュ購読情報が本アプリのサーバー（Vercel
+            Serverless Functions）へ送信されます。トレーニング履歴の内容そのものは送信されません。オフに戻せばサーバー側の情報も削除されます。
           </p>
         </section>
 

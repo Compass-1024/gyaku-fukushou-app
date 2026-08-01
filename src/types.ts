@@ -48,6 +48,8 @@ export interface AppSettings {
   voiceURI: string | null
   soundEnabled: boolean
   dailyGoal: number
+  notificationsEnabled: boolean
+  notifyHourJst: number
 }
 
 export interface NBackTrial {

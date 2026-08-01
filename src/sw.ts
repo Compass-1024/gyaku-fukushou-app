@@ -1,0 +1,39 @@
+/// <reference lib="webworker" />
+import { precacheAndRoute } from 'workbox-precaching'
+
+declare const self: ServiceWorkerGlobalScope
+
+precacheAndRoute(self.__WB_MANIFEST)
+
+interface PushPayload {
+  title?: string
+  body?: string
+}
+
+self.addEventListener('push', (event) => {
+  let data: PushPayload = {}
+  try {
+    data = event.data?.json() ?? {}
+  } catch {
+    /* ペイロードがJSONでない場合は既定文言にフォールバック */
+  }
+  event.waitUntil(
+    self.registration.showNotification(data.title ?? '逆復唱トレーニング', {
+      body: data.body ?? '',
+      icon: '/icon-192.png',
+      badge: '/icon-192.png',
+      tag: 'daily-reminder',
+    }),
+  )
+})
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close()
+  event.waitUntil(
+    self.clients.matchAll({ type: 'window' }).then((clientList) => {
+      const existing = clientList.find((c) => 'focus' in c)
+      if (existing) return existing.focus()
+      return self.clients.openWindow('/')
+    }),
+  )
+})
