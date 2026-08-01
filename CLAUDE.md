@@ -270,7 +270,9 @@ Web Audio APIによる完全プログラム生成のシンセサイザー方式�
 - 直近N日間の日別正答率推移（未挑戦日はnull扱い）
 - 実績一覧グリッド表示
 
-### 設定画面（`src/components/SettingsScreen.tsx`, `src/lib/settings.ts`）
+### 設定画面（`src/components/SettingsScreen.tsx`＋セクションごとの`src/components/Settings*Section.tsx`, `src/lib/settings.ts`）
+
+`SettingsScreen.tsx`は設定state（`AppSettings`）の保持と各セクションへのprops受け渡しのみを担い、実際のUIと操作ロジックはテーマ／音声／目標セット数／効果音／通知／データの6セクションコンポーネントに分割している（`SettingsThemeSection`, `SettingsVoiceSection`, `SettingsDailyGoalSection`, `SettingsSoundSection`, `SettingsNotificationSection`, `SettingsDataSection`）。通知・データの各セクションは購読状態やインポート/エクスポートのローカルUI状態を自身で保持する。
 
 - テーマ（システム／ライト／ダーク）
 - 音声合成の声・速度
