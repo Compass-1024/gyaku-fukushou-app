@@ -179,6 +179,21 @@ export function TopScreen({
             マスが光る順番を覚えて、逆から画面をタップして答える視空間ワーキングメモリトレーニングです。
           </p>
         </button>
+
+        <button
+          type="button"
+          onClick={() => {
+            if (loadSettings().soundEnabled) playButtonTap()
+            onSelect('pattern')
+          }}
+          className="touch-manipulation rounded-2xl bg-gradient-to-br from-amber-500 to-yellow-500 px-6 py-6 text-left text-white shadow-lg shadow-amber-500/20 transition hover:scale-[1.02] hover:shadow-xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500"
+        >
+          <span className="text-4xl">👀</span>
+          <p className="mt-2 text-xl font-bold">変化検出モード</p>
+          <p className="mt-1 text-sm opacity-90">
+            一瞬表示される模様を覚えて、変化したかどうかを見分けるワーキングメモリトレーニングです。
+          </p>
+        </button>
       </div>
     </div>
   )

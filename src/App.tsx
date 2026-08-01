@@ -5,6 +5,7 @@ import { DigitTypeSelect } from './components/DigitTypeSelect'
 import { DigitLevelSelect } from './components/DigitLevelSelect'
 import { NBackLevelSelect } from './components/NBackLevelSelect'
 import { SpatialLevelSelect } from './components/SpatialLevelSelect'
+import { PatternLevelSelect } from './components/PatternLevelSelect'
 import { SettingsScreen } from './components/SettingsScreen'
 import { StatsScreen } from './components/StatsScreen'
 import { PrivacyScreen } from './components/PrivacyScreen'
@@ -34,6 +35,11 @@ const SpatialGameScreen = lazy(() =>
     default: m.SpatialGameScreen,
   })),
 )
+const PatternGameScreen = lazy(() =>
+  import('./components/PatternGameScreen').then((m) => ({
+    default: m.PatternGameScreen,
+  })),
+)
 
 type View =
   | { screen: 'top' }
@@ -46,6 +52,8 @@ type View =
   | { screen: 'nback-game'; level: Level }
   | { screen: 'spatial-level' }
   | { screen: 'spatial-game'; level: Level }
+  | { screen: 'pattern-level' }
+  | { screen: 'pattern-game'; level: Level }
   | { screen: 'settings' }
   | { screen: 'stats' }
   | { screen: 'privacy' }
@@ -90,6 +98,7 @@ function App() {
       next.screen === 'digit-level' ||
       next.screen === 'nback-level' ||
       next.screen === 'spatial-level' ||
+      next.screen === 'pattern-level' ||
       next.screen === 'stats'
     ) {
       setHistory(loadHistory())
@@ -109,6 +118,7 @@ function App() {
             else if (mode === 'digit') goTo({ screen: 'digit-type' })
             else if (mode === 'nback') goTo({ screen: 'nback-level' })
             else if (mode === 'spatial') goTo({ screen: 'spatial-level' })
+            else if (mode === 'pattern') goTo({ screen: 'pattern-level' })
             else goTo({ screen: 'top' })
           }}
           onOpenSettings={() => goTo({ screen: 'settings' })}
@@ -126,6 +136,8 @@ function App() {
               goTo({ screen: 'nback-game', level: area.level })
             } else if (area.mode === 'spatial') {
               goTo({ screen: 'spatial-game', level: area.level })
+            } else if (area.mode === 'pattern') {
+              goTo({ screen: 'pattern-game', level: area.level })
             }
           }}
         />
@@ -221,6 +233,25 @@ function App() {
           level={view.level}
           onExit={() => goTo({ screen: 'spatial-level' })}
           onSelectLevel={(level) => goTo({ screen: 'spatial-game', level })}
+        />
+      )
+      break
+    case 'pattern-level':
+      content = (
+        <PatternLevelSelect
+          history={history}
+          onSelect={(level) => goTo({ screen: 'pattern-game', level })}
+          onBack={() => goTo({ screen: 'top' })}
+        />
+      )
+      break
+    case 'pattern-game':
+      content = (
+        <PatternGameScreen
+          key={view.level}
+          level={view.level}
+          onExit={() => goTo({ screen: 'pattern-level' })}
+          onSelectLevel={(level) => goTo({ screen: 'pattern-game', level })}
         />
       )
       break
