@@ -9,6 +9,9 @@ const AREA_LABELS: Record<string, string> = {
   'digit-reverse': 'すうじ（逆から）',
   'digit-sum': 'すうじ（合計）',
   nback: 'Nバック',
+  spatial: '空間',
+  pattern: '変化検出',
+  tone: '音・色の順番',
 }
 
 function areaLabel(area: AreaStats): string {
@@ -159,6 +162,21 @@ export function TopScreen({
           <p className="mt-2 text-xl font-bold">Nバックモード</p>
           <p className="mt-1 text-sm opacity-90">
             N個前と同じ数字が出たら反応する、科学的根拠のあるワーキングメモリトレーニングです。
+          </p>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => {
+            if (loadSettings().soundEnabled) playButtonTap()
+            onSelect('spatial')
+          }}
+          className="touch-manipulation rounded-2xl bg-gradient-to-br from-cyan-500 to-blue-500 px-6 py-6 text-left text-white shadow-lg shadow-cyan-500/20 transition hover:scale-[1.02] hover:shadow-xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-500"
+        >
+          <span className="text-4xl">🧩</span>
+          <p className="mt-2 text-xl font-bold">空間モード</p>
+          <p className="mt-1 text-sm opacity-90">
+            マスが光る順番を覚えて、逆から画面をタップして答える視空間ワーキングメモリトレーニングです。
           </p>
         </button>
       </div>

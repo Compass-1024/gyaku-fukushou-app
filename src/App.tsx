@@ -4,6 +4,7 @@ import { LevelSelect } from './components/LevelSelect'
 import { DigitTypeSelect } from './components/DigitTypeSelect'
 import { DigitLevelSelect } from './components/DigitLevelSelect'
 import { NBackLevelSelect } from './components/NBackLevelSelect'
+import { SpatialLevelSelect } from './components/SpatialLevelSelect'
 import { SettingsScreen } from './components/SettingsScreen'
 import { StatsScreen } from './components/StatsScreen'
 import { PrivacyScreen } from './components/PrivacyScreen'
@@ -28,6 +29,11 @@ const NBackGameScreen = lazy(() =>
     default: m.NBackGameScreen,
   })),
 )
+const SpatialGameScreen = lazy(() =>
+  import('./components/SpatialGameScreen').then((m) => ({
+    default: m.SpatialGameScreen,
+  })),
+)
 
 type View =
   | { screen: 'top' }
@@ -38,6 +44,8 @@ type View =
   | { screen: 'digit-game'; gameType: DigitGameType; level: Level }
   | { screen: 'nback-level' }
   | { screen: 'nback-game'; level: Level }
+  | { screen: 'spatial-level' }
+  | { screen: 'spatial-game'; level: Level }
   | { screen: 'settings' }
   | { screen: 'stats' }
   | { screen: 'privacy' }
@@ -81,6 +89,7 @@ function App() {
       next.screen === 'word-level' ||
       next.screen === 'digit-level' ||
       next.screen === 'nback-level' ||
+      next.screen === 'spatial-level' ||
       next.screen === 'stats'
     ) {
       setHistory(loadHistory())
@@ -98,7 +107,9 @@ function App() {
           onSelect={(mode) => {
             if (mode === 'word') goTo({ screen: 'word-level' })
             else if (mode === 'digit') goTo({ screen: 'digit-type' })
-            else goTo({ screen: 'nback-level' })
+            else if (mode === 'nback') goTo({ screen: 'nback-level' })
+            else if (mode === 'spatial') goTo({ screen: 'spatial-level' })
+            else goTo({ screen: 'top' })
           }}
           onOpenSettings={() => goTo({ screen: 'settings' })}
           onOpenStats={() => goTo({ screen: 'stats' })}
@@ -111,8 +122,10 @@ function App() {
                 gameType: area.gameType ?? 'reverse',
                 level: area.level,
               })
-            } else {
+            } else if (area.mode === 'nback') {
               goTo({ screen: 'nback-game', level: area.level })
+            } else if (area.mode === 'spatial') {
+              goTo({ screen: 'spatial-game', level: area.level })
             }
           }}
         />
@@ -189,6 +202,25 @@ function App() {
           level={view.level}
           onExit={() => goTo({ screen: 'nback-level' })}
           onSelectLevel={(level) => goTo({ screen: 'nback-game', level })}
+        />
+      )
+      break
+    case 'spatial-level':
+      content = (
+        <SpatialLevelSelect
+          history={history}
+          onSelect={(level) => goTo({ screen: 'spatial-game', level })}
+          onBack={() => goTo({ screen: 'top' })}
+        />
+      )
+      break
+    case 'spatial-game':
+      content = (
+        <SpatialGameScreen
+          key={view.level}
+          level={view.level}
+          onExit={() => goTo({ screen: 'spatial-level' })}
+          onSelectLevel={(level) => goTo({ screen: 'spatial-game', level })}
         />
       )
       break

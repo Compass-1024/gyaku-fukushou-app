@@ -71,6 +71,27 @@ export const ACHIEVEMENTS: Achievement[] = [
     isUnlocked: (h) => h.some((e) => e.mode === 'nback' && e.level === 3),
   },
   {
+    id: 'level-3-spatial',
+    icon: '🧩',
+    label: '空間記憶上級者',
+    description: '空間モードのレベル3に挑戦した',
+    isUnlocked: (h) => h.some((e) => e.mode === 'spatial' && e.level === 3),
+  },
+  {
+    id: 'level-3-pattern',
+    icon: '👀',
+    label: '観察力上級者',
+    description: '変化検出モードのレベル3に挑戦した',
+    isUnlocked: (h) => h.some((e) => e.mode === 'pattern' && e.level === 3),
+  },
+  {
+    id: 'level-3-tone',
+    icon: '🎵',
+    label: '音感上級者',
+    description: '音・色モードのレベル3に挑戦した',
+    isUnlocked: (h) => h.some((e) => e.mode === 'tone' && e.level === 3),
+  },
+  {
     id: 'total-10',
     icon: '📈',
     label: '継続力',
@@ -91,6 +112,19 @@ export const ACHIEVEMENTS: Achievement[] = [
     description: '全モードに挑戦した',
     isUnlocked: (h) =>
       hasMode(h, 'word') && hasMode(h, 'digit') && hasMode(h, 'nback'),
+  },
+  {
+    id: 'all-six-modes',
+    icon: '🌈',
+    label: '全モード制覇',
+    description: 'ことば・すうじ・Nバック・空間・変化検出・音の全6モードに挑戦した',
+    isUnlocked: (h) =>
+      hasMode(h, 'word') &&
+      hasMode(h, 'digit') &&
+      hasMode(h, 'nback') &&
+      hasMode(h, 'spatial') &&
+      hasMode(h, 'pattern') &&
+      hasMode(h, 'tone'),
   },
 ]
 

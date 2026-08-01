@@ -61,6 +61,47 @@ describe('achievements', () => {
     ).toBe(true)
   })
 
+  it('level-3 achievements exist for the three new modes', () => {
+    expect(
+      findAchievement('level-3-spatial').isUnlocked([
+        entry({ mode: 'spatial', level: 3 }),
+      ]),
+    ).toBe(true)
+    expect(
+      findAchievement('level-3-pattern').isUnlocked([
+        entry({ mode: 'pattern', level: 3 }),
+      ]),
+    ).toBe(true)
+    expect(
+      findAchievement('level-3-tone').isUnlocked([
+        entry({ mode: 'tone', level: 3 }),
+      ]),
+    ).toBe(true)
+  })
+
+  it('all-six-modes requires all six modes to have been attempted', () => {
+    const allSix = findAchievement('all-six-modes')
+    expect(
+      allSix.isUnlocked([
+        entry({ mode: 'word' }),
+        entry({ mode: 'digit' }),
+        entry({ mode: 'nback' }),
+        entry({ mode: 'spatial' }),
+        entry({ mode: 'pattern' }),
+      ]),
+    ).toBe(false)
+    expect(
+      allSix.isUnlocked([
+        entry({ mode: 'word' }),
+        entry({ mode: 'digit' }),
+        entry({ mode: 'nback' }),
+        entry({ mode: 'spatial' }),
+        entry({ mode: 'pattern' }),
+        entry({ mode: 'tone' }),
+      ]),
+    ).toBe(true)
+  })
+
   it('total-10 requires at least 10 sessions', () => {
     const total10 = findAchievement('total-10')
     const nine = Array.from({ length: 9 }, () => entry())

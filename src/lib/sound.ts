@@ -218,6 +218,26 @@ export function playLevelUp(): void {
   })
 }
 
+// 音・色モードの4つのパッドに割り当てる音高（ペンタトニック寄りで濁りにくい組み合わせ）
+const PAD_FREQUENCIES = [392.0, 440.0, 523.25, 659.25] // G4, A4, C5, E5
+
+// 音・色モード: パッドごとに異なる高さのベル風の単音を鳴らす
+export function playPadTone(padIndex: number): void {
+  const ctx = getAudioContext()
+  if (!ctx) return
+  const bus = createVoiceBus(ctx, 0.25)
+  const frequency = PAD_FREQUENCIES[padIndex] ?? PAD_FREQUENCIES[0]
+  playHarmonicTone(ctx, bus, {
+    frequency,
+    startTime: ctx.currentTime,
+    duration: 0.35,
+    gain: 0.22,
+    type: 'sine',
+    harmonics: [1, 0.5, 0.25, 0.12],
+    attack: 0.008,
+  })
+}
+
 // 実績解除: きらびやかな和音+高音のアクセント
 export function playAchievementUnlock(): void {
   const ctx = getAudioContext()

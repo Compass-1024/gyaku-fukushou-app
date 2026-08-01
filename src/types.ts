@@ -1,6 +1,6 @@
 export type Level = 1 | 2 | 3
 
-export type Mode = 'word' | 'digit' | 'nback'
+export type Mode = 'word' | 'digit' | 'nback' | 'spatial' | 'pattern' | 'tone'
 export type DigitGameType = 'reverse' | 'sum'
 export type ThemeMode = 'system' | 'light' | 'dark'
 
@@ -56,3 +56,47 @@ export interface NBackTrial {
 }
 
 export type NBackPhase = 'ready' | 'showing' | 'result'
+
+export interface SpatialQuestion {
+  id: string
+  gridSize: number
+  sequence: number[]
+}
+
+export type SpatialQuestionPhase = 'ready' | 'showing' | 'answering' | 'result'
+
+export interface SpatialQuestionResult {
+  question: SpatialQuestion
+  expectedAnswer: number[]
+  tapped: number[]
+  correct: boolean
+}
+
+export interface PatternQuestion {
+  id: string
+  gridSize: number
+  filledCells: number[]
+  comparisonCells: number[]
+  hasChange: boolean
+}
+
+export type PatternQuestionPhase = 'ready' | 'showing' | 'answering' | 'result'
+
+export interface PatternQuestionResult {
+  question: PatternQuestion
+  answeredChanged: boolean
+  correct: boolean
+}
+
+export interface ToneQuestion {
+  id: string
+  sequence: number[]
+}
+
+export type ToneQuestionPhase = 'ready' | 'showing' | 'answering' | 'result'
+
+export interface ToneQuestionResult {
+  question: ToneQuestion
+  tapped: number[]
+  correct: boolean
+}

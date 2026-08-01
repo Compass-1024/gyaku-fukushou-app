@@ -18,6 +18,9 @@ const AREA_LABELS: Record<string, string> = {
   'digit-reverse': 'すうじ（逆から）',
   'digit-sum': 'すうじ（合計）',
   nback: 'Nバック',
+  spatial: '空間',
+  pattern: '変化検出',
+  tone: '音・色の順番',
 }
 
 const TREND_DAYS = 14

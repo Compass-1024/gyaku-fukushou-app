@@ -116,6 +116,9 @@ const ALL_AREAS: ReadonlyArray<{ mode: Mode; gameType?: DigitGameType }> = [
   { mode: 'digit', gameType: 'reverse' },
   { mode: 'digit', gameType: 'sum' },
   { mode: 'nback' },
+  { mode: 'spatial' },
+  { mode: 'pattern' },
+  { mode: 'tone' },
 ]
 const ALL_LEVELS: readonly Level[] = [1, 2, 3]
 
