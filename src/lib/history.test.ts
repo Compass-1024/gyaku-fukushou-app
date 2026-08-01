@@ -230,6 +230,22 @@ describe('getWeakestAreas', () => {
     const weakest = getWeakestAreas(history, 1)
     expect(weakest[0]).toMatchObject({ mode: 'word', level: 1 })
   })
+
+  it('resurfaces a high-accuracy area that has not been attempted in a long time', () => {
+    const reference = new Date('2026-08-01T00:00:00Z')
+    const longAgo = new Date('2026-06-01T00:00:00Z').toISOString() // 61日前
+    const recent = new Date('2026-07-31T00:00:00Z').toISOString() // 1日前
+    const history: HistoryEntry[] = [
+      // 正答率90%だが61日間放置（忘却が進んでいる可能性が高い）
+      { mode: 'word', level: 1, correct: 9, total: 10, timestamp: longAgo },
+      { mode: 'word', level: 1, correct: 9, total: 10, timestamp: longAgo },
+      // 正答率70%だが昨日挑戦したばかり
+      { mode: 'digit', gameType: 'reverse', level: 1, correct: 7, total: 10, timestamp: recent },
+      { mode: 'digit', gameType: 'reverse', level: 1, correct: 7, total: 10, timestamp: recent },
+    ]
+    const weakest = getWeakestAreas(history, 1, reference)
+    expect(weakest[0]).toMatchObject({ mode: 'word', level: 1 })
+  })
 })
 
 describe('clearHistory', () => {

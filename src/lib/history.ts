@@ -162,12 +162,36 @@ export function getAllAreaStats(history: HistoryEntry[]): AreaStats[] {
 // 誤判定されやすいため、十分な挑戦回数がある項目を優先する
 const MIN_ATTEMPTS_FOR_RELIABLE_WEAKEST = 2
 
-// 挑戦済みの中で正答率が低い項目を返す（苦手分野の可視化用）。
-// 挑戦回数が十分な項目があればそちらを優先し、正答率が同じ場合は挑戦回数が
+// 間隔反復（Spaced Repetition）の考え方を踏まえ、最終挑戦からの経過日数
+// 1日あたりに加算する優先度スコア（正答率ポイントと同じスケールに揃えている）。
+// 正答率が高くても長期間触れていない項目は、忘却が進んでいる可能性が高いため
+// 再浮上させる
+const RECENCY_SCORE_PER_DAY = 3
+
+function getLastAttemptTimestampMs(
+  history: HistoryEntry[],
+  area: { mode: Mode; gameType?: DigitGameType },
+  level: Level,
+): number | null {
+  let latest: number | null = null
+  for (const e of history) {
+    if (e.mode !== area.mode || e.level !== level || e.gameType !== area.gameType) {
+      continue
+    }
+    const t = new Date(e.timestamp).getTime()
+    if (latest === null || t > latest) latest = t
+  }
+  return latest
+}
+
+// 挑戦済みの中から、優先して復習すべき項目を返す（「今日のおすすめ」用）。
+// 正答率が低いほど、また最終挑戦からの経過日数が長いほど優先度スコアが高くなる。
+// 挑戦回数が十分な項目があればそちらを優先し、スコアが同じ場合は挑戦回数が
 // 多い（＝より確からしい）項目を優先する
 export function getWeakestAreas(
   history: HistoryEntry[],
   count: number,
+  now: Date = new Date(),
 ): AreaStats[] {
   const attempted = getAllAreaStats(history).filter(
     (a) => a.stats.attempts > 0 && a.stats.accuracy !== null,
@@ -176,13 +200,23 @@ export function getWeakestAreas(
     (a) => a.stats.attempts >= MIN_ATTEMPTS_FOR_RELIABLE_WEAKEST,
   )
   const pool = reliable.length > 0 ? reliable : attempted
+  const nowMs = now.getTime()
+
   return pool
+    .map((area) => {
+      const lastAttemptMs = getLastAttemptTimestampMs(history, area, area.level)
+      const daysSinceLastAttempt =
+        lastAttemptMs === null ? 0 : Math.max(0, (nowMs - lastAttemptMs) / 86_400_000)
+      const score =
+        (100 - (area.stats.accuracy ?? 0)) + daysSinceLastAttempt * RECENCY_SCORE_PER_DAY
+      return { area, score }
+    })
     .sort((a, b) => {
-      const accuracyDiff = (a.stats.accuracy ?? 0) - (b.stats.accuracy ?? 0)
-      if (accuracyDiff !== 0) return accuracyDiff
-      return b.stats.attempts - a.stats.attempts
+      if (b.score !== a.score) return b.score - a.score
+      return b.area.stats.attempts - a.area.stats.attempts
     })
     .slice(0, count)
+    .map((x) => x.area)
 }
 
 // 指定モード・レベルにおける、これまでの1セットあたりの最高正答率（%）
