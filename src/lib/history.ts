@@ -258,6 +258,7 @@ export interface ActivityDay {
 export function getActivityCalendar(
   history: HistoryEntry[],
   weeks: number,
+  now: Date = new Date(),
 ): ActivityDay[] {
   const counts = new Map<string, number>()
   for (const e of history) {
@@ -265,7 +266,7 @@ export function getActivityCalendar(
     counts.set(key, (counts.get(key) ?? 0) + 1)
   }
 
-  const today = new Date()
+  const today = new Date(now)
   today.setHours(0, 0, 0, 0)
   const gridEnd = new Date(today)
   gridEnd.setDate(gridEnd.getDate() + (6 - today.getDay()))

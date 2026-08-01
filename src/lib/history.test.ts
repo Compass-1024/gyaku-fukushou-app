@@ -156,14 +156,18 @@ describe('getStreakDays', () => {
   })
 
   it('stops bridging once the monthly freeze budget is used up', () => {
-    // day1, day3, day5 missed（3回目の単日欠落は月2回の上限を超えるため救済されない）
+    // 実時刻(daysAgo)を使うと月境界をまたぐ日に実行された場合に結果が
+    // 変わってしまう（月ごとに猶予が独立してリセットされるため）ため、
+    // 月境界をまたがない固定日付で検証する
+    const now = new Date(2026, 7, 15, 12) // 2026-08-15
+    // 8/14, 8/12, 8/10 欠落（3回目の単日欠落は月2回の上限を超えるため救済されない）
     const history = [
-      entryOn(daysAgo(0)),
-      entryOn(daysAgo(2)),
-      entryOn(daysAgo(4)),
-      entryOn(daysAgo(6)),
+      entryOnLocalDate(2026, 8, 15),
+      entryOnLocalDate(2026, 8, 13),
+      entryOnLocalDate(2026, 8, 11),
+      entryOnLocalDate(2026, 8, 9),
     ]
-    expect(getStreakDays(history)).toBe(3)
+    expect(getStreakDays(history, now)).toBe(3)
   })
 
   it('resets the freeze budget independently per calendar month', () => {
@@ -388,12 +392,18 @@ describe('getActivityCalendar', () => {
   })
 
   it('counts the number of completed sets per day', () => {
-    const history = [entryOn(daysAgo(0)), entryOn(daysAgo(0)), entryOn(daysAgo(1))]
-    const calendar = getActivityCalendar(history, 1)
-    const todayKey = localKeyDaysAgo(0)
-    const yesterdayKey = localKeyDaysAgo(1)
-    expect(calendar.find((d) => d.dateKey === todayKey)?.count).toBe(2)
-    expect(calendar.find((d) => d.dateKey === yesterdayKey)?.count).toBe(1)
+    // weeks:1のグリッドは「今週（日曜始まり）」のみを含むため、実時刻(daysAgo)
+    // では日曜日に実行されると前日が前週側に落ちてテストが不安定になる。
+    // 週の途中（水曜）を固定のnowとして検証する
+    const now = new Date(2026, 7, 5, 12) // 2026-08-05（水曜）
+    const history = [
+      entryOnLocalDate(2026, 8, 5),
+      entryOnLocalDate(2026, 8, 5),
+      entryOnLocalDate(2026, 8, 4),
+    ]
+    const calendar = getActivityCalendar(history, 1, now)
+    expect(calendar.find((d) => d.dateKey === '2026-08-05')?.count).toBe(2)
+    expect(calendar.find((d) => d.dateKey === '2026-08-04')?.count).toBe(1)
   })
 
   it('returns 0 for days with no activity', () => {
