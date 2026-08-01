@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react'
 import { getStreakDays, getTodayCount, loadHistory } from '../lib/history'
 import { buildResultShareText, shareText } from '../lib/share'
 import { loadSettings } from '../lib/settings'
+import { rollLuckyBonus } from '../lib/luckyBonus'
+import { playAchievementUnlock } from '../lib/sound'
 import type { Achievement } from '../lib/achievements'
 
 export interface SummaryItem {
@@ -44,6 +46,15 @@ export function SetSummary({
   const goalProgress =
     dailyGoal > 0 ? Math.min(100, Math.round((todayCount / dailyGoal) * 100)) : 0
   const goalReached = dailyGoal > 0 && todayCount >= dailyGoal
+
+  // 低確率のサプライズ演出。マウント時に1回だけ判定し、以降の再描画
+  // （実績バッジ表示に伴う再レンダー等）では再抽選しない。実績・統計・
+  // レベル判定には一切影響しない完全に飾りの演出
+  const [isLucky] = useState(() => rollLuckyBonus())
+  useEffect(() => {
+    if (isLucky && loadSettings().soundEnabled) playAchievementUnlock()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   async function handleShare() {
     const text = buildResultShareText({
@@ -99,6 +110,14 @@ export function SetSummary({
           </p>
         )}
       </div>
+
+      {isLucky && (
+        <div className="animate-pop rounded-lg border border-fuchsia-300 bg-fuchsia-50 px-4 py-3 text-center dark:border-fuchsia-700 dark:bg-fuchsia-900/30">
+          <p className="text-sm font-semibold text-fuchsia-700 dark:text-fuchsia-300">
+            🍀 ラッキーデー！ たまたま今日は運が良いようです
+          </p>
+        </div>
+      )}
 
       {isNewBest && (
         <div className="animate-pop rounded-lg border border-sky-300 bg-sky-50 px-4 py-3 text-center dark:border-sky-700 dark:bg-sky-900/30">
