@@ -249,6 +249,7 @@ export function SettingsScreen({
             声
           </h2>
           <select
+            aria-label="声"
             value={settings.voiceURI ?? ''}
             onChange={(e) =>
               updateSettings({ voiceURI: e.target.value || null })
@@ -304,7 +305,7 @@ export function SettingsScreen({
           onClick={() => updateSettings({ soundEnabled: !settings.soundEnabled })}
           className={`touch-manipulation rounded-full px-4 py-1.5 text-sm font-semibold transition ${
             settings.soundEnabled
-              ? 'bg-emerald-500 text-white'
+              ? 'bg-emerald-700 text-white'
               : 'bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-300'
           }`}
         >
@@ -323,7 +324,7 @@ export function SettingsScreen({
             disabled={notificationBusy || !isPushSupported()}
             className={`touch-manipulation rounded-full px-4 py-1.5 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-50 ${
               settings.notificationsEnabled
-                ? 'bg-emerald-500 text-white'
+                ? 'bg-emerald-700 text-white'
                 : 'bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-300'
             }`}
           >

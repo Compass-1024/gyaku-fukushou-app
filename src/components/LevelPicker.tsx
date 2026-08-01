@@ -39,12 +39,12 @@ export function LevelPicker({
           >
             <span className="text-lg font-semibold">{labelFor(level)}</span>
             {descriptionFor && (
-              <span className="text-sm opacity-90">
-                {descriptionFor(level)}
-              </span>
+              // 半透明にすると背景色によってはWCAG AAのコントラスト基準（4.5:1）を
+              // 割り込むため、不透明の白文字にして太字/サイズだけで階層を表現する
+              <span className="text-sm">{descriptionFor(level)}</span>
             )}
             {stats.accuracy !== null && (
-              <span className="text-xs opacity-80">
+              <span className="text-xs">
                 これまでの正答率: {stats.accuracy}%（{stats.attempts}回挑戦）
               </span>
             )}

@@ -177,7 +177,9 @@ export function DigitGameScreen({
 
   // 結果表示中はEnterキーでも次の問題へ進めるようにし、テンポよく周回できるようにする
   useEffect(() => {
-    if (phase !== 'result') return
+    // finished後もこの効果が残ると、SetSummary自身のEnterハンドラと二重に
+    // 発火し履歴が二重記録されてしまうため、finished中は無効化する
+    if (phase !== 'result' || finished) return
     function handleKeyDown(e: KeyboardEvent) {
       if (e.key === 'Enter') {
         e.preventDefault()
@@ -187,7 +189,7 @@ export function DigitGameScreen({
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [phase, currentResult])
+  }, [phase, currentResult, finished])
 
   // setTyped の関数形更新の中で読むことで、直前の入力を確実に拾ってから採点する
   function commitAnswer() {

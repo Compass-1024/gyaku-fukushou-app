@@ -131,7 +131,9 @@ export function SpatialGameScreen({
 
   // 結果表示中はEnterキーでも次の問題へ進めるようにする
   useEffect(() => {
-    if (phase !== 'result') return
+    // finished後もこの効果が残ると、SetSummary自身のEnterハンドラと二重に
+    // 発火し履歴が二重記録されてしまうため、finished中は無効化する
+    if (phase !== 'result' || finished) return
     function handleKeyDown(e: KeyboardEvent) {
       if (e.key === 'Enter') {
         e.preventDefault()
@@ -141,7 +143,7 @@ export function SpatialGameScreen({
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [phase, currentResult])
+  }, [phase, currentResult, finished])
 
   function finalizeAnswer(value: number[]) {
     const expectedAnswer = reverseSequence(currentQuestion.sequence)
