@@ -1,4 +1,6 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
+import { getStreakDays, loadHistory } from '../lib/history'
+import { buildResultShareText, shareText } from '../lib/share'
 import type { Achievement } from '../lib/achievements'
 
 export interface SummaryItem {
@@ -30,6 +32,24 @@ export function SetSummary({
   isNewBest,
 }: SetSummaryProps) {
   const correctCount = items.filter((item) => item.correct).length
+  const [shareStatus, setShareStatus] = useState<
+    'idle' | 'shared' | 'copied' | 'error'
+  >('idle')
+
+  async function handleShare() {
+    const text = buildResultShareText({
+      correctCount,
+      total: items.length,
+      streakDays: getStreakDays(loadHistory()),
+      achievementLabels: (newAchievements ?? []).map(
+        (a) => `${a.icon} ${a.label}`,
+      ),
+    })
+    const outcome = await shareText(text)
+    if (outcome === 'shared') setShareStatus('shared')
+    else if (outcome === 'copied') setShareStatus('copied')
+    else if (outcome === 'unsupported') setShareStatus('error')
+  }
 
   // 結果画面の最上部に表示される主要アクション（提案があればそれ、
   // なければ「同じレベルでもう一度」）をEnterキーでも実行できるようにする
@@ -51,6 +71,24 @@ export function SetSummary({
         <p className="mt-1 text-4xl font-bold text-gray-900 dark:text-gray-100">
           {correctCount} / {items.length} 問正解
         </p>
+        <button
+          type="button"
+          onClick={handleShare}
+          className="mt-2 touch-manipulation text-sm text-gray-500 underline decoration-dotted underline-offset-2 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+        >
+          📤 結果をシェア
+        </button>
+        {shareStatus !== 'idle' && (
+          <p
+            role="status"
+            className="mt-1 text-xs text-gray-500 dark:text-gray-400"
+          >
+            {shareStatus === 'shared' && 'シェアしました'}
+            {shareStatus === 'copied' && 'クリップボードにコピーしました'}
+            {shareStatus === 'error' &&
+              'シェアに対応していない環境です。テキストを選択してコピーしてください。'}
+          </p>
+        )}
       </div>
 
       {isNewBest && (
