@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useEnterKey } from '../hooks/useEnterKey'
 import { useCountdown } from '../hooks/useCountdown'
+import { useSetCompletionRecorder } from '../hooks/useSetCompletionRecorder'
 import {
   pickPatternQuestionSet,
   isPatternAnswerCorrect,
@@ -10,27 +11,13 @@ import {
   READY_MS,
   getAnswerTimeoutMs,
 } from '../lib/pattern'
-import {
-  appendHistoryEntry,
-  getBestSetAccuracy,
-  loadHistory,
-} from '../lib/history'
 import { confirmExit } from '../lib/confirmExit'
 import { getSuggestedLevel } from '../lib/difficulty'
 import { loadSettings } from '../lib/settings'
-import { syncPushState } from '../lib/push'
-import {
-  playCorrectSound,
-  playIncorrectSound,
-  playButtonTap,
-  playLevelUp,
-  playAchievementUnlock,
-} from '../lib/sound'
-import { getNewlyUnlockedAchievements } from '../lib/achievements'
+import { playCorrectSound, playIncorrectSound, playButtonTap } from '../lib/sound'
 import { SetSummary } from './SetSummary'
 import { GameHeader } from './GameHeader'
 import { ResultBadge } from './ResultBadge'
-import type { Achievement } from '../lib/achievements'
 import type {
   BaseGameScreenProps,
   PatternQuestion,
@@ -56,8 +43,6 @@ export function PatternGameScreen({
     useState<PatternQuestionResult | null>(null)
   const [results, setResults] = useState<PatternQuestionResult[]>([])
   const [finished, setFinished] = useState(false)
-  const [newAchievements, setNewAchievements] = useState<Achievement[]>([])
-  const [isNewBest, setIsNewBest] = useState(false)
 
   const currentQuestion = questions[currentIndex]
   const cellCount = currentQuestion.gridSize * currentQuestion.gridSize
@@ -134,34 +119,13 @@ export function PatternGameScreen({
   }, [phase, currentQuestion])
 
   // 3問セットが完了するたびに結果を記録し、新規実績の解除やレベルアップを演出する
-  useEffect(() => {
-    if (!finished) return
-    const correctCount = results.filter((r) => r.correct).length
-    const before = loadHistory()
-    const previousBest = getBestSetAccuracy(before, 'pattern', level)
-    appendHistoryEntry({
-      mode: 'pattern',
-      level,
-      correct: correctCount,
-      total: results.length,
-    })
-    syncPushState()
-    const after = loadHistory()
-    const newly = getNewlyUnlockedAchievements(before, after)
-    setNewAchievements(newly)
-
-    const accuracyPercent =
-      results.length > 0
-        ? Math.round((correctCount / results.length) * 100)
-        : 0
-    setIsNewBest(previousBest !== null && accuracyPercent > previousBest)
-
-    if (loadSettings().soundEnabled) {
-      if (newly.length > 0) playAchievementUnlock()
-      const suggestedLevel = getSuggestedLevel(level, accuracyPercent)
-      if (suggestedLevel && suggestedLevel > level) playLevelUp()
-    }
-  }, [finished, results, level])
+  const { newAchievements, isNewBest } = useSetCompletionRecorder({
+    trigger: finished,
+    mode: 'pattern',
+    level,
+    correctCount: results.filter((r) => r.correct).length,
+    total: results.length,
+  })
 
   function handleNext() {
     if (!currentResult) return

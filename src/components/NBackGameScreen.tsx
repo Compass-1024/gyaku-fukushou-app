@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useStepReveal } from '../hooks/useStepReveal'
+import { useSetCompletionRecorder } from '../hooks/useSetCompletionRecorder'
 import {
   generateNBackSequence,
   scoreNBackTrials,
@@ -10,26 +11,12 @@ import {
   GAP_MS,
   READY_MS,
 } from '../lib/nback'
-import {
-  appendHistoryEntry,
-  getBestSetAccuracy,
-  loadHistory,
-} from '../lib/history'
 import { confirmExit } from '../lib/confirmExit'
 import { getSuggestedLevel } from '../lib/difficulty'
 import { loadSettings } from '../lib/settings'
-import { syncPushState } from '../lib/push'
-import {
-  playCorrectSound,
-  playIncorrectSound,
-  playButtonTap,
-  playLevelUp,
-  playAchievementUnlock,
-} from '../lib/sound'
-import { getNewlyUnlockedAchievements } from '../lib/achievements'
+import { playButtonTap } from '../lib/sound'
 import { SetSummary } from './SetSummary'
 import { GameHeader } from './GameHeader'
-import type { Achievement } from '../lib/achievements'
 import type { BaseGameScreenProps, NBackPhase, NBackTrial } from '../types'
 
 type NBackGameScreenProps = BaseGameScreenProps
@@ -47,8 +34,6 @@ export function NBackGameScreen({
   const [pressed, setPressed] = useState<boolean[]>(() =>
     new Array(NBACK_SEQUENCE_LENGTH).fill(false),
   )
-  const [newAchievements, setNewAchievements] = useState<Achievement[]>([])
-  const [isNewBest, setIsNewBest] = useState(false)
 
   // 準備フェーズ: 少し間を置いてから開始する
   useEffect(() => {
@@ -94,31 +79,15 @@ export function NBackGameScreen({
   }, [phase, trialIndex])
 
   // 結果が確定するたびに、履歴の記録・効果音の再生・新規実績の解除演出を行う
-  useEffect(() => {
-    if (phase !== 'result') return
-    const score = scoreNBackTrials(trials, pressed)
-    const before = loadHistory()
-    const previousBest = getBestSetAccuracy(before, 'nback', level)
-    appendHistoryEntry({
-      mode: 'nback',
-      level,
-      correct: score.hits + score.correctRejections,
-      total: trials.length,
-    })
-    syncPushState()
-    const after = loadHistory()
-    const newly = getNewlyUnlockedAchievements(before, after)
-    setNewAchievements(newly)
-    setIsNewBest(previousBest !== null && score.accuracy > previousBest)
-
-    if (loadSettings().soundEnabled) {
-      if (score.accuracy >= 70) playCorrectSound()
-      else playIncorrectSound()
-      if (newly.length > 0) playAchievementUnlock()
-      const suggestedLevel = getSuggestedLevel(level, score.accuracy)
-      if (suggestedLevel && suggestedLevel > level) playLevelUp()
-    }
-  }, [phase, trials, pressed, level])
+  const score = scoreNBackTrials(trials, pressed)
+  const { newAchievements, isNewBest } = useSetCompletionRecorder({
+    trigger: phase === 'result',
+    mode: 'nback',
+    level,
+    correctCount: score.hits + score.correctRejections,
+    total: trials.length,
+    playAccuracySound: true,
+  })
 
   function handleRetry() {
     setTrials(generateNBackSequence(level))
@@ -127,7 +96,6 @@ export function NBackGameScreen({
   }
 
   if (phase === 'result') {
-    const score = scoreNBackTrials(trials, pressed)
     const suggestedLevel = getSuggestedLevel(level, score.accuracy)
     return (
       <SetSummary

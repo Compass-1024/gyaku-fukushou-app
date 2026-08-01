@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import { useEnterKey } from '../hooks/useEnterKey'
+import { useSetCompletionRecorder } from '../hooks/useSetCompletionRecorder'
 import { useSpeechSynthesis } from '../hooks/useSpeechSynthesis'
 import { useSpeechRecognition } from '../hooks/useSpeechRecognition'
 import {
@@ -11,27 +12,13 @@ import {
 } from '../lib/phrases'
 import { reverseText } from '../lib/reverse'
 import { findMatchingAlternative, normalizeForCompare } from '../lib/kana'
-import {
-  appendHistoryEntry,
-  getBestSetAccuracy,
-  loadHistory,
-} from '../lib/history'
 import { confirmExit } from '../lib/confirmExit'
 import { getSuggestedLevel } from '../lib/difficulty'
 import { loadSettings } from '../lib/settings'
-import { syncPushState } from '../lib/push'
-import {
-  playCorrectSound,
-  playIncorrectSound,
-  playButtonTap,
-  playLevelUp,
-  playAchievementUnlock,
-} from '../lib/sound'
-import { getNewlyUnlockedAchievements } from '../lib/achievements'
+import { playCorrectSound, playIncorrectSound, playButtonTap } from '../lib/sound'
 import { SetSummary } from './SetSummary'
 import { GameHeader } from './GameHeader'
 import { ResultBadge } from './ResultBadge'
-import type { Achievement } from '../lib/achievements'
 import type {
   BaseGameScreenProps,
   Phrase,
@@ -71,8 +58,6 @@ export function GameScreen({ level, onExit, onSelectLevel }: GameScreenProps) {
   const [results, setResults] = useState<QuestionResult[]>([])
   const [finished, setFinished] = useState(false)
   const [listenRemaining, setListenRemaining] = useState(0)
-  const [newAchievements, setNewAchievements] = useState<Achievement[]>([])
-  const [isNewBest, setIsNewBest] = useState(false)
 
   const currentPhrase = questions[currentIndex]
   // 依存配列にはこのフレーズの「実体」を表す questions/currentIndex を使う。
@@ -162,34 +147,13 @@ export function GameScreen({ level, onExit, onSelectLevel }: GameScreenProps) {
   }, [phase, currentPhrase, listenTimeoutMs, listenOnce, level, recognitionSupported])
 
   // 3問セットが完了するたびに結果を記録し、新規実績の解除やレベルアップを演出する
-  useEffect(() => {
-    if (!finished) return
-    const correctCount = results.filter((r) => r.correct).length
-    const before = loadHistory()
-    const previousBest = getBestSetAccuracy(before, 'word', level)
-    appendHistoryEntry({
-      mode: 'word',
-      level,
-      correct: correctCount,
-      total: results.length,
-    })
-    syncPushState()
-    const after = loadHistory()
-    const newly = getNewlyUnlockedAchievements(before, after)
-    setNewAchievements(newly)
-
-    const accuracyPercent =
-      results.length > 0
-        ? Math.round((correctCount / results.length) * 100)
-        : 0
-    setIsNewBest(previousBest !== null && accuracyPercent > previousBest)
-
-    if (loadSettings().soundEnabled) {
-      if (newly.length > 0) playAchievementUnlock()
-      const suggestedLevel = getSuggestedLevel(level, accuracyPercent)
-      if (suggestedLevel && suggestedLevel > level) playLevelUp()
-    }
-  }, [finished, results, level])
+  const { newAchievements, isNewBest } = useSetCompletionRecorder({
+    trigger: finished,
+    mode: 'word',
+    level,
+    correctCount: results.filter((r) => r.correct).length,
+    total: results.length,
+  })
 
   function handleNext() {
     if (!currentResult) return

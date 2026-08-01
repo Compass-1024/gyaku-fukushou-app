@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useEnterKey } from '../hooks/useEnterKey'
 import { useCountdown } from '../hooks/useCountdown'
 import { useStepReveal } from '../hooks/useStepReveal'
+import { useSetCompletionRecorder } from '../hooks/useSetCompletionRecorder'
 import {
   pickDigitQuestionSet,
   reverseDigits,
@@ -13,28 +14,14 @@ import {
   READY_MS,
   getAnswerTimeoutMs,
 } from '../lib/digits'
-import {
-  appendHistoryEntry,
-  getBestSetAccuracy,
-  loadHistory,
-} from '../lib/history'
 import { confirmExit } from '../lib/confirmExit'
 import { getSuggestedLevel } from '../lib/difficulty'
 import { loadSettings } from '../lib/settings'
-import { syncPushState } from '../lib/push'
-import {
-  playCorrectSound,
-  playIncorrectSound,
-  playButtonTap,
-  playLevelUp,
-  playAchievementUnlock,
-} from '../lib/sound'
-import { getNewlyUnlockedAchievements } from '../lib/achievements'
+import { playCorrectSound, playIncorrectSound, playButtonTap } from '../lib/sound'
 import { NumpadInput } from './NumpadInput'
 import { SetSummary } from './SetSummary'
 import { GameHeader } from './GameHeader'
 import { ResultBadge } from './ResultBadge'
-import type { Achievement } from '../lib/achievements'
 import type {
   BaseGameScreenProps,
   DigitGameType,
@@ -81,8 +68,6 @@ export function DigitGameScreen({
     useState<DigitQuestionResult | null>(null)
   const [results, setResults] = useState<DigitQuestionResult[]>([])
   const [finished, setFinished] = useState(false)
-  const [newAchievements, setNewAchievements] = useState<Achievement[]>([])
-  const [isNewBest, setIsNewBest] = useState(false)
 
   const currentQuestion = questions[currentIndex]
   const maxAnswerLength =
@@ -186,35 +171,14 @@ export function DigitGameScreen({
   }
 
   // 3問セットが完了するたびに結果を記録し、新規実績の解除やレベルアップを演出する
-  useEffect(() => {
-    if (!finished) return
-    const correctCount = results.filter((r) => r.correct).length
-    const before = loadHistory()
-    const previousBest = getBestSetAccuracy(before, 'digit', level, gameType)
-    appendHistoryEntry({
-      mode: 'digit',
-      gameType,
-      level,
-      correct: correctCount,
-      total: results.length,
-    })
-    syncPushState()
-    const after = loadHistory()
-    const newly = getNewlyUnlockedAchievements(before, after)
-    setNewAchievements(newly)
-
-    const accuracyPercent =
-      results.length > 0
-        ? Math.round((correctCount / results.length) * 100)
-        : 0
-    setIsNewBest(previousBest !== null && accuracyPercent > previousBest)
-
-    if (loadSettings().soundEnabled) {
-      if (newly.length > 0) playAchievementUnlock()
-      const suggestedLevel = getSuggestedLevel(level, accuracyPercent)
-      if (suggestedLevel && suggestedLevel > level) playLevelUp()
-    }
-  }, [finished, results, level, gameType])
+  const { newAchievements, isNewBest } = useSetCompletionRecorder({
+    trigger: finished,
+    mode: 'digit',
+    gameType,
+    level,
+    correctCount: results.filter((r) => r.correct).length,
+    total: results.length,
+  })
 
   function handleNext() {
     if (!currentResult) return
