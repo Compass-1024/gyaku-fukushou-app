@@ -24,6 +24,10 @@
 - E2Eテストを追加（結果表示中のEnterキー操作、ことばモードのテキスト入力フォールバック）
 - SEO/SNSシェア対応として`index.html`にmeta description・OGP・Twitter Cardタグを追加
 
+### Fixed
+
+- `index.html`のviewport metaに`viewport-fit=cover`を追加。これが無いとiOS Safariで`env(safe-area-inset-*)`が常に0として扱われ、App.tsxで指定していたノッチ・ホームインジケーター避けのpaddingが実質的に無効化されていた
+
 ### Changed
 
 - 要件定義書.mdの内容をCLAUDE.mdに統合（画面遷移図はMermaid形式に変換）
