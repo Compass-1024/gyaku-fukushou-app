@@ -1,54 +1,76 @@
-# 逆復唱アプリ 要件定義書
+# CLAUDE.md
 
-最終更新: 2026-08-01
-本書は既存実装（ソースコード）の内容をそのままドキュメント化したものです。新規セッションへの開発引き継ぎ資料として使用してください。
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## 1. 概要
+## Overview
 
-- **アプリ名**: 逆復唱トレーニング（gyaku-fukushou-app）
-- **目的**: ワーキングメモリ（作業記憶）を鍛えるトレーニングアプリ。「ことば」「すうじ」「Nバック」の3モードを提供する。
-- **UI言語**: 日本語のみ
-- **形態**: バックエンドを持たないSPA。全データはブラウザのlocalStorageに保存。PWA対応でホーム画面に追加してネイティブアプリ風に利用可能。
-- **プロジェクトパス**: `C:\Users\incur\OneDrive\デスクトップ\Claude Code\逆復唱アプリ`
+**逆復唱トレーニング**（`gyaku-fukushou-app`）は、ワーキングメモリ（作業記憶）を鍛えるトレーニングアプリ。「ことば」「すうじ」「Nバック」の3モードを提供する。UIは日本語のみ。バックエンドを持たないSPAで、全データはブラウザの`localStorage`に保存する。PWA対応でホーム画面に追加してネイティブアプリ風に利用可能。デプロイ先: https://gyaku-fukushou-app.vercel.app/
 
-## 2. 技術スタック
+## Commands
+
+- `npm run dev` — 開発サーバー起動（ポート5174固定、`strictPort: true`）
+- `npm run build` — 型チェック（`tsc -b`）後に本番ビルド（`vite build`）
+- `npm run lint` — oxlint実行
+- `npm run preview` — 本番ビルドのプレビュー
+- `npm run test` — Vitestでロジック層のテストを実行（`environment: 'node'`）
+
+## Tech stack
 
 | 分類 | 技術 |
 |---|---|
-| フレームワーク | React 19.2.7 + TypeScript ~6.0.2 |
-| ビルドツール | Vite 8.1.1（`@vitejs/plugin-react`） |
-| スタイリング | Tailwind CSS 4.3.3（`@tailwindcss/vite`、CSS-firstの`@theme`設定） |
-| PWA | vite-plugin-pwa 1.3.0（`registerType: 'autoUpdate'`） |
-| テスト | Vitest 4.1.10（`environment: 'node'`、ロジック層のみ対象） |
-| Lint | oxlint 1.71.0 |
+| フレームワーク | React 19 + TypeScript |
+| ビルドツール | Vite（`@vitejs/plugin-react`） |
+| スタイリング | Tailwind CSS v4（`@tailwindcss/vite`、CSS-firstの`@theme`設定。`tailwind.config.js`は存在しない） |
+| PWA | vite-plugin-pwa（`registerType: 'autoUpdate'`） |
+| テスト | Vitest（`environment: 'node'`、ロジック層のみ対象。UIコンポーネントのテストはなし） |
+| Lint | oxlint |
 | 状態管理 | Reactの`useState`＋localStorage永続化のみ（外部状態管理ライブラリなし） |
-| 開発サーバー | ポート5174固定（`strictPort: true`） |
 
-**npmスクリプト**: `dev` / `build`（`tsc -b && vite build`）/ `lint` / `preview` / `test`（`vitest run`）
+## Screen structure / navigation
 
-## 3. 画面構成・画面遷移
+`App.tsx`が`View`（Union型）でSPA内の画面状態を管理し、`window.history.pushState`/`popstate`と連動する（ブラウザの戻る操作・PWA化した際のOS標準の戻るボタンにも対応）。
 
-`App.tsx`が`View`（Union型）でSPA内の画面状態を管理し、`window.history.pushState`/`popstate`と連動（ブラウザの戻る操作・PWA化した際のOS標準の戻るボタンにも対応）。
+```mermaid
+flowchart TD
+    top["top（トップ画面）"]
+    stats["stats（統計画面）"]
+    settings["settings（設定画面）"]
 
-```
-top（トップ画面）
- ├─ 📊 統計ボタン → stats（統計画面）
- ├─ ⚙️ 設定ボタン → settings（設定画面）
- ├─ 「ことばモード」
- │    → word-level（レベル選択） → word-game（ゲーム画面） → 結果表示 → word-level or 同レベルで再挑戦
- ├─ 「すうじモード」
- │    → digit-type（逆から入力/合計を入力の選択） → digit-level（レベル選択） → digit-game（ゲーム画面） → 結果表示 → digit-level or 同条件で再挑戦
- └─ 「Nバックモード」
-      → nback-level（レベル選択） → nback-game（ゲーム画面） → 結果表示 → nback-level or 同レベルで再挑戦
+    wordLevel["word-level（レベル選択）"]
+    wordGame["word-game（ゲーム画面）"]
+    wordResult["結果表示"]
+
+    digitType["digit-type（逆から入力/合計を入力の選択）"]
+    digitLevel["digit-level（レベル選択）"]
+    digitGame["digit-game（ゲーム画面）"]
+    digitResult["結果表示"]
+
+    nbackLevel["nback-level（レベル選択）"]
+    nbackGame["nback-game（ゲーム画面）"]
+    nbackResult["結果表示"]
+
+    top -->|📊 統計| stats
+    top -->|⚙️ 設定| settings
+    top -->|ことばモード| wordLevel --> wordGame --> wordResult
+    wordResult -->|同レベルで再挑戦| wordGame
+    wordResult -->|戻る| wordLevel
+
+    top -->|すうじモード| digitType --> digitLevel --> digitGame --> digitResult
+    digitResult -->|同条件で再挑戦| digitGame
+    digitResult -->|戻る| digitLevel
+
+    top -->|Nバックモード| nbackLevel --> nbackGame --> nbackResult
+    nbackResult -->|同レベルで再挑戦| nbackGame
+    nbackResult -->|戻る| nbackLevel
 ```
 
 - 各レベル選択・ゲーム画面には「← 戻る」ボタンがある。
-- 回答途中で離脱しようとすると`confirmExit`（`window.confirm`）で「回答中のセットが破棄されます。よろしいですか？」の確認ダイアログを表示。
+- 回答途中で離脱しようとすると`confirmExit`（`window.confirm`）で「回答中のセットが破棄されます。よろしいですか？」の確認ダイアログを表示する。
 - 履歴を表示する画面（top / word-level / digit-level / nback-level / stats）に遷移するたびにlocalStorageの履歴を再読み込みする。
 
-## 4. 機能要件
+## Feature requirements
 
-### 4.1 ことばモード
+### ことばモード（`src/lib/reverse.ts`, `src/lib/kana.ts`, `src/lib/phrases.ts`）
 
 - **出題方式**: `PHRASES`（ひらがな表記の単語・文リスト）からレベルごとに重複なくランダムに3問抽出。
 - **レベル定義**:
@@ -67,7 +89,7 @@ top（トップ画面）
 - マイクエラー（`not-allowed`, `service-not-allowed`, `audio-capture`）ごとに専用メッセージを表示。
 - 音声認識非対応ブラウザでは、レベル選択画面に警告バナーを表示しレベル選択ボタンを無効化。
 
-### 4.2 すうじモード
+### すうじモード（`src/lib/digits.ts`）
 
 - ゲームタイプ選択が先にある: 「逆から入力（reverse）」「合計を入力（sum）」の2種類。
 - **出題方式**: レベルごとの桁数でランダムな数字列を3問生成。
@@ -86,7 +108,7 @@ top（トップ画面）
   - reverse: 数字配列を逆順に文字列化したものと比較（先頭0埋めの差異は同一視、例: 「325」と「0325」）
   - sum: 数字の合計値の文字列と一致するか
 
-### 4.3 Nバックモード
+### Nバックモード（`src/lib/nback.ts`）
 
 - **出題方式**: レベルに応じたN値（1back/2back/3back）で、15問の数字系列を生成。N個前と一致する確率は35%で意図的に混入。
 - **レベル定義**: レベル1=1つ前と比較、レベル2=2つ前と比較、レベル3=3つ前と比較
@@ -98,15 +120,15 @@ top（トップ画面）
   - hits（一致で押した）／misses（一致なのに押さなかった）／falseAlarms（不一致なのに押した）／correctRejections（不一致で押さなかった）
   - 正答率 = (hits + correctRejections) / 総試行数 × 100（四捨五入）
 
-### 4.4 共通: レベル推奨ロジック
+### 共通: レベル推奨ロジック（`src/lib/difficulty.ts`）
 
 - 正答率100%以上 → レベルアップ提案（レベル3未満の場合）
 - 正答率50%未満 → レベルダウン提案（レベル1超の場合）
 - 結果画面（`SetSummary`）に「次のレベルへ挑戦」または「前のレベルに戻る」ボタンとして表示（全3モード共通）
 
-### 4.5 実績（アチーブメント）システム
+### 実績（アチーブメント）システム（`src/lib/achievements.ts`）
 
-11種類。判定はすべて履歴データから都度動的に計算（永続化された「解除済みフラグ」は存在しない）。
+11種類。判定はすべて履歴データから都度動的に計算する（永続化された「解除済みフラグ」は存在しない）。
 
 | アイコン | ラベル | 解除条件 |
 |---|---|---|
@@ -122,10 +144,10 @@ top（トップ画面）
 | 🏆 | 継続力（上級） | 累計セット数 ≥ 50 |
 | 🌟 | オールラウンダー | word/digit/nback全モードに挑戦履歴あり |
 
-- セット完了直前・直後の履歴を比較し、新規解除された実績を検出。検出時は効果音＋結果画面に「🎉 新しい実績を獲得しました！」バッジを表示。
+- セット完了直前・直後の履歴を比較し、新規解除された実績を検出する（`getNewlyUnlockedAchievements`）。検出時は効果音＋結果画面に「🎉 新しい実績を獲得しました！」バッジを表示。
 - 統計画面では全実績を常時グリッド表示し、未解除は半透明表示。
 
-### 4.6 効果音システム
+### 効果音システム（`src/lib/sound.ts`）
 
 Web Audio APIによる完全プログラム生成のシンセサイザー方式（音声ファイルは一切使わない）。
 
@@ -141,21 +163,23 @@ Web Audio APIによる完全プログラム生成のシンセサイザー方式�
   - 実績解除音: G5/B5/D6の和音＋高音アクセント
 - 設定画面のON/OFFトグルで全音を一括制御。
 
-### 4.7 統計・履歴画面
+### 統計・履歴画面（`src/components/StatsScreen.tsx`, `src/lib/history.ts`）
 
 - 4エリア（ことば／すうじ・逆から入力／すうじ・合計／Nバック）×3レベルの正答率
 - 苦手分野（正答率最下位）の抽出表示
 - 直近N日間の日別正答率推移（未挑戦日はnull扱い）
 - 実績一覧グリッド表示
 
-### 4.8 設定画面
+### 設定画面（`src/components/SettingsScreen.tsx`, `src/lib/settings.ts`）
 
 - テーマ（システム／ライト／ダーク）
 - 音声合成の声・速度
 - 効果音ON/OFF
 - 1日の目標セット数
 
-## 5. データモデル（localStorage）
+## Data model (localStorage)
+
+すべてのキーと読み書きロジックは`src/lib/history.ts`と`src/lib/settings.ts`に集約されている。新しい永続化データを追加する場合はこの2ファイルを拡張すること。
 
 | キー | 用途 | 形式 |
 |---|---|---|
@@ -185,7 +209,7 @@ interface AppSettings {
 
 読み込み・保存とも`try/catch`でlocalStorage利用不可（プライベートモード等）を許容し、失敗時はデフォルト値やno-opにフォールバックする。
 
-## 6. 非機能要件
+## Non-functional requirements
 
 - **PWA対応**:
   - `name`「逆復唱トレーニング」、`short_name`「逆復唱」、`lang: 'ja'`
@@ -202,19 +226,15 @@ interface AppSettings {
   - 音声合成: 非対応時はテキスト表示にフォールバック
   - 日本語音声（`lang: 'ja-JP'`）を優先選択
 
-## 7. テスト構成
+## Testing
 
-`src/lib/`配下にロジック層のテストを併置（UIコンポーネントのテストなし）:
+`src/lib/`配下にロジック層のテストを併置している（UIコンポーネントのテストはなし）:
 `reverse.test.ts` / `digits.test.ts` / `kana.test.ts` / `difficulty.test.ts` / `theme.test.ts` / `history.test.ts` / `nback.test.ts` / `achievements.test.ts`
 
-## 8. これまでの主な開発経緯
+新しいロジックを`src/lib/`に追加する場合は、同ディレクトリに`*.test.ts`を併置してVitestでカバーすること。
 
-1. 初期実装: 3モード（ことば／すうじ／Nバック）の基本機能、レベル選択、履歴、PWA化
-2. 効果音システムの強化: チープな単音ではなく、倍音合成・ADSRエンベロープ・簡易リバーブによるリアルな音への刷新。ボタンタップ音を全操作に追加
-3. 実績システムの新規解除検知と演出: `getNewlyUnlockedAchievements`による検出、結果画面でのバッジ表示と専用効果音
-4. Nバックモードの15問化: 従来の問題数から15問構成に変更し、数字切り替え時の視認性向上のためギャップ（空白表示）を追加
-5. 各モードの説明文統一: トップ画面・各レベル選択画面の説明文を「〜トレーニングです」という文末で統一
+## See also
 
-## 9. 未着手・today's TODO
-
-現時点で明示的に依頼されている未実装のタスクはなし（直近4件の依頼はすべて実装・検証済み）。新規セッションでは、本書と`README.md`を参照しつつ、追加要望をヒアリングして進める。
+- [README.md](README.md) — ユーザー向けの簡潔な概要
+- [ROADMAP.md](ROADMAP.md) — 今後の開発候補・バックログ
+- [CHANGELOG.md](CHANGELOG.md) — バージョンごとの変更履歴
