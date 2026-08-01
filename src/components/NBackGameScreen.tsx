@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useStepReveal } from '../hooks/useStepReveal'
 import {
   generateNBackSequence,
   scoreNBackTrials,
@@ -46,18 +47,12 @@ export function NBackGameScreen({
   const [trials, setTrials] = useState<NBackTrial[]>(() =>
     generateNBackSequence(level),
   )
-  // 表示ステップ: 偶数=数字を表示、奇数=数字と数字の間の空白。
-  // trialIndex/isGapはこの値から導出する（DigitGameScreenと同じ方式）
-  const [step, setStep] = useState(0)
   const [phase, setPhase] = useState<NBackPhase>('ready')
   const [pressed, setPressed] = useState<boolean[]>(() =>
     new Array(NBACK_SEQUENCE_LENGTH).fill(false),
   )
   const [newAchievements, setNewAchievements] = useState<Achievement[]>([])
   const [isNewBest, setIsNewBest] = useState(false)
-
-  const trialIndex = Math.floor(step / 2)
-  const isGap = step % 2 === 1
 
   // 準備フェーズ: 少し間を置いてから開始する
   useEffect(() => {
@@ -67,16 +62,13 @@ export function NBackGameScreen({
   }, [phase])
 
   // 各試行を「表示→空白」の順に一定時間ずつ進め、最後まで来たら結果表示する
-  useEffect(() => {
-    if (phase !== 'showing') return
-    if (trialIndex >= trials.length) {
-      setPhase('result')
-      return
-    }
-    const duration = isGap ? GAP_MS : STIMULUS_MS
-    const timeout = setTimeout(() => setStep((s) => s + 1), duration)
-    return () => clearTimeout(timeout)
-  }, [phase, step, trialIndex, isGap, trials.length])
+  const { index: trialIndex, isGap } = useStepReveal({
+    active: phase === 'showing',
+    itemCount: trials.length,
+    shownMs: STIMULUS_MS,
+    gapMs: GAP_MS,
+    onComplete: () => setPhase('result'),
+  })
 
   function handleMatchPress() {
     if (phase !== 'showing' || trialIndex >= trials.length) return
@@ -103,7 +95,7 @@ export function NBackGameScreen({
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [phase, step])
+  }, [phase, trialIndex])
 
   // 結果が確定するたびに、履歴の記録・効果音の再生・新規実績の解除演出を行う
   useEffect(() => {
@@ -134,7 +126,6 @@ export function NBackGameScreen({
 
   function handleRetry() {
     setTrials(generateNBackSequence(level))
-    setStep(0)
     setPressed(new Array(NBACK_SEQUENCE_LENGTH).fill(false))
     setPhase('ready')
   }

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useEnterKey } from '../hooks/useEnterKey'
 import { useCountdown } from '../hooks/useCountdown'
+import { useStepReveal } from '../hooks/useStepReveal'
 import {
   pickToneQuestionSet,
   isToneAnswerCorrect,
@@ -65,7 +66,6 @@ export function ToneGameScreen({
   )
   const [currentIndex, setCurrentIndex] = useState(0)
   const [phase, setPhase] = useState<ToneQuestionPhase>('ready')
-  const [step, setStep] = useState(0)
   const [tapped, setTapped] = useState<number[]>([])
   // タイムアウト時に最新の入力値を読むための参照(setStateのアップデータ内で
   // 副作用を呼ぶのを避けるため)
@@ -79,15 +79,10 @@ export function ToneGameScreen({
   const [isNewBest, setIsNewBest] = useState(false)
 
   const currentQuestion = questions[currentIndex]
-  const trialIndex = Math.floor(step / 2)
-  const isGap = step % 2 === 1
-  const litPad =
-    phase === 'showing' && !isGap ? currentQuestion.sequence[trialIndex] : null
 
   // 出題が変わるたびに状態をリセットする
   useEffect(() => {
     setPhase('ready')
-    setStep(0)
     setTapped([])
     setCurrentResult(null)
   }, [currentQuestion])
@@ -99,19 +94,18 @@ export function ToneGameScreen({
   }, [phase, currentQuestion])
 
   // パッドを1つずつ順番に光らせ、音を鳴らす
-  useEffect(() => {
-    if (phase !== 'showing') return
-    if (trialIndex >= currentQuestion.sequence.length) {
-      setPhase('answering')
-      return
-    }
-    if (!isGap && loadSettings().soundEnabled) {
-      playPadTone(currentQuestion.sequence[trialIndex])
-    }
-    const duration = isGap ? TONE_GAP_MS : TONE_SHOWN_MS
-    const timeout = setTimeout(() => setStep((s) => s + 1), duration)
-    return () => clearTimeout(timeout)
-  }, [phase, step, trialIndex, isGap, currentQuestion])
+  const { index: trialIndex, isGap } = useStepReveal({
+    active: phase === 'showing',
+    itemCount: currentQuestion.sequence.length,
+    shownMs: TONE_SHOWN_MS,
+    gapMs: TONE_GAP_MS,
+    onItemShown: (i) => {
+      if (loadSettings().soundEnabled) playPadTone(currentQuestion.sequence[i])
+    },
+    onComplete: () => setPhase('answering'),
+  })
+  const litPad =
+    phase === 'showing' && !isGap ? currentQuestion.sequence[trialIndex] : null
 
   // 回答フェーズ: 残り時間をカウントダウンし、時間切れなら自動で採点する
   const answerRemaining = useCountdown(

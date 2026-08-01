@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useEnterKey } from '../hooks/useEnterKey'
 import { useCountdown } from '../hooks/useCountdown'
+import { useStepReveal } from '../hooks/useStepReveal'
 import {
   pickDigitQuestionSet,
   reverseDigits,
@@ -74,8 +75,6 @@ export function DigitGameScreen({
   )
   const [currentIndex, setCurrentIndex] = useState(0)
   const [phase, setPhase] = useState<DigitQuestionPhase>('ready')
-  // 表示ステップ: 偶数=数字を表示、奇数=数字と数字の間の空白。digitPos/isGapはこの値から導出する
-  const [step, setStep] = useState(0)
   const [typed, setTyped] = useState('')
   // タイムアウト時に最新の入力値を読むための参照(setStateのアップデータ内で
   // 副作用を呼ぶのを避けるため)
@@ -93,13 +92,10 @@ export function DigitGameScreen({
     gameType === 'reverse'
       ? currentQuestion.digits.length
       : String(9 * currentQuestion.digits.length).length
-  const digitPos = Math.floor(step / 2)
-  const isGap = step % 2 === 1
 
   // 出題が変わるたびに状態をリセットする
   useEffect(() => {
     setPhase('ready')
-    setStep(0)
     setTyped('')
     setCurrentResult(null)
   }, [currentQuestion])
@@ -112,16 +108,13 @@ export function DigitGameScreen({
   }, [phase, currentQuestion])
 
   // 数字を1つずつ順番に表示する
-  useEffect(() => {
-    if (phase !== 'showing') return
-    if (digitPos >= currentQuestion.digits.length) {
-      setPhase('answering')
-      return
-    }
-    const duration = isGap ? DIGIT_GAP_MS : DIGIT_SHOWN_MS
-    const timeout = setTimeout(() => setStep((s) => s + 1), duration)
-    return () => clearTimeout(timeout)
-  }, [phase, step, digitPos, isGap, currentQuestion])
+  const { index: digitPos, isGap } = useStepReveal({
+    active: phase === 'showing',
+    itemCount: currentQuestion.digits.length,
+    shownMs: DIGIT_SHOWN_MS,
+    gapMs: DIGIT_GAP_MS,
+    onComplete: () => setPhase('answering'),
+  })
 
   // 回答フェーズ: 残り時間をカウントダウンし、時間切れなら自動で採点する
   const answerRemaining = useCountdown(

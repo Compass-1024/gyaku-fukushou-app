@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useEnterKey } from '../hooks/useEnterKey'
 import { useCountdown } from '../hooks/useCountdown'
+import { useStepReveal } from '../hooks/useStepReveal'
 import {
   pickSpatialQuestionSet,
   reverseSequence,
@@ -55,7 +56,6 @@ export function SpatialGameScreen({
   )
   const [currentIndex, setCurrentIndex] = useState(0)
   const [phase, setPhase] = useState<SpatialQuestionPhase>('ready')
-  const [step, setStep] = useState(0)
   const [tapped, setTapped] = useState<number[]>([])
   // タイムアウト時に最新の入力値を読むための参照(setStateのアップデータ内で
   // 副作用を呼ぶのを避けるため)
@@ -70,13 +70,10 @@ export function SpatialGameScreen({
 
   const currentQuestion = questions[currentIndex]
   const cellCount = currentQuestion.gridSize * currentQuestion.gridSize
-  const litIndex = Math.floor(step / 2)
-  const isGap = step % 2 === 1
 
   // 出題が変わるたびに状態をリセットする
   useEffect(() => {
     setPhase('ready')
-    setStep(0)
     setTapped([])
     setCurrentResult(null)
   }, [currentQuestion])
@@ -88,16 +85,13 @@ export function SpatialGameScreen({
   }, [phase, currentQuestion])
 
   // マスを1つずつ順番に光らせる
-  useEffect(() => {
-    if (phase !== 'showing') return
-    if (litIndex >= currentQuestion.sequence.length) {
-      setPhase('answering')
-      return
-    }
-    const duration = isGap ? SPATIAL_GAP_MS : SPATIAL_SHOWN_MS
-    const timeout = setTimeout(() => setStep((s) => s + 1), duration)
-    return () => clearTimeout(timeout)
-  }, [phase, step, litIndex, isGap, currentQuestion])
+  const { index: litIndex, isGap } = useStepReveal({
+    active: phase === 'showing',
+    itemCount: currentQuestion.sequence.length,
+    shownMs: SPATIAL_SHOWN_MS,
+    gapMs: SPATIAL_GAP_MS,
+    onComplete: () => setPhase('answering'),
+  })
 
   // 回答フェーズ: 残り時間をカウントダウンし、時間切れなら自動で採点する
   const answerRemaining = useCountdown(
