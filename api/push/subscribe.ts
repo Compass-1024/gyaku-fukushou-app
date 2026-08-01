@@ -1,6 +1,8 @@
+import type { IncomingMessage, ServerResponse } from 'node:http'
 import { getKV } from '../_lib/kv.js'
 import { subscriptionKey } from '../_lib/subscription.js'
 import type { PushSubscriptionJSON, StoredSubscription } from '../_lib/subscription.js'
+import { readJsonBody, sendEmpty } from '../_lib/http.js'
 
 interface SubscribeBody {
   subscription: PushSubscriptionJSON
@@ -18,16 +20,19 @@ function isValidSubscribeBody(value: unknown): value is SubscribeBody {
   return true
 }
 
-export default async function handler(request: Request): Promise<Response> {
-  if (request.method !== 'POST') return new Response(null, { status: 405 })
+export default async function handler(
+  req: IncomingMessage,
+  res: ServerResponse,
+): Promise<void> {
+  if (req.method !== 'POST') return sendEmpty(res, 405)
 
   let body: unknown
   try {
-    body = await request.json()
+    body = await readJsonBody(req)
   } catch {
-    return new Response(null, { status: 400 })
+    return sendEmpty(res, 400)
   }
-  if (!isValidSubscribeBody(body)) return new Response(null, { status: 400 })
+  if (!isValidSubscribeBody(body)) return sendEmpty(res, 400)
 
   const record: StoredSubscription = {
     subscription: body.subscription,
@@ -36,5 +41,5 @@ export default async function handler(request: Request): Promise<Response> {
     updatedAt: new Date().toISOString(),
   }
   await getKV().set(subscriptionKey(body.subscription.endpoint), record)
-  return new Response(null, { status: 204 })
+  sendEmpty(res, 204)
 }

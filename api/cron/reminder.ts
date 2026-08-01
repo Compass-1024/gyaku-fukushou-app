@@ -1,11 +1,14 @@
+import type { IncomingMessage, ServerResponse } from 'node:http'
 // web-pushはCommonJSパッケージで、Vercel FunctionsのESM環境では名前付き
 // importが解決できないことがあるため、default importしてから分割する
 import webpush from 'web-push'
-const { sendNotification, setVapidDetails, WebPushError } = webpush
 import { getKV } from '../_lib/kv.js'
 import { shouldSendReminder, buildReminderMessage, getJstDateKey } from '../_lib/reminder.js'
 import { SUBSCRIPTION_KEY_PREFIX } from '../_lib/subscription.js'
 import type { StoredSubscription } from '../_lib/subscription.js'
+import { getHeader, sendJson } from '../_lib/http.js'
+
+const { sendNotification, setVapidDetails, WebPushError } = webpush
 
 function isVapidConfigured(): boolean {
   return Boolean(
@@ -17,21 +20,23 @@ function isVapidConfigured(): boolean {
 
 // Vercel Cronからのリクエスト、または手動テスト用にCRON_SECRETをBearerトークンで
 // 渡した呼び出しのみ受け付ける
-function isAuthorized(request: Request): boolean {
+function isAuthorized(req: IncomingMessage): boolean {
   const secret = process.env.CRON_SECRET
   if (!secret) return false
-  return request.headers.get('authorization') === `Bearer ${secret}`
+  return getHeader(req, 'authorization') === `Bearer ${secret}`
 }
 
-export default async function handler(request: Request): Promise<Response> {
-  if (!isAuthorized(request)) {
-    return new Response(null, { status: 401 })
+export default async function handler(
+  req: IncomingMessage,
+  res: ServerResponse,
+): Promise<void> {
+  if (!isAuthorized(req)) {
+    return sendJson(res, 401, { error: 'unauthorized' })
   }
   if (!isVapidConfigured()) {
-    return new Response(
-      JSON.stringify({ error: 'VAPID environment variables are not configured' }),
-      { status: 500, headers: { 'content-type': 'application/json' } },
-    )
+    return sendJson(res, 500, {
+      error: 'VAPID environment variables are not configured',
+    })
   }
 
   setVapidDetails(
@@ -84,8 +89,5 @@ export default async function handler(request: Request): Promise<Response> {
     }
   }
 
-  return new Response(JSON.stringify({ sent, deleted, errored }), {
-    status: 200,
-    headers: { 'content-type': 'application/json' },
-  })
+  sendJson(res, 200, { sent, deleted, errored })
 }

@@ -1,6 +1,8 @@
+import type { IncomingMessage, ServerResponse } from 'node:http'
 import { getKV } from '../_lib/kv.js'
 import { subscriptionKey } from '../_lib/subscription.js'
 import type { StoredSubscription } from '../_lib/subscription.js'
+import { readJsonBody, sendEmpty } from '../_lib/http.js'
 
 interface SyncBody {
   endpoint: string
@@ -15,21 +17,24 @@ function isValidSyncBody(value: unknown): value is SyncBody {
   )
 }
 
-export default async function handler(request: Request): Promise<Response> {
-  if (request.method !== 'POST') return new Response(null, { status: 405 })
+export default async function handler(
+  req: IncomingMessage,
+  res: ServerResponse,
+): Promise<void> {
+  if (req.method !== 'POST') return sendEmpty(res, 405)
 
   let body: unknown
   try {
-    body = await request.json()
+    body = await readJsonBody(req)
   } catch {
-    return new Response(null, { status: 400 })
+    return sendEmpty(res, 400)
   }
-  if (!isValidSyncBody(body)) return new Response(null, { status: 400 })
+  if (!isValidSyncBody(body)) return sendEmpty(res, 400)
 
   const kv = getKV()
   const key = subscriptionKey(body.endpoint)
   const existing = await kv.get<StoredSubscription>(key)
-  if (!existing) return new Response(null, { status: 404 })
+  if (!existing) return sendEmpty(res, 404)
 
   const updated: StoredSubscription = {
     ...existing,
@@ -37,5 +42,5 @@ export default async function handler(request: Request): Promise<Response> {
     updatedAt: new Date().toISOString(),
   }
   await kv.set(key, updated)
-  return new Response(null, { status: 204 })
+  sendEmpty(res, 204)
 }
