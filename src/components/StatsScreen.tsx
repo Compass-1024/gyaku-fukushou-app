@@ -172,9 +172,14 @@ export function StatsScreen({ history, onBack }: StatsScreenProps) {
                         : 'border-gray-200 bg-gray-50 opacity-50 dark:border-gray-700 dark:bg-gray-800/50'
                     }`}
                   >
-                    <span className="text-2xl">{achievement.icon}</span>
+                    <span aria-hidden="true" className="text-2xl">
+                      {achievement.icon}
+                    </span>
                     <span className="text-xs font-medium text-gray-700 dark:text-gray-200">
                       {achievement.label}
+                    </span>
+                    <span className="sr-only">
+                      {unlocked ? '解除済み' : '未解除'}
                     </span>
                   </div>
                 )

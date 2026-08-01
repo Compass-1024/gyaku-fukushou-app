@@ -13,6 +13,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `npm run lint` — oxlint実行
 - `npm run preview` — 本番ビルドのプレビュー
 - `npm run test` — Vitestでロジック層のテストを実行（`environment: 'node'`）
+- `npm run test:e2e` — Playwrightでブラウザ上のE2Eテストを実行（初回は`npx playwright install --with-deps chromium`が必要）
 
 ## Tech stack
 
@@ -228,13 +229,21 @@ interface AppSettings {
 
 ## Testing
 
-`src/lib/`配下にロジック層のテストを併置している（UIコンポーネントのテストはなし）:
-`reverse.test.ts` / `digits.test.ts` / `kana.test.ts` / `difficulty.test.ts` / `theme.test.ts` / `history.test.ts` / `nback.test.ts` / `achievements.test.ts`
+- **ユニットテスト（Vitest）**: `src/lib/`配下にロジック層のテストを併置している（UIコンポーネントの単体テストはなし）:
+  `reverse.test.ts` / `digits.test.ts` / `kana.test.ts` / `difficulty.test.ts` / `theme.test.ts` / `history.test.ts` / `nback.test.ts` / `achievements.test.ts` / `logger.test.ts`
+  新しいロジックを`src/lib/`に追加する場合は、同ディレクトリに`*.test.ts`を併置してVitestでカバーすること。`vitest.config.ts`で`e2e/`ディレクトリは除外している。
+- **E2Eテスト（Playwright）**: `e2e/`配下に主要な画面遷移・操作フローのスモークテストを配置している（`playwright.config.ts`、本番ビルドを`vite preview`で配信して実行）。新しい画面や主要フローを追加した場合は、ここにスモークテストを追加することを検討する。
 
-新しいロジックを`src/lib/`に追加する場合は、同ディレクトリに`*.test.ts`を併置してVitestでカバーすること。
+## Error handling / logging
+
+React描画時の例外は`src/components/ErrorBoundary.tsx`で捕捉し、`window.onerror`/`unhandledrejection`は`src/lib/logger.ts`の`installGlobalErrorHandlers`（`main.tsx`で起動時に登録）で捕捉する。バックエンドを持たないため外部監視サービスへの送信は行わず、`console.error`への構造化ログ出力とメモリ上への直近件数の保持のみ。詳細は[ERROR_HANDLING.md](ERROR_HANDLING.md)を参照。
 
 ## See also
 
 - [README.md](README.md) — ユーザー向けの簡潔な概要
 - [ROADMAP.md](ROADMAP.md) — 今後の開発候補・バックログ
 - [CHANGELOG.md](CHANGELOG.md) — バージョンごとの変更履歴
+- [ACCESSIBILITY.md](ACCESSIBILITY.md) — アクセシビリティ方針
+- [PRIVACY.md](PRIVACY.md) — プライバシーポリシー
+- [ERROR_HANDLING.md](ERROR_HANDLING.md) — エラー監視・ロギング方針
+- [DEPLOYMENT.md](DEPLOYMENT.md) — デプロイ手順

@@ -10,14 +10,18 @@
 
 開発基盤の整備状況を踏まえた候補。実装を依頼された際にここから拾う、あるいは新規追加する。
 
-- [ ] E2E/UIテストの導入（現状はロジック層のテストのみ）
-- [ ] エラー監視・ロギング方針の検討（クライアントエラーの可視化）
-- [ ] アクセシビリティ方針の明文化とWAI-ARIA対応の見直し
-- [ ] プライバシーポリシーページの作成（マイク使用・音声認識・localStorageのみでサーバー送信なしである旨の明記）
-- [ ] デプロイ手順書の作成（Vercel連携の詳細）
+- [ ] GitHub Actions の Node.js 20 非推奨警告の解消（`actions/checkout`/`actions/setup-node`をv5系へ更新）
+- [ ] カラーコントラストの機械的検証、スクリーンリーダーでの実機確認（[ACCESSIBILITY.md](ACCESSIBILITY.md)の既知の課題を参照）
+- [ ] `SpeechRecognition`非対応ブラウザ向けの代替回答手段の検討（ことばモード）
+- [ ] E2Eテストのカバレッジ拡大（現状は主要導線のスモークテストのみ。実際の音声認識・音声合成を伴うフローは未カバー）
 
 ## 完了
 
 - [x] 要件定義書のCLAUDE.mdへの統合（2026-08-01）
 - [x] GitHubリポジトリ連携（[Compass-1024/gyaku-fukushou-app](https://github.com/Compass-1024/gyaku-fukushou-app)、2026-08-01）
 - [x] CI（GitHub Actions）導入（2026-08-01）
+- [x] E2Eテストの導入（Playwright、`e2e/`配下に主要導線のスモークテスト、CI統合、2026-08-01）
+- [x] エラー監視・ロギング方針の実装（`ErrorBoundary`＋グローバルエラーハンドラ、[ERROR_HANDLING.md](ERROR_HANDLING.md)、2026-08-01）
+- [x] アクセシビリティ方針の明文化と対応（[ACCESSIBILITY.md](ACCESSIBILITY.md)、aria-label/aria-live/フォーカス管理の見直し、2026-08-01）
+- [x] プライバシーポリシーの作成（[PRIVACY.md](PRIVACY.md)＋アプリ内画面、2026-08-01）
+- [x] デプロイ手順書の作成（[DEPLOYMENT.md](DEPLOYMENT.md)、2026-08-01）

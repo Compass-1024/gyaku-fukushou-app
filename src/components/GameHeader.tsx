@@ -21,7 +21,7 @@ export function GameHeader({
         >
           {backLabel}
         </button>
-        <div className="flex gap-1.5">
+        <div aria-hidden="true" className="flex gap-1.5">
           {Array.from({ length: total }, (_, i) => (
             <span
               key={i}

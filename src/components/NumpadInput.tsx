@@ -43,6 +43,7 @@ export function NumpadInput({
         <button
           type="button"
           onClick={onBackspace}
+          aria-label="1文字削除"
           className="touch-manipulation rounded-lg bg-gray-200 py-3 text-lg font-semibold text-gray-700 transition hover:bg-gray-300 dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-500"
         >
           ⌫

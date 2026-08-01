@@ -6,6 +6,7 @@ interface SettingsScreenProps {
   themeMode: ThemeMode
   onChangeTheme: (mode: ThemeMode) => void
   onBack: () => void
+  onOpenPrivacy: () => void
 }
 
 const THEME_OPTIONS: { value: ThemeMode; label: string }[] = [
@@ -26,6 +27,7 @@ export function SettingsScreen({
   themeMode,
   onChangeTheme,
   onBack,
+  onOpenPrivacy,
 }: SettingsScreenProps) {
   const [settings, setSettings] = useState<AppSettings>(() => loadSettings())
   const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([])
@@ -198,6 +200,14 @@ export function SettingsScreen({
           {settings.soundEnabled ? 'オン' : 'オフ'}
         </button>
       </section>
+
+      <button
+        type="button"
+        onClick={onOpenPrivacy}
+        className="touch-manipulation self-start text-sm text-gray-500 underline decoration-dotted underline-offset-2 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+      >
+        プライバシーポリシー
+      </button>
     </div>
   )
 }
