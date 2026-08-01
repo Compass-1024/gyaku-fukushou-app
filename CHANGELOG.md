@@ -19,12 +19,23 @@
 
 ### Fixed
 
+- 音声合成（Web Speech API）が一部ブラウザで`onend`/`onerror`を発火せず、ことばモードの読み上げ（`reading`フェーズ）がまれに進行不能になりうる問題への対策として、文字数に応じたタイムアウトフォールバックを追加（`src/hooks/useSpeechSynthesis.ts`）
 - axe-coreの自動検証で判明したWCAG AA未達のコントラスト比を修正。レベル選択ボタンの配色（`LEVEL_STYLES`）、設定画面のトグルボタン、レベル選択ボタン内の半透明テキスト（説明文・正答率表示）を不透明かつ十分に濃い配色に変更。あわせて音声選択の`<select>`にアクセシブルな名前（`aria-label`）を追加
 - **[重要]** 結果まとめ画面（SetSummary）表示中にEnterキーを押すと、直前の問題用の「結果表示中はEnterで次へ」ハンドラが解除されずSetSummary自身のEnterハンドラと二重に発火し、学習履歴が二重記録されてしまうバグを修正（全モード共通、`finished`状態をハンドラの有効条件に追加）
 - E2Eテスト「設定画面: リマインド通知セクションが表示される」が、`.env.local`にVAPID公開鍵が設定されたことで前提が崩れ失敗していたため、対応環境向けの表示を検証する内容に更新
 - `src/lib/push.ts`の`subscribeToPush()`が失敗理由を握りつぶしていたため、実機で購読に失敗しても原因を特定できなかった問題を修正。`console.error`で実際のエラー内容を出力するようにした
 - `api/cron/reminder.ts`で`web-push`（CommonJSパッケージ）から名前付きimportしていたため、Vercel Functions（ESM）環境で`SyntaxError`が発生し関数が起動しなかった問題を修正。default importしてから分割する形に変更
 - `api/`配下の全ハンドラがWeb標準の`Request`/`Response`を前提にしていたため、実際のVercel Node Functionsのランタイム（Node.js標準の`(req, res)`形式、`req.headers`はプレーンオブジェクトで`.get()`を持たない）と不一致を起こしTypeErrorで落ちていた問題を修正。`api/_lib/http.ts`にNode.js形式向けのJSON送受信ヘルパーを追加し、全ハンドラをNode.js形式に書き直した
+
+### Changed
+
+- 品質・保守性向上のためのリファクタリングを実施（機能仕様・UIの変更なし）
+  - 結果表示中にEnterキーで次の問題へ進める処理が5つのゲーム画面コンポーネントで重複していたため、`src/hooks/useEnterKey.ts`へ共通化
+  - 回答フェーズの残り時間カウントダウン＋タイムアウト自動採点が4つのゲーム画面コンポーネントで重複していたため、`src/hooks/useCountdown.ts`へ共通化。あわせて、タイムアウト時に最新の入力値を読むために`setState`のアップデータ関数内で採点処理（副作用）を呼んでいた実装をrefベースの読み取りに修正
+  - `StatsScreen`の統計計算（`getAllAreaStats`等）を`useMemo`化し、不要な再計算を回避
+  - `SettingsScreen`の`React.ChangeEvent`参照を他ファイルと同様に明示importする形式に統一
+  - `getStreakDays`にテスト用の`now`引数（デフォルト値付き、既存呼び出しへの影響なし）を追加し、ストリークフリーズの月またぎ挙動を決定的にテストできるようにした
+  - `history.test.ts`に、ストリークフリーズの猶予が暦月ごとに独立してリセットされるケースと、`getWeakestAreas`でスコアが同点の場合に挑戦回数の多い方を優先するタイブレークのテストケースを追加
 
 ### Added
 
