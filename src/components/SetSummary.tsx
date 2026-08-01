@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
-import { getStreakDays, loadHistory } from '../lib/history'
+import { getStreakDays, getTodayCount, loadHistory } from '../lib/history'
 import { buildResultShareText, shareText } from '../lib/share'
+import { loadSettings } from '../lib/settings'
 import type { Achievement } from '../lib/achievements'
 
 export interface SummaryItem {
@@ -35,6 +36,14 @@ export function SetSummary({
   const [shareStatus, setShareStatus] = useState<
     'idle' | 'shared' | 'copied' | 'error'
   >('idle')
+
+  // 表示のたびにlocalStorageから読み直す（このセット自身の記録がまだ
+  // 反映されていないタイミングで最初に描画されても、直後の再描画で正しい値になる）
+  const dailyGoal = loadSettings().dailyGoal
+  const todayCount = getTodayCount(loadHistory())
+  const goalProgress =
+    dailyGoal > 0 ? Math.min(100, Math.round((todayCount / dailyGoal) * 100)) : 0
+  const goalReached = dailyGoal > 0 && todayCount >= dailyGoal
 
   async function handleShare() {
     const text = buildResultShareText({
@@ -142,6 +151,25 @@ export function SetSummary({
           </li>
         ))}
       </ul>
+
+      {dailyGoal > 0 && (
+        <div className="rounded-lg border border-gray-200 px-4 py-3 dark:border-gray-700">
+          <p className="text-xs text-gray-500 dark:text-gray-400">
+            今日の目標: {todayCount} / {dailyGoal} セット
+          </p>
+          <div className="mt-1.5 h-2 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
+            <div
+              className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-sky-500 transition-all"
+              style={{ width: `${goalProgress}%` }}
+            />
+          </div>
+          {goalReached && (
+            <p className="mt-1.5 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+              🎉 今日の目標セット数を達成しました！
+            </p>
+          )}
+        </div>
+      )}
 
       <div className="flex flex-col gap-3">
         {suggestion && (
