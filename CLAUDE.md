@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Overview
 
-**逆復唱トレーニング**（`gyaku-fukushou-app`）は、ワーキングメモリ（作業記憶）を鍛えるトレーニングアプリ。「ことば」「すうじ」「Nバック」の3モードを提供する。UIは日本語のみ。バックエンドを持たないSPAで、全データはブラウザの`localStorage`に保存する。PWA対応でホーム画面に追加してネイティブアプリ風に利用可能。デプロイ先: https://gyaku-fukushou-app.vercel.app/
+**逆復唱トレーニング**（`gyaku-fukushou-app`）は、ワーキングメモリ（作業記憶）を鍛えるトレーニングアプリ。「ことば」「すうじ」「Nバック」「空間」「変化検出」「音・色」の6モードを提供する。UIは日本語のみ。バックエンドを持たないSPAで、全データはブラウザの`localStorage`に保存する。PWA対応でホーム画面に追加してネイティブアプリ風に利用可能。デプロイ先: https://gyaku-fukushou-app.vercel.app/
 
 ## Commands
 
@@ -63,11 +63,35 @@ flowchart TD
     top -->|Nバックモード| nbackLevel --> nbackGame --> nbackResult
     nbackResult -->|同レベルで再挑戦| nbackGame
     nbackResult -->|戻る| nbackLevel
+
+    spatialLevel["spatial-level（レベル選択）"]
+    spatialGame["spatial-game（ゲーム画面）"]
+    spatialResult["結果表示"]
+
+    patternLevel["pattern-level（レベル選択）"]
+    patternGame["pattern-game（ゲーム画面）"]
+    patternResult["結果表示"]
+
+    toneLevel["tone-level（レベル選択）"]
+    toneGame["tone-game（ゲーム画面）"]
+    toneResult["結果表示"]
+
+    top -->|空間モード| spatialLevel --> spatialGame --> spatialResult
+    spatialResult -->|同レベルで再挑戦| spatialGame
+    spatialResult -->|戻る| spatialLevel
+
+    top -->|変化検出モード| patternLevel --> patternGame --> patternResult
+    patternResult -->|同レベルで再挑戦| patternGame
+    patternResult -->|戻る| patternLevel
+
+    top -->|音・色モード| toneLevel --> toneGame --> toneResult
+    toneResult -->|同レベルで再挑戦| toneGame
+    toneResult -->|戻る| toneLevel
 ```
 
 - 各レベル選択・ゲーム画面には「← 戻る」ボタンがある。
 - 回答途中で離脱しようとすると`confirmExit`（`window.confirm`）で「回答中のセットが破棄されます。よろしいですか？」の確認ダイアログを表示する。
-- 履歴を表示する画面（top / word-level / digit-level / nback-level / stats）に遷移するたびにlocalStorageの履歴を再読み込みする。
+- 履歴を表示する画面（top / word-level / digit-level / nback-level / spatial-level / pattern-level / tone-level / stats）に遷移するたびにlocalStorageの履歴を再読み込みする。
 
 ## Feature requirements
 
@@ -121,15 +145,69 @@ flowchart TD
   - hits（一致で押した）／misses（一致なのに押さなかった）／falseAlarms（不一致なのに押した）／correctRejections（不一致で押さなかった）
   - 正答率 = (hits + correctRejections) / 総試行数 × 100（四捨五入）
 
+### 空間モード（`src/lib/spatial.ts`）
+
+視空間ワーキングメモリ（Corsi Block-Tapping Taskを参考）を鍛えるモード。マスが順番に光るのを見て覚え、逆の順番でタップして答える。
+
+- **出題方式**: レベルごとのグリッドサイズから、重複なくランダムにマスを選んで系列を生成し、3問1セットで出題。
+- **レベル定義**:
+  | レベル | グリッド | マス数 |
+  |---|---|---|
+  | 1 | 3×3 | 3 |
+  | 2 | 3×3 | 4 |
+  | 3 | 4×4 | 5 |
+- **1問の流れ**（`ready → showing → answering → result`）:
+  1. `ready`: 1000ms待機
+  2. `showing`: マスを1つずつ光らせる。1マスあたり表示700ms＋間隔250ms
+  3. `answering`: グリッドを逆の順番でタップして回答。タップ済みマスには順番の数字を表示。タイムアウトはベース3000ms＋マス数×2000ms、時間切れで自動採点
+  4. `result`: 正誤判定
+- **正誤判定**: タップした順序が、出題系列を逆順にしたものと完全一致するか。
+
+### 変化検出モード（`src/lib/pattern.ts`）
+
+視覚パターン記憶（Luck & Vogel 1997の変化検出課題を参考）を鍛えるモード。一瞬表示される模様を覚え、再表示時に変化しているかを判定する。
+
+- **出題方式**: レベルごとのグリッドサイズ・塗りつぶしマス数でランダムな模様を生成。50%の確率で、塗りつぶしマスのうち1つを別の空きマスへ移動させた「変化あり」の比較用模様を生成する。3問1セットで出題。
+- **レベル定義**:
+  | レベル | グリッド | 塗りつぶしマス数 |
+  |---|---|---|
+  | 1 | 4×4 | 4 |
+  | 2 | 4×4 | 6 |
+  | 3 | 5×5 | 8 |
+- **1問の流れ**（`ready → showing → answering → result`）:
+  1. `ready`: 1000ms待機
+  2. `showing`: 模様を3000ms表示→500ms空白
+  3. `answering`: 比較用の模様を表示し続けながら「変化あり」「変化なし」の2択で回答（Y/N・矢印キーにも対応）。タイムアウトはベース4000ms＋塗りつぶしマス数×400ms、時間切れは「変化なし」として自動採点
+  4. `result`: 正誤判定
+- **正誤判定**: 回答（変化あり/なし）が実際の`hasChange`と一致するか。
+
+### 音・色モード（`src/lib/tone.ts`）
+
+非言語性の聴覚ワーキングメモリ（ピッチ記憶が言語・数字の記憶と独立した貯蔵系であることを示すDeutsch 1970などの知見を参考）を鍛える、Simon型のモード。4色のパッドが音とともに光る順番を覚え、同じ順にタップして再現する。
+
+- **出題方式**: レベルごとの長さで、4色のパッド番号（重複可）をランダムに並べた系列を生成。3問1セットで出題。
+- **レベル定義**:
+  | レベル | 音数 |
+  |---|---|
+  | 1 | 3 |
+  | 2 | 4 |
+  | 3 | 5 |
+- **1問の流れ**（`ready → showing → answering → result`）:
+  1. `ready`: 1000ms待機
+  2. `showing`: パッドを1つずつ光らせ、`playPadTone`（Web Audio API、パッドごとに異なる音高）で音を鳴らす。1パッドあたり表示600ms＋間隔300ms
+  3. `answering`: 4色のパッドを同じ順にタップして回答。タイムアウトはベース3000ms＋音数×2000ms、時間切れで自動採点
+  4. `result`: 正誤判定
+- **正誤判定**: タップした順序が出題系列と完全一致するか。
+
 ### 共通: レベル推奨ロジック（`src/lib/difficulty.ts`）
 
 - 正答率100%以上 → レベルアップ提案（レベル3未満の場合）
 - 正答率50%未満 → レベルダウン提案（レベル1超の場合）
-- 結果画面（`SetSummary`）に「次のレベルへ挑戦」または「前のレベルに戻る」ボタンとして表示（全3モード共通）
+- 結果画面（`SetSummary`）に「次のレベルへ挑戦」または「前のレベルに戻る」ボタンとして表示（全モード共通）
 
 ### 実績（アチーブメント）システム（`src/lib/achievements.ts`）
 
-11種類。判定はすべて履歴データから都度動的に計算する（永続化された「解除済みフラグ」は存在しない）。
+14種類。判定はすべて履歴データから都度動的に計算する（永続化された「解除済みフラグ」は存在しない）。
 
 | アイコン | ラベル | 解除条件 |
 |---|---|---|
@@ -141,9 +219,13 @@ flowchart TD
 | 🗣️ | ことば上級者 | ことばモードのレベル3に挑戦履歴あり |
 | 🔢 | すうじ上級者 | すうじモードのレベル3に挑戦履歴あり |
 | 🧠 | Nバック上級者 | Nバックモードのレベル3に挑戦履歴あり |
+| 🧩 | 空間記憶上級者 | 空間モードのレベル3に挑戦履歴あり |
+| 👀 | 観察力上級者 | 変化検出モードのレベル3に挑戦履歴あり |
+| 🎵 | 音感上級者 | 音・色モードのレベル3に挑戦履歴あり |
 | 📈 | 継続力 | 累計セット数 ≥ 10 |
 | 🏆 | 継続力（上級） | 累計セット数 ≥ 50 |
-| 🌟 | オールラウンダー | word/digit/nback全モードに挑戦履歴あり |
+| 🌟 | オールラウンダー | word/digit/nback（従来3モード）に挑戦履歴あり（後方互換のため対象は変更していない） |
+| 🌈 | 全モード制覇 | 全6モードに挑戦履歴あり |
 
 - セット完了直前・直後の履歴を比較し、新規解除された実績を検出する（`getNewlyUnlockedAchievements`）。検出時は効果音＋結果画面に「🎉 新しい実績を獲得しました！」バッジを表示。
 - 統計画面では全実績を常時グリッド表示し、未解除は半透明表示。
@@ -189,7 +271,7 @@ Web Audio APIによる完全プログラム生成のシンセサイザー方式�
 
 ```ts
 interface HistoryEntry {
-  mode: 'word' | 'digit' | 'nback'
+  mode: 'word' | 'digit' | 'nback' | 'spatial' | 'pattern' | 'tone'
   gameType?: 'reverse' | 'sum'
   level: 1 | 2 | 3
   correct: number
@@ -230,7 +312,7 @@ interface AppSettings {
 ## Testing
 
 - **ユニットテスト（Vitest）**: `src/lib/`配下にロジック層のテストを併置している（UIコンポーネントの単体テストはなし）:
-  `reverse.test.ts` / `digits.test.ts` / `kana.test.ts` / `difficulty.test.ts` / `theme.test.ts` / `history.test.ts` / `nback.test.ts` / `achievements.test.ts` / `logger.test.ts`
+  `reverse.test.ts` / `digits.test.ts` / `kana.test.ts` / `difficulty.test.ts` / `theme.test.ts` / `history.test.ts` / `nback.test.ts` / `achievements.test.ts` / `logger.test.ts` / `backup.test.ts` / `spatial.test.ts` / `pattern.test.ts` / `tone.test.ts`
   新しいロジックを`src/lib/`に追加する場合は、同ディレクトリに`*.test.ts`を併置してVitestでカバーすること。`vitest.config.ts`で`e2e/`ディレクトリは除外している。
 - **E2Eテスト（Playwright）**: `e2e/`配下に主要な画面遷移・操作フローのスモークテストを配置している（`playwright.config.ts`、本番ビルドを`vite preview`で配信して実行）。新しい画面や主要フローを追加した場合は、ここにスモークテストを追加することを検討する。
 

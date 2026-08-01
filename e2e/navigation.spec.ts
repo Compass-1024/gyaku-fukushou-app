@@ -45,6 +45,42 @@ test('Nバックモード: レベル選択画面へ遷移できる', async ({ pa
   ).toBeVisible()
 })
 
+test('空間モード: レベル選択画面へ遷移できる', async ({ page }) => {
+  await page.goto('/')
+  await page.getByRole('button', { name: /空間モード/ }).click()
+
+  await expect(
+    page.getByRole('heading', { name: '空間モード' }),
+  ).toBeVisible()
+  await expect(
+    page.getByRole('button', { name: /レベル1（3×3・3マス）/ }),
+  ).toBeVisible()
+})
+
+test('変化検出モード: レベル選択画面へ遷移できる', async ({ page }) => {
+  await page.goto('/')
+  await page.getByRole('button', { name: /変化検出モード/ }).click()
+
+  await expect(
+    page.getByRole('heading', { name: '変化検出モード' }),
+  ).toBeVisible()
+  await expect(
+    page.getByRole('button', { name: /レベル1（4×4・4マス）/ }),
+  ).toBeVisible()
+})
+
+test('音・色モード: レベル選択画面へ遷移できる', async ({ page }) => {
+  await page.goto('/')
+  await page.getByRole('button', { name: /音・色モード/ }).click()
+
+  await expect(
+    page.getByRole('heading', { name: '音・色モード' }),
+  ).toBeVisible()
+  await expect(
+    page.getByRole('button', { name: /レベル1（3音）/ }),
+  ).toBeVisible()
+})
+
 test('ブラウザバックでトップ画面に戻れる（History API連動）', async ({
   page,
 }) => {
