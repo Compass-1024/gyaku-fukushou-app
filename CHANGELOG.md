@@ -4,6 +4,10 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- `api/cron/reminder.ts`で`web-push`（CommonJSパッケージ）から名前付きimportしていたため、Vercel Functions（ESM）環境で`SyntaxError`が発生し関数が起動しなかった問題を修正。default importしてから分割する形に変更
+
 ### Added
 
 - プッシュ通知リマインダー機能を追加（オプトイン、既定オフ）。その日1回もプレイしていない場合、毎日21時ごろ（JST、Vercel Cronの実行タイミングにより前後あり）に通知でお知らせする。継続利用率の向上を狙った施策。Vercel Serverless Functions + Redisストレージ（`@upstash/redis`）+ Vercel Cron（1日1回実行）を用いた最小限のバックエンドを追加し、アプリ全体の「バックエンドを持たないSPA」という方針の例外として位置づける（`src/lib/push.ts`、`src/lib/reminder.ts`、`src/sw.ts`（`injectManifest`戦略へ移行）、`api/`配下のServerless Functions、`vercel.json`）。PRIVACY.md/privacy.html/PrivacyScreen.tsx/CLAUDE.md/DEPLOYMENT.mdを本機能に合わせて更新

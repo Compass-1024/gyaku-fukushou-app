@@ -1,4 +1,7 @@
-import { sendNotification, setVapidDetails, WebPushError } from 'web-push'
+// web-pushはCommonJSパッケージで、Vercel FunctionsのESM環境では名前付き
+// importが解決できないことがあるため、default importしてから分割する
+import webpush from 'web-push'
+const { sendNotification, setVapidDetails, WebPushError } = webpush
 import { getKV } from '../_lib/kv.js'
 import { shouldSendReminder, buildReminderMessage, getJstDateKey } from '../_lib/reminder.js'
 import { SUBSCRIPTION_KEY_PREFIX } from '../_lib/subscription.js'
