@@ -44,6 +44,32 @@ export default defineConfig({
             purpose: 'maskable',
           },
         ],
+        // ホーム画面アイコンの長押し（Android）・右クリック（デスクトップ）から
+        // 各モードのレベル選択画面へ直接ジャンプできるショートカット。
+        // 対応環境は限定的（主要ブラウザのAndroid/ChromeOS/一部デスクトップ）だが、
+        // 非対応環境では単に無視されるだけなので害はない
+        shortcuts: [
+          {
+            name: 'ことばモード',
+            url: '/?shortcut=word',
+            icons: [{ src: '/icon-192.png', sizes: '192x192' }],
+          },
+          {
+            name: 'すうじモード',
+            url: '/?shortcut=digit',
+            icons: [{ src: '/icon-192.png', sizes: '192x192' }],
+          },
+          {
+            name: 'Nバックモード',
+            url: '/?shortcut=nback',
+            icons: [{ src: '/icon-192.png', sizes: '192x192' }],
+          },
+          {
+            name: '空間モード',
+            url: '/?shortcut=spatial',
+            icons: [{ src: '/icon-192.png', sizes: '192x192' }],
+          },
+        ],
       },
     }),
   ],

@@ -68,10 +68,33 @@ type View =
 
 const TOP_VIEW: View = { screen: 'top' }
 
+// PWAマニフェストのshortcuts（ホーム画面アイコン長押し等）から
+// `?shortcut=<mode>` 付きで開かれた場合に、対応するレベル選択画面へ直接遷移する
+function getShortcutView(): View | null {
+  if (typeof window === 'undefined') return null
+  const shortcut = new URLSearchParams(window.location.search).get('shortcut')
+  switch (shortcut) {
+    case 'word':
+      return { screen: 'word-level' }
+    case 'digit':
+      return { screen: 'digit-type' }
+    case 'nback':
+      return { screen: 'nback-level' }
+    case 'spatial':
+      return { screen: 'spatial-level' }
+    case 'pattern':
+      return { screen: 'pattern-level' }
+    case 'tone':
+      return { screen: 'tone-level' }
+    default:
+      return null
+  }
+}
+
 function App() {
   const { themeMode, setThemeMode } = useThemeMode()
   const { supported: recognitionSupported } = useSpeechRecognition()
-  const [view, setView] = useState<View>(TOP_VIEW)
+  const [view, setView] = useState<View>(() => getShortcutView() ?? TOP_VIEW)
   const [history, setHistory] = useState<HistoryEntry[]>(() => loadHistory())
   const mainRef = useRef<HTMLElement>(null)
   const isFirstRender = useRef(true)
@@ -87,15 +110,18 @@ function App() {
   }, [view.screen])
 
   // ブラウザの戻る操作や、アプリ化した際のOS標準の戻るボタンでも画面遷移が
-  // 正しく機能するよう、画面遷移を History API と連動させる
+  // 正しく機能するよう、画面遷移を History API と連動させる。
+  // 初期表示（ショートカット経由の場合も含む）の状態をここで積み直し、
+  // URLの`?shortcut=...`クエリはクリーンなパスに置き換える
   useEffect(() => {
-    window.history.replaceState({ view: TOP_VIEW }, '')
+    window.history.replaceState({ view }, '', '/')
     function handlePopState(event: PopStateEvent) {
       const state = event.state as { view?: View } | null
       setView(state?.view ?? TOP_VIEW)
     }
     window.addEventListener('popstate', handlePopState)
     return () => window.removeEventListener('popstate', handlePopState)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   function goTo(next: View) {

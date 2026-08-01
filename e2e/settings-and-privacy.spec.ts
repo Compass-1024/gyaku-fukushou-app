@@ -28,11 +28,15 @@ test('設定画面: リマインド通知セクションが表示される', asy
   await page.getByRole('button', { name: '設定' }).click()
 
   await expect(page.getByText('リマインド通知')).toBeVisible()
-  // テスト環境ではVITE_VAPID_PUBLIC_KEY未設定のため非対応メッセージが出る
+  // .env.localにVITE_VAPID_PUBLIC_KEYが設定されているため対応環境として
+  // 扱われ、対応ブラウザ向けの説明文とトグルが表示される
   await expect(
-    page.getByText('この端末・ブラウザは通知に対応していません', {
+    page.getByText('その日にまだ1回もプレイしていない場合', {
       exact: false,
     }),
+  ).toBeVisible()
+  await expect(
+    page.getByRole('button', { name: 'オフ' }),
   ).toBeVisible()
 })
 
