@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useEnterKey } from '../hooks/useEnterKey'
+import { useCountdown } from '../hooks/useCountdown'
 import {
   pickPatternQuestionSet,
   isPatternAnswerCorrect,
@@ -55,7 +56,6 @@ export function PatternGameScreen({
   const [phase, setPhase] = useState<PatternQuestionPhase>('ready')
   // 0=模様を表示、1=空白（showingフェーズ内の2ステップ）
   const [step, setStep] = useState(0)
-  const [answerRemaining, setAnswerRemaining] = useState(0)
   const [currentResult, setCurrentResult] =
     useState<PatternQuestionResult | null>(null)
   const [results, setResults] = useState<PatternQuestionResult[]>([])
@@ -92,20 +92,11 @@ export function PatternGameScreen({
   }, [phase, step, currentQuestion])
 
   // 回答フェーズ: 残り時間をカウントダウンし、時間切れなら「変化なし」として自動採点する
-  useEffect(() => {
-    if (phase !== 'answering') return
-    const totalMs = getAnswerTimeoutMs(currentQuestion.filledCells.length)
-    setAnswerRemaining(Math.ceil(totalMs / 1000))
-    const interval = setInterval(() => {
-      setAnswerRemaining((prev) => Math.max(0, prev - 1))
-    }, 1000)
-    const timeout = setTimeout(() => finalizeAnswer(false), totalMs)
-    return () => {
-      clearInterval(interval)
-      clearTimeout(timeout)
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [phase, currentQuestion])
+  const answerRemaining = useCountdown(
+    phase === 'answering',
+    getAnswerTimeoutMs(currentQuestion.filledCells.length),
+    () => finalizeAnswer(false),
+  )
 
   // 結果表示中はEnterキーでも次の問題へ進めるようにする。finished後もこれが
   // 有効だと、SetSummary自身のEnterハンドラと二重に発火し履歴が二重記録

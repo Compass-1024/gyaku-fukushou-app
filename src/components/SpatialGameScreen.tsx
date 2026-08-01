@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useEnterKey } from '../hooks/useEnterKey'
+import { useCountdown } from '../hooks/useCountdown'
 import {
   pickSpatialQuestionSet,
   reverseSequence,
@@ -56,7 +57,10 @@ export function SpatialGameScreen({
   const [phase, setPhase] = useState<SpatialQuestionPhase>('ready')
   const [step, setStep] = useState(0)
   const [tapped, setTapped] = useState<number[]>([])
-  const [answerRemaining, setAnswerRemaining] = useState(0)
+  // タイムアウト時に最新の入力値を読むための参照(setStateのアップデータ内で
+  // 副作用を呼ぶのを避けるため)
+  const tappedRef = useRef(tapped)
+  tappedRef.current = tapped
   const [currentResult, setCurrentResult] =
     useState<SpatialQuestionResult | null>(null)
   const [results, setResults] = useState<SpatialQuestionResult[]>([])
@@ -96,25 +100,11 @@ export function SpatialGameScreen({
   }, [phase, step, litIndex, isGap, currentQuestion])
 
   // 回答フェーズ: 残り時間をカウントダウンし、時間切れなら自動で採点する
-  useEffect(() => {
-    if (phase !== 'answering') return
-    const totalMs = getAnswerTimeoutMs(currentQuestion.sequence.length)
-    setAnswerRemaining(Math.ceil(totalMs / 1000))
-    const interval = setInterval(() => {
-      setAnswerRemaining((prev) => Math.max(0, prev - 1))
-    }, 1000)
-    const timeout = setTimeout(() => {
-      setTapped((prev) => {
-        finalizeAnswer(prev)
-        return prev
-      })
-    }, totalMs)
-    return () => {
-      clearInterval(interval)
-      clearTimeout(timeout)
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [phase, currentQuestion])
+  const answerRemaining = useCountdown(
+    phase === 'answering',
+    getAnswerTimeoutMs(currentQuestion.sequence.length),
+    () => finalizeAnswer(tappedRef.current),
+  )
 
   function handleCellTap(cell: number) {
     if (phase !== 'answering') return

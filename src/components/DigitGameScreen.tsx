@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useEnterKey } from '../hooks/useEnterKey'
+import { useCountdown } from '../hooks/useCountdown'
 import {
   pickDigitQuestionSet,
   reverseDigits,
@@ -76,7 +77,10 @@ export function DigitGameScreen({
   // 表示ステップ: 偶数=数字を表示、奇数=数字と数字の間の空白。digitPos/isGapはこの値から導出する
   const [step, setStep] = useState(0)
   const [typed, setTyped] = useState('')
-  const [answerRemaining, setAnswerRemaining] = useState(0)
+  // タイムアウト時に最新の入力値を読むための参照(setStateのアップデータ内で
+  // 副作用を呼ぶのを避けるため)
+  const typedRef = useRef(typed)
+  typedRef.current = typed
   const [currentResult, setCurrentResult] =
     useState<DigitQuestionResult | null>(null)
   const [results, setResults] = useState<DigitQuestionResult[]>([])
@@ -120,25 +124,11 @@ export function DigitGameScreen({
   }, [phase, step, digitPos, isGap, currentQuestion])
 
   // 回答フェーズ: 残り時間をカウントダウンし、時間切れなら自動で採点する
-  useEffect(() => {
-    if (phase !== 'answering') return
-    const totalMs = getAnswerTimeoutMs(currentQuestion.digits.length)
-    setAnswerRemaining(Math.ceil(totalMs / 1000))
-    const interval = setInterval(() => {
-      setAnswerRemaining((prev) => Math.max(0, prev - 1))
-    }, 1000)
-    const timeout = setTimeout(() => {
-      setTyped((prev) => {
-        finalizeAnswer(prev)
-        return prev
-      })
-    }, totalMs)
-    return () => {
-      clearInterval(interval)
-      clearTimeout(timeout)
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [phase, currentQuestion])
+  const answerRemaining = useCountdown(
+    phase === 'answering',
+    getAnswerTimeoutMs(currentQuestion.digits.length),
+    () => finalizeAnswer(typedRef.current),
+  )
 
   function handleDigitPress(d: string) {
     if (loadSettings().soundEnabled) playButtonTap()
