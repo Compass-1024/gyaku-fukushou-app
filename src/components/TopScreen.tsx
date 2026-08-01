@@ -1,13 +1,27 @@
-import { getStreakDays, getTodayCount } from '../lib/history'
+import { getStreakDays, getTodayCount, getWeakestAreas } from '../lib/history'
+import type { AreaStats } from '../lib/history'
 import { loadSettings } from '../lib/settings'
 import { playButtonTap } from '../lib/sound'
 import type { HistoryEntry, Mode } from '../types'
+
+const AREA_LABELS: Record<string, string> = {
+  word: 'ことば',
+  'digit-reverse': 'すうじ（逆から）',
+  'digit-sum': 'すうじ（合計）',
+  nback: 'Nバック',
+}
+
+function areaLabel(area: AreaStats): string {
+  const key = area.gameType ? `${area.mode}-${area.gameType}` : area.mode
+  return `${AREA_LABELS[key]} レベル${area.level}`
+}
 
 interface TopScreenProps {
   history: HistoryEntry[]
   onSelect: (mode: Mode) => void
   onOpenSettings: () => void
   onOpenStats: () => void
+  onStartRecommended: (area: AreaStats) => void
 }
 
 export function TopScreen({
@@ -15,12 +29,15 @@ export function TopScreen({
   onSelect,
   onOpenSettings,
   onOpenStats,
+  onStartRecommended,
 }: TopScreenProps) {
   const streakDays = getStreakDays(history)
   const todayCount = getTodayCount(history)
   const dailyGoal = loadSettings().dailyGoal
   const goalProgress =
     dailyGoal > 0 ? Math.min(100, Math.round((todayCount / dailyGoal) * 100)) : 0
+  const recommended = getWeakestAreas(history, 1)[0]
+  const streakAtRisk = streakDays > 0 && todayCount === 0
 
   return (
     <div className="mx-auto flex w-full max-w-md flex-col gap-8 px-4 py-8 sm:px-6 sm:py-12">
@@ -70,7 +87,34 @@ export function TopScreen({
             </div>
           </div>
         )}
+        {streakAtRisk && (
+          <p
+            role="status"
+            className="mt-3 text-sm font-medium text-amber-600 dark:text-amber-400"
+          >
+            🔥 {streakDays}日連続中！今日プレイしないと記録が途切れます。
+          </p>
+        )}
       </div>
+
+      {recommended && (
+        <button
+          type="button"
+          onClick={() => {
+            if (loadSettings().soundEnabled) playButtonTap()
+            onStartRecommended(recommended)
+          }}
+          className="touch-manipulation rounded-xl border border-dashed border-indigo-300 bg-indigo-50/60 px-4 py-3 text-left transition hover:bg-indigo-50 dark:border-indigo-700 dark:bg-indigo-900/20 dark:hover:bg-indigo-900/30"
+        >
+          <p className="text-xs font-semibold text-indigo-500 dark:text-indigo-300">
+            🎯 今日のおすすめ
+          </p>
+          <p className="mt-1 text-sm text-gray-700 dark:text-gray-200">
+            {areaLabel(recommended)}（正答率
+            {recommended.stats.accuracy}%）を復習しましょう
+          </p>
+        </button>
+      )}
 
       <div className="flex flex-col gap-5">
         <button

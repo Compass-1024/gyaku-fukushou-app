@@ -10,7 +10,11 @@ import {
 } from '../lib/phrases'
 import { reverseText } from '../lib/reverse'
 import { findMatchingAlternative } from '../lib/kana'
-import { appendHistoryEntry, loadHistory } from '../lib/history'
+import {
+  appendHistoryEntry,
+  getBestSetAccuracy,
+  loadHistory,
+} from '../lib/history'
 import { confirmExit } from '../lib/confirmExit'
 import { getSuggestedLevel } from '../lib/difficulty'
 import { loadSettings } from '../lib/settings'
@@ -63,6 +67,7 @@ export function GameScreen({ level, onExit, onSelectLevel }: GameScreenProps) {
   const [finished, setFinished] = useState(false)
   const [listenRemaining, setListenRemaining] = useState(0)
   const [newAchievements, setNewAchievements] = useState<Achievement[]>([])
+  const [isNewBest, setIsNewBest] = useState(false)
 
   const currentPhrase = questions[currentIndex]
   // 依存配列にはこのフレーズの「実体」を表す questions/currentIndex を使う。
@@ -154,6 +159,7 @@ export function GameScreen({ level, onExit, onSelectLevel }: GameScreenProps) {
     if (!finished) return
     const correctCount = results.filter((r) => r.correct).length
     const before = loadHistory()
+    const previousBest = getBestSetAccuracy(before, 'word', level)
     appendHistoryEntry({
       mode: 'word',
       level,
@@ -164,12 +170,14 @@ export function GameScreen({ level, onExit, onSelectLevel }: GameScreenProps) {
     const newly = getNewlyUnlockedAchievements(before, after)
     setNewAchievements(newly)
 
+    const accuracyPercent =
+      results.length > 0
+        ? Math.round((correctCount / results.length) * 100)
+        : 0
+    setIsNewBest(previousBest !== null && accuracyPercent > previousBest)
+
     if (loadSettings().soundEnabled) {
       if (newly.length > 0) playAchievementUnlock()
-      const accuracyPercent =
-        results.length > 0
-          ? Math.round((correctCount / results.length) * 100)
-          : 0
       const suggestedLevel = getSuggestedLevel(level, accuracyPercent)
       if (suggestedLevel && suggestedLevel > level) playLevelUp()
     }
@@ -221,6 +229,7 @@ export function GameScreen({ level, onExit, onSelectLevel }: GameScreenProps) {
         onRetry={handleRetry}
         onChangeLevel={onExit}
         newAchievements={newAchievements}
+        isNewBest={isNewBest}
         suggestion={
           suggestedLevel
             ? {

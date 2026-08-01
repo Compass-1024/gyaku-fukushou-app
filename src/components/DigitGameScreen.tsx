@@ -10,7 +10,11 @@ import {
   READY_MS,
   getAnswerTimeoutMs,
 } from '../lib/digits'
-import { appendHistoryEntry, loadHistory } from '../lib/history'
+import {
+  appendHistoryEntry,
+  getBestSetAccuracy,
+  loadHistory,
+} from '../lib/history'
 import { confirmExit } from '../lib/confirmExit'
 import { getSuggestedLevel } from '../lib/difficulty'
 import { loadSettings } from '../lib/settings'
@@ -76,6 +80,7 @@ export function DigitGameScreen({
   const [results, setResults] = useState<DigitQuestionResult[]>([])
   const [finished, setFinished] = useState(false)
   const [newAchievements, setNewAchievements] = useState<Achievement[]>([])
+  const [isNewBest, setIsNewBest] = useState(false)
 
   const currentQuestion = questions[currentIndex]
   const maxAnswerLength =
@@ -189,6 +194,7 @@ export function DigitGameScreen({
     if (!finished) return
     const correctCount = results.filter((r) => r.correct).length
     const before = loadHistory()
+    const previousBest = getBestSetAccuracy(before, 'digit', level, gameType)
     appendHistoryEntry({
       mode: 'digit',
       gameType,
@@ -200,12 +206,14 @@ export function DigitGameScreen({
     const newly = getNewlyUnlockedAchievements(before, after)
     setNewAchievements(newly)
 
+    const accuracyPercent =
+      results.length > 0
+        ? Math.round((correctCount / results.length) * 100)
+        : 0
+    setIsNewBest(previousBest !== null && accuracyPercent > previousBest)
+
     if (loadSettings().soundEnabled) {
       if (newly.length > 0) playAchievementUnlock()
-      const accuracyPercent =
-        results.length > 0
-          ? Math.round((correctCount / results.length) * 100)
-          : 0
       const suggestedLevel = getSuggestedLevel(level, accuracyPercent)
       if (suggestedLevel && suggestedLevel > level) playLevelUp()
     }
@@ -246,6 +254,7 @@ export function DigitGameScreen({
         onRetry={handleRetry}
         onChangeLevel={onExit}
         newAchievements={newAchievements}
+        isNewBest={isNewBest}
         suggestion={
           suggestedLevel
             ? {

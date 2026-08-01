@@ -128,6 +128,25 @@ export function getWeakestAreas(
     .slice(0, count)
 }
 
+// 指定モード・レベルにおける、これまでの1セットあたりの最高正答率（%）
+export function getBestSetAccuracy(
+  history: HistoryEntry[],
+  mode: Mode,
+  level: Level,
+  gameType?: DigitGameType,
+): number | null {
+  let best: number | null = null
+  for (const e of history) {
+    if (e.mode !== mode || e.level !== level || e.gameType !== gameType) {
+      continue
+    }
+    if (e.total <= 0) continue
+    const accuracy = Math.round((e.correct / e.total) * 100)
+    if (best === null || accuracy > best) best = accuracy
+  }
+  return best
+}
+
 export interface DailyAccuracy {
   dateKey: string
   accuracy: number | null

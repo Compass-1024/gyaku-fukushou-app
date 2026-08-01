@@ -14,6 +14,9 @@
 - プライバシーポリシーを作成（[PRIVACY.md](PRIVACY.md)＋設定画面から遷移できるアプリ内画面＋JS起動不要な静的ページ`public/privacy.html`）
 - デプロイ手順書を作成（[DEPLOYMENT.md](DEPLOYMENT.md)）
 - VercelとGitHubリポジトリのGit連携を設定し、masterへのpushで自動デプロイされるように変更
+- トップ画面に「🎯 今日のおすすめ」カードを追加。苦手分野（`getWeakestAreas`）をワンタップで直接プレイ開始できるように
+- 結果画面に自己ベスト更新バッジ（🏅）を追加。モード・レベルごとの過去最高正答率を`getBestSetAccuracy`で判定
+- トップ画面にストリーク危機感バナーを追加（連続日数があるのに当日未挑戦の場合に表示）
 
 ### Changed
 

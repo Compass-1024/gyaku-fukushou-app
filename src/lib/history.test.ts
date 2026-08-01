@@ -7,6 +7,7 @@ import {
   getStreakDays,
   getAllAreaStats,
   getWeakestAreas,
+  getBestSetAccuracy,
   getDailyAccuracyTrend,
 } from './history'
 import type { HistoryEntry } from '../types'
@@ -160,6 +161,47 @@ describe('getWeakestAreas', () => {
 
   it('returns an empty array when nothing has been attempted', () => {
     expect(getWeakestAreas([], 2)).toEqual([])
+  })
+})
+
+describe('getBestSetAccuracy', () => {
+  it('returns the highest accuracy among matching entries', () => {
+    const now = new Date().toISOString()
+    const history: HistoryEntry[] = [
+      { mode: 'word', level: 1, correct: 1, total: 3, timestamp: now },
+      { mode: 'word', level: 1, correct: 3, total: 3, timestamp: now },
+      { mode: 'word', level: 1, correct: 2, total: 3, timestamp: now },
+      { mode: 'word', level: 2, correct: 3, total: 3, timestamp: now },
+    ]
+    expect(getBestSetAccuracy(history, 'word', 1)).toBe(100)
+  })
+
+  it('returns null when there are no matching entries', () => {
+    expect(getBestSetAccuracy([], 'word', 1)).toBeNull()
+  })
+
+  it('distinguishes digit gameType when matching', () => {
+    const now = new Date().toISOString()
+    const history: HistoryEntry[] = [
+      {
+        mode: 'digit',
+        gameType: 'reverse',
+        level: 1,
+        correct: 3,
+        total: 3,
+        timestamp: now,
+      },
+      {
+        mode: 'digit',
+        gameType: 'sum',
+        level: 1,
+        correct: 0,
+        total: 3,
+        timestamp: now,
+      },
+    ]
+    expect(getBestSetAccuracy(history, 'digit', 1, 'sum')).toBe(0)
+    expect(getBestSetAccuracy(history, 'digit', 1, 'reverse')).toBe(100)
   })
 })
 

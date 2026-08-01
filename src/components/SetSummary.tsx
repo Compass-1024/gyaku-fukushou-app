@@ -17,6 +17,7 @@ interface SetSummaryProps {
   onChangeLevel: () => void
   suggestion?: LevelSuggestion
   newAchievements?: Achievement[]
+  isNewBest?: boolean
 }
 
 export function SetSummary({
@@ -25,6 +26,7 @@ export function SetSummary({
   onChangeLevel,
   suggestion,
   newAchievements,
+  isNewBest,
 }: SetSummaryProps) {
   const correctCount = items.filter((item) => item.correct).length
 
@@ -36,6 +38,14 @@ export function SetSummary({
           {correctCount} / {items.length} 問正解
         </p>
       </div>
+
+      {isNewBest && (
+        <div className="animate-pop rounded-lg border border-sky-300 bg-sky-50 px-4 py-3 text-center dark:border-sky-700 dark:bg-sky-900/30">
+          <p className="text-sm font-semibold text-sky-700 dark:text-sky-300">
+            🏅 自己ベスト更新！
+          </p>
+        </div>
+      )}
 
       {newAchievements && newAchievements.length > 0 && (
         <div className="animate-pop rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-center dark:border-amber-700 dark:bg-amber-900/30">

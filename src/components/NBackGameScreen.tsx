@@ -9,7 +9,11 @@ import {
   GAP_MS,
   READY_MS,
 } from '../lib/nback'
-import { appendHistoryEntry, loadHistory } from '../lib/history'
+import {
+  appendHistoryEntry,
+  getBestSetAccuracy,
+  loadHistory,
+} from '../lib/history'
 import { confirmExit } from '../lib/confirmExit'
 import { getSuggestedLevel } from '../lib/difficulty'
 import { loadSettings } from '../lib/settings'
@@ -49,6 +53,7 @@ export function NBackGameScreen({
     new Array(NBACK_SEQUENCE_LENGTH).fill(false),
   )
   const [newAchievements, setNewAchievements] = useState<Achievement[]>([])
+  const [isNewBest, setIsNewBest] = useState(false)
 
   const trialIndex = Math.floor(step / 2)
   const isGap = step % 2 === 1
@@ -102,6 +107,7 @@ export function NBackGameScreen({
     if (phase !== 'result') return
     const score = scoreNBackTrials(trials, pressed)
     const before = loadHistory()
+    const previousBest = getBestSetAccuracy(before, 'nback', level)
     appendHistoryEntry({
       mode: 'nback',
       level,
@@ -111,6 +117,7 @@ export function NBackGameScreen({
     const after = loadHistory()
     const newly = getNewlyUnlockedAchievements(before, after)
     setNewAchievements(newly)
+    setIsNewBest(previousBest !== null && score.accuracy > previousBest)
 
     if (loadSettings().soundEnabled) {
       if (score.accuracy >= 70) playCorrectSound()
@@ -141,6 +148,7 @@ export function NBackGameScreen({
         onRetry={handleRetry}
         onChangeLevel={onExit}
         newAchievements={newAchievements}
+        isNewBest={isNewBest}
         suggestion={
           suggestedLevel
             ? {

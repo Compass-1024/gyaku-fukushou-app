@@ -13,6 +13,7 @@ import { PrivacyScreen } from './components/PrivacyScreen'
 import { useSpeechRecognition } from './hooks/useSpeechRecognition'
 import { useThemeMode } from './hooks/useThemeMode'
 import { loadHistory } from './lib/history'
+import type { AreaStats } from './lib/history'
 import type { DigitGameType, HistoryEntry, Level } from './types'
 
 type View =
@@ -88,6 +89,19 @@ function App() {
           }}
           onOpenSettings={() => goTo({ screen: 'settings' })}
           onOpenStats={() => goTo({ screen: 'stats' })}
+          onStartRecommended={(area: AreaStats) => {
+            if (area.mode === 'word') {
+              goTo({ screen: 'word-game', level: area.level })
+            } else if (area.mode === 'digit') {
+              goTo({
+                screen: 'digit-game',
+                gameType: area.gameType ?? 'reverse',
+                level: area.level,
+              })
+            } else {
+              goTo({ screen: 'nback-game', level: area.level })
+            }
+          }}
         />
       )
       break
