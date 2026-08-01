@@ -86,8 +86,15 @@ export function getTodayCount(history: HistoryEntry[]): number {
     .length
 }
 
+// 1か月あたりに許容する「ストリークフリーズ」の回数（1日休んでも連続記録が
+// 途切れない猶予）。全か無かのプレッシャーによる離脱を防ぐための施策
+const MAX_STREAK_FREEZES_PER_MONTH = 2
+
 // 連続で挑戦した日数。今日まだ挑戦していなくても、昨日までの連続記録が
-// 途切れていなければ継続中として扱う
+// 途切れていなければ継続中として扱う。また、1か月に最大
+// MAX_STREAK_FREEZES_PER_MONTH 回まで、1日だけの欠落（前後は挑戦している）
+// を「フリーズ」として自動的に穴埋めし、連続記録を途切れさせない。
+// 2日以上連続で欠落した場合はフリーズでは救済しない。
 export function getStreakDays(history: HistoryEntry[]): number {
   if (history.length === 0) return 0
   const days = new Set(history.map((e) => localDateKey(new Date(e.timestamp))))
@@ -97,8 +104,22 @@ export function getStreakDays(history: HistoryEntry[]): number {
     if (!days.has(localDateKey(cursor))) return 0
   }
   let streak = 0
-  while (days.has(localDateKey(cursor))) {
-    streak += 1
+  let lastWasFreeze = false
+  const freezesUsedByMonth = new Map<string, number>()
+  while (true) {
+    const key = localDateKey(cursor)
+    if (days.has(key)) {
+      streak += 1
+      lastWasFreeze = false
+      cursor.setDate(cursor.getDate() - 1)
+      continue
+    }
+    if (lastWasFreeze) break // 2日連続の欠落はフリーズで救済しない
+    const monthKey = `${cursor.getFullYear()}-${String(cursor.getMonth() + 1).padStart(2, '0')}`
+    const used = freezesUsedByMonth.get(monthKey) ?? 0
+    if (used >= MAX_STREAK_FREEZES_PER_MONTH) break
+    freezesUsedByMonth.set(monthKey, used + 1)
+    lastWasFreeze = true
     cursor.setDate(cursor.getDate() - 1)
   }
   return streak

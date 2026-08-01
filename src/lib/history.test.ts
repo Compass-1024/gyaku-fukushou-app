@@ -136,6 +136,29 @@ describe('getStreakDays', () => {
   it('returns 0 for empty history', () => {
     expect(getStreakDays([])).toBe(0)
   })
+
+  it('bridges a single missed day using a streak freeze', () => {
+    // day0, day1 played, day2 missed, day3 played
+    const history = [entryOn(daysAgo(0)), entryOn(daysAgo(1)), entryOn(daysAgo(3))]
+    expect(getStreakDays(history)).toBe(3)
+  })
+
+  it('does not bridge two consecutive missed days', () => {
+    // day0, day1 played, day2 and day3 missed
+    const history = [entryOn(daysAgo(0)), entryOn(daysAgo(1)), entryOn(daysAgo(4))]
+    expect(getStreakDays(history)).toBe(2)
+  })
+
+  it('stops bridging once the monthly freeze budget is used up', () => {
+    // day1, day3, day5 missed（3回目の単日欠落は月2回の上限を超えるため救済されない）
+    const history = [
+      entryOn(daysAgo(0)),
+      entryOn(daysAgo(2)),
+      entryOn(daysAgo(4)),
+      entryOn(daysAgo(6)),
+    ]
+    expect(getStreakDays(history)).toBe(3)
+  })
 })
 
 describe('getAllAreaStats', () => {
