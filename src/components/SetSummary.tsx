@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import type { Achievement } from '../lib/achievements'
 
 export interface SummaryItem {
@@ -29,6 +30,19 @@ export function SetSummary({
   isNewBest,
 }: SetSummaryProps) {
   const correctCount = items.filter((item) => item.correct).length
+
+  // 結果画面の最上部に表示される主要アクション（提案があればそれ、
+  // なければ「同じレベルでもう一度」）をEnterキーでも実行できるようにする
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key !== 'Enter') return
+      e.preventDefault()
+      if (suggestion) suggestion.onSelect()
+      else onRetry()
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [suggestion, onRetry])
 
   return (
     <div className="mx-auto flex w-full max-w-md flex-col gap-6 px-4 py-8 sm:px-6 sm:py-12">

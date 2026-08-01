@@ -88,11 +88,13 @@ export function NBackGameScreen({
     if (loadSettings().soundEnabled) playButtonTap()
   }
 
-  // スペースキーでも「一致」を押せるようにする
+  // スペースキー・Enterキーでも「一致」を押せるようにする
+  // （他モードの操作フェーズもEnter/物理キーボードに対応しており、
+  // 片手・キーボード操作での周回のしやすさを揃えるため）
   useEffect(() => {
     if (phase !== 'showing') return
     function handleKeyDown(e: KeyboardEvent) {
-      if (e.key === ' ' || e.code === 'Space') {
+      if (e.key === ' ' || e.code === 'Space' || e.key === 'Enter') {
         e.preventDefault()
         handleMatchPress()
       }
