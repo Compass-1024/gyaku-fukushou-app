@@ -64,13 +64,7 @@ export function PrivacyScreen({ onBack }: PrivacyScreenProps) {
           <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400">
             お問い合わせ
           </h2>
-          <p>
-            プライバシーに関するご質問・ご懸念は
-            <a href="mailto:nakasho4949@gmail.com" className="underline">
-              nakasho4949@gmail.com
-            </a>
-            までご連絡ください。
-          </p>
+          <p>お問い合わせ窓口は現在準備中です。</p>
         </section>
 
         <p className="text-xs text-gray-400 dark:text-gray-500">
