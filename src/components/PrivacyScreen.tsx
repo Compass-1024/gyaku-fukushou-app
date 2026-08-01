@@ -55,8 +55,9 @@ export function PrivacyScreen({ onBack }: PrivacyScreenProps) {
             データの削除
           </h2>
           <p>
-            ブラウザの設定からサイトデータ（localStorage）を削除することで、
-            保存されているすべてのデータを消去できます。
+            「設定」画面の「学習履歴をすべて削除」から一括削除できます。また、
+            ブラウザの設定からサイトデータ（localStorage）を削除する方法でも
+            同様に消去できます。
           </p>
         </section>
 

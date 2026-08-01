@@ -2,6 +2,7 @@ import { describe, expect, it, beforeEach } from 'vitest'
 import {
   loadHistory,
   appendHistoryEntry,
+  clearHistory,
   getLevelStats,
   getTodayCount,
   getStreakDays,
@@ -161,6 +162,52 @@ describe('getWeakestAreas', () => {
 
   it('returns an empty array when nothing has been attempted', () => {
     expect(getWeakestAreas([], 2)).toEqual([])
+  })
+
+  it('prefers areas with enough attempts over a single unlucky attempt', () => {
+    const now = new Date().toISOString()
+    const history: HistoryEntry[] = [
+      // 1回だけ挑戦して0%（たまたまの失敗）
+      { mode: 'word', level: 1, correct: 0, total: 3, timestamp: now },
+      // 複数回挑戦した上での40%（より確からしい苦手分野）
+      {
+        mode: 'digit',
+        gameType: 'reverse',
+        level: 1,
+        correct: 1,
+        total: 3,
+        timestamp: now,
+      },
+      {
+        mode: 'digit',
+        gameType: 'reverse',
+        level: 1,
+        correct: 1,
+        total: 2,
+        timestamp: now,
+      },
+    ]
+    const weakest = getWeakestAreas(history, 1)
+    expect(weakest[0]).toMatchObject({ mode: 'digit', gameType: 'reverse', level: 1 })
+  })
+
+  it('falls back to single-attempt areas when none meet the reliability threshold', () => {
+    const now = new Date().toISOString()
+    const history: HistoryEntry[] = [
+      { mode: 'word', level: 1, correct: 0, total: 3, timestamp: now },
+      { mode: 'word', level: 2, correct: 3, total: 3, timestamp: now },
+    ]
+    const weakest = getWeakestAreas(history, 1)
+    expect(weakest[0]).toMatchObject({ mode: 'word', level: 1 })
+  })
+})
+
+describe('clearHistory', () => {
+  it('removes all stored history', () => {
+    appendHistoryEntry({ mode: 'word', level: 1, correct: 1, total: 1 })
+    expect(loadHistory()).toHaveLength(1)
+    clearHistory()
+    expect(loadHistory()).toEqual([])
   })
 })
 

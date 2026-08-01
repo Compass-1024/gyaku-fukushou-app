@@ -15,6 +15,14 @@ export function loadHistory(): HistoryEntry[] {
   }
 }
 
+export function clearHistory(): void {
+  try {
+    localStorage.removeItem(STORAGE_KEY)
+  } catch {
+    /* localStorage unavailable (private mode, quota, etc.) */
+  }
+}
+
 export function appendHistoryEntry(
   entry: Omit<HistoryEntry, 'timestamp'>,
 ): void {
@@ -117,14 +125,30 @@ export function getAllAreaStats(history: HistoryEntry[]): AreaStats[] {
   return result
 }
 
-// 挑戦済みの中で正答率が低い項目を返す（苦手分野の可視化用）
+// この回数未満の挑戦しかない項目は、1回のたまたまの失敗で「苦手分野」と
+// 誤判定されやすいため、十分な挑戦回数がある項目を優先する
+const MIN_ATTEMPTS_FOR_RELIABLE_WEAKEST = 2
+
+// 挑戦済みの中で正答率が低い項目を返す（苦手分野の可視化用）。
+// 挑戦回数が十分な項目があればそちらを優先し、正答率が同じ場合は挑戦回数が
+// 多い（＝より確からしい）項目を優先する
 export function getWeakestAreas(
   history: HistoryEntry[],
   count: number,
 ): AreaStats[] {
-  return getAllAreaStats(history)
-    .filter((a) => a.stats.attempts > 0 && a.stats.accuracy !== null)
-    .sort((a, b) => (a.stats.accuracy ?? 0) - (b.stats.accuracy ?? 0))
+  const attempted = getAllAreaStats(history).filter(
+    (a) => a.stats.attempts > 0 && a.stats.accuracy !== null,
+  )
+  const reliable = attempted.filter(
+    (a) => a.stats.attempts >= MIN_ATTEMPTS_FOR_RELIABLE_WEAKEST,
+  )
+  const pool = reliable.length > 0 ? reliable : attempted
+  return pool
+    .sort((a, b) => {
+      const accuracyDiff = (a.stats.accuracy ?? 0) - (b.stats.accuracy ?? 0)
+      if (accuracyDiff !== 0) return accuracyDiff
+      return b.stats.attempts - a.stats.attempts
+    })
     .slice(0, count)
 }
 
