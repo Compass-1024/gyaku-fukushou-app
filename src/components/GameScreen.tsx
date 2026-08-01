@@ -32,7 +32,12 @@ import { SetSummary } from './SetSummary'
 import { GameHeader } from './GameHeader'
 import { ResultBadge } from './ResultBadge'
 import type { Achievement } from '../lib/achievements'
-import type { Level, Phrase, QuestionPhase, QuestionResult } from '../types'
+import type {
+  BaseGameScreenProps,
+  Phrase,
+  QuestionPhase,
+  QuestionResult,
+} from '../types'
 
 const MIC_ERROR_MESSAGES: Partial<Record<SpeechRecognitionErrorCode, string>> =
   {
@@ -44,11 +49,7 @@ const MIC_ERROR_MESSAGES: Partial<Record<SpeechRecognitionErrorCode, string>> =
       'マイクが見つかりません。マイクが接続されているか確認してください。',
   }
 
-interface GameScreenProps {
-  level: Level
-  onExit: () => void
-  onSelectLevel: (level: Level) => void
-}
+type GameScreenProps = BaseGameScreenProps
 
 export function GameScreen({ level, onExit, onSelectLevel }: GameScreenProps) {
   const { supported: synthesisSupported, speak } = useSpeechSynthesis()

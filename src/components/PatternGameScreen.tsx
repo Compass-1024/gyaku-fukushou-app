@@ -32,17 +32,13 @@ import { GameHeader } from './GameHeader'
 import { ResultBadge } from './ResultBadge'
 import type { Achievement } from '../lib/achievements'
 import type {
-  Level,
+  BaseGameScreenProps,
   PatternQuestion,
   PatternQuestionPhase,
   PatternQuestionResult,
 } from '../types'
 
-interface PatternGameScreenProps {
-  level: Level
-  onExit: () => void
-  onSelectLevel: (level: Level) => void
-}
+type PatternGameScreenProps = BaseGameScreenProps
 
 export function PatternGameScreen({
   level,

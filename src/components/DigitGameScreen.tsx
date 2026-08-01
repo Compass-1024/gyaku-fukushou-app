@@ -36,11 +36,11 @@ import { GameHeader } from './GameHeader'
 import { ResultBadge } from './ResultBadge'
 import type { Achievement } from '../lib/achievements'
 import type {
+  BaseGameScreenProps,
   DigitGameType,
   DigitQuestion,
   DigitQuestionPhase,
   DigitQuestionResult,
-  Level,
 } from '../types'
 
 function computeExpectedAnswer(
@@ -57,11 +57,8 @@ const GAME_TYPE_PROMPTS: Record<DigitGameType, string> = {
   sum: '全部たすといくつ？',
 }
 
-interface DigitGameScreenProps {
-  level: Level
+interface DigitGameScreenProps extends BaseGameScreenProps {
   gameType: DigitGameType
-  onExit: () => void
-  onSelectLevel: (level: Level) => void
 }
 
 export function DigitGameScreen({

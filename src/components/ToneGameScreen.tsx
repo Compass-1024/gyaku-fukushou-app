@@ -36,7 +36,7 @@ import { GameHeader } from './GameHeader'
 import { ResultBadge } from './ResultBadge'
 import type { Achievement } from '../lib/achievements'
 import type {
-  Level,
+  BaseGameScreenProps,
   ToneQuestion,
   ToneQuestionPhase,
   ToneQuestionResult,
@@ -50,11 +50,7 @@ const PAD_COLORS = [
 ]
 const PAD_LIT_COLORS = ['bg-rose-300', 'bg-sky-300', 'bg-emerald-300', 'bg-amber-200']
 
-interface ToneGameScreenProps {
-  level: Level
-  onExit: () => void
-  onSelectLevel: (level: Level) => void
-}
+type ToneGameScreenProps = BaseGameScreenProps
 
 export function ToneGameScreen({
   level,

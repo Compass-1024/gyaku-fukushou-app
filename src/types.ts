@@ -1,5 +1,14 @@
 export type Level = 1 | 2 | 3
 
+// 各モードのゲーム画面コンポーネントに共通するprops。
+// モード固有の追加props（例: DigitGameScreenのgameType）は
+// `& { ... }`で拡張する
+export interface BaseGameScreenProps {
+  level: Level
+  onExit: () => void
+  onSelectLevel: (level: Level) => void
+}
+
 export type Mode = 'word' | 'digit' | 'nback' | 'spatial' | 'pattern' | 'tone'
 export type DigitGameType = 'reverse' | 'sum'
 export type ThemeMode = 'system' | 'light' | 'dark'

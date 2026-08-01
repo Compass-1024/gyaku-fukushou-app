@@ -30,13 +30,9 @@ import { getNewlyUnlockedAchievements } from '../lib/achievements'
 import { SetSummary } from './SetSummary'
 import { GameHeader } from './GameHeader'
 import type { Achievement } from '../lib/achievements'
-import type { Level, NBackPhase, NBackTrial } from '../types'
+import type { BaseGameScreenProps, NBackPhase, NBackTrial } from '../types'
 
-interface NBackGameScreenProps {
-  level: Level
-  onExit: () => void
-  onSelectLevel: (level: Level) => void
-}
+type NBackGameScreenProps = BaseGameScreenProps
 
 export function NBackGameScreen({
   level,

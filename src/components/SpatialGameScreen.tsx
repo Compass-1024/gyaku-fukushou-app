@@ -34,17 +34,13 @@ import { GameHeader } from './GameHeader'
 import { ResultBadge } from './ResultBadge'
 import type { Achievement } from '../lib/achievements'
 import type {
-  Level,
+  BaseGameScreenProps,
   SpatialQuestion,
   SpatialQuestionPhase,
   SpatialQuestionResult,
 } from '../types'
 
-interface SpatialGameScreenProps {
-  level: Level
-  onExit: () => void
-  onSelectLevel: (level: Level) => void
-}
+type SpatialGameScreenProps = BaseGameScreenProps
 
 export function SpatialGameScreen({
   level,
