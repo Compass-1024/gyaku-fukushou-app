@@ -4,6 +4,10 @@
 
 ## [Unreleased]
 
+### Added
+
+- 通知購読失敗時のエラーメッセージに、OS側の通知設定（Windows/macOS/Androidの設定アプリ）を確認するよう促す文言を追加。ブラウザ側で許可していてもOS側でブロックされていると`pushManager.subscribe()`が失敗することが実機検証で判明したため（[DEPLOYMENT.md](DEPLOYMENT.md)にトラブルシューティング手順を追記）
+
 ### Fixed
 
 - `src/lib/push.ts`の`subscribeToPush()`が失敗理由を握りつぶしていたため、実機で購読に失敗しても原因を特定できなかった問題を修正。`console.error`で実際のエラー内容を出力するようにした

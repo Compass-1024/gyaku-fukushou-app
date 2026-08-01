@@ -64,6 +64,17 @@ npx vercel --prod
 6. 実機でアプリを開き、「設定」→「リマインド通知」をオンにして通知許可を承認する。
 7. 動作確認は次のいずれかで行う: (a) 次のCron発火を待つ、(b) `CRON_SECRET`をBearerトークンとして手動で`/api/cron/reminder`を呼び出す（`curl -X POST -H "Authorization: Bearer <CRON_SECRET>" https://gyaku-fukushou-app.vercel.app/api/cron/reminder`）。
 
+### トラブルシューティング: 通知の許可後も「通知の設定に失敗しました」と表示される
+
+ブラウザ側で通知を許可していても、OS（Windows/macOS/Android等）側の通知設定でそのブラウザアプリ自体がブロックされていると、`pushManager.subscribe()`が失敗しこの状態になることがある（実機で確認された事例、2026-08-01）。
+
+- Windows: 設定 → システム → 通知 → 対象ブラウザ（例: Microsoft Edge）がオンになっているか確認
+- Windows: `edge://settings/content/notifications`（Chromeなら`chrome://settings/content/notifications`）で対象サイトが「ブロック」リストに入っていないか確認
+- macOS: システム設定 → 通知 → 対象ブラウザの通知が許可されているか確認
+- Android: 設定 → アプリ → 対象ブラウザ → 通知が許可されているか確認
+
+設定画面のトグルがOFFのまま失敗する場合は、ブラウザの開発者ツール（F12）のコンソールに`[push] subscribeToPush failed ...`のログが出力されるので、原因の特定に利用できる。
+
 ### Vercel Cronの実行頻度制限（Hobbyプラン）
 
 Vercel HobbyプランはCronジョブを**1日1回まで**しか実行できない（`0 * * * *`のような毎時実行はデプロイ時に失敗する）。そのため`vercel.json`は`0 12 * * *`（UTC 12:00 = JST 21:00ごろ、実行は最大59分前後する）の1日1回実行にしている。ユーザーごとに送信時刻を選ばせる設計は行っていない（全ユーザー共通の固定時刻）。より高頻度・高精度なCronが必要な場合はVercel Proプランへのアップグレードが必要。

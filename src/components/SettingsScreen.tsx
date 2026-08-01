@@ -162,7 +162,7 @@ export function SettingsScreen({
           setNotificationMessage('この端末・ブラウザは通知に対応していません。')
         } else {
           setNotificationMessage(
-            '通知の設定に失敗しました。時間をおいて再度お試しください。',
+            '通知の設定に失敗しました。時間をおいて再度お試しください。改善しない場合は、パソコン・スマートフォン本体側の通知設定（OSの設定アプリ）でこのブラウザの通知が許可されているかもご確認ください。',
           )
         }
       } else {
