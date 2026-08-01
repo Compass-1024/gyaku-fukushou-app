@@ -4,7 +4,6 @@ import type { PushSubscriptionJSON, StoredSubscription } from '../_lib/subscript
 
 interface SubscribeBody {
   subscription: PushSubscriptionJSON
-  notifyHourJst: number
 }
 
 function isValidSubscribeBody(value: unknown): value is SubscribeBody {
@@ -16,13 +15,6 @@ function isValidSubscribeBody(value: unknown): value is SubscribeBody {
   const keys = sub.keys as Record<string, unknown> | undefined
   if (typeof keys !== 'object' || keys === null) return false
   if (typeof keys.p256dh !== 'string' || typeof keys.auth !== 'string') return false
-  if (
-    typeof v.notifyHourJst !== 'number' ||
-    v.notifyHourJst < 0 ||
-    v.notifyHourJst > 23
-  ) {
-    return false
-  }
   return true
 }
 
@@ -41,7 +33,6 @@ export default async function handler(request: Request): Promise<Response> {
     subscription: body.subscription,
     lastPracticedDateKey: null,
     lastReminderSentDateKey: null,
-    notifyHourJst: body.notifyHourJst,
     updatedAt: new Date().toISOString(),
   }
   await getKV().set(subscriptionKey(body.subscription.endpoint), record)

@@ -9,7 +9,6 @@ export const DEFAULT_SETTINGS: AppSettings = {
   soundEnabled: true,
   dailyGoal: 3,
   notificationsEnabled: false,
-  notifyHourJst: 21,
 }
 
 export function loadSettings(): AppSettings {

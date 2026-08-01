@@ -42,14 +42,14 @@ npx vercel --prod
 
 ## プッシュ通知リマインダーのセットアップ（初回のみ・手動）
 
-「リマインド通知」機能（[CLAUDE.md](CLAUDE.md)の「プッシュ通知リマインダー」セクション参照）を有効化するには、以下の手動セットアップが必要。未実施でもアプリ自体は問題なく動作する（通知機能のみ非対応として無効化される）。
+「リマインド通知」機能（[CLAUDE.md](CLAUDE.md)の「プッシュ通知リマインダー」セクション参照）の有効化に必要な手動セットアップは完了済み（2026-08-01）。未実施でもアプリ自体は問題なく動作する（通知機能のみ非対応として無効化される）ため、以下は将来別プロジェクトへ展開する場合や再セットアップ時の手順として残す。
 
-1. VercelダッシュボードのStorageタブで、このプロジェクトにRedis系のストレージ連携を追加する（「Vercel KV」は非推奨化されており、現在はVercel Marketplace経由のRedisインテグレーション（Upstash等）を利用する。ダッシュボードで現在の正式名称・手順を確認すること）。連携すると`KV_REST_API_URL`/`KV_REST_API_TOKEN`または`UPSTASH_REDIS_REST_URL`/`UPSTASH_REDIS_REST_TOKEN`が自動的に環境変数へ追加される（`api/_lib/kv.ts`はどちらの命名規則にも対応済み）。
+1. VercelダッシュボードのStorageタブ、または`vercel integration add upstash/upstash-kv`でRedis系のストレージ連携を追加する（「Vercel KV」は非推奨化されており、現在はVercel Marketplace経由の「Upstash for Redis」を利用する）。インストール時にUpstash社の利用規約への同意がブラウザで必要（`vercel integration add`実行後に表示される`verification_uri`を開いて同意する）。連携すると`KV_REST_API_URL`/`KV_REST_API_TOKEN`が自動的に環境変数へ追加される。
 2. ローカル端末のターミナルで以下を実行し、VAPID鍵ペアを生成する（**秘密鍵をチャットや公開リポジトリに貼らないこと**）。
    ```bash
    npx web-push generate-vapid-keys
    ```
-3. Vercelダッシュボード → Project Settings → Environment Variablesに以下を追加する。
+3. Vercelダッシュボード → Project Settings → Environment Variables（または`vercel env add <名前> <environment> --value=<値>`）に以下を追加する。
 
    | 変数 | 値の例 | 備考 |
    |---|---|---|
@@ -60,9 +60,13 @@ npx vercel --prod
    | `CRON_SECRET` | 任意のランダム文字列（例: `openssl rand -hex 32`の出力） | `api/cron/reminder.ts`の認証、Vercel Cronからのリクエストにも自動付与される |
 
 4. ローカル開発でも通知トグルを試したい場合は、`.env.local`（gitignore対象）に`VITE_VAPID_PUBLIC_KEY`を追加する。ただし`api/`配下はVercel Functionsとして動くため、`npm run dev`（Vite単体）では購読・送信までは確認できない（`vercel dev`を使うか、実際にデプロイして確認する）。
-5. コードをpushして再デプロイし、`vercel.json`のCron設定（`/api/cron/reminder`を毎時0分に実行）が反映されたことをVercelダッシュボードの「Cron Jobs」で確認する。
+5. コードをpushして再デプロイし、`vercel.json`のCron設定が反映されたことをVercelダッシュボードの「Cron Jobs」で確認する。
 6. 実機でアプリを開き、「設定」→「リマインド通知」をオンにして通知許可を承認する。
-7. 動作確認は次のいずれかで行う: (a) 次のCron発火（毎時0分）を待つ、(b) `CRON_SECRET`をBearerトークンとして手動で`/api/cron/reminder`を呼び出す（`curl -X POST -H "Authorization: Bearer <CRON_SECRET>" https://gyaku-fukushou-app.vercel.app/api/cron/reminder`）。
+7. 動作確認は次のいずれかで行う: (a) 次のCron発火を待つ、(b) `CRON_SECRET`をBearerトークンとして手動で`/api/cron/reminder`を呼び出す（`curl -X POST -H "Authorization: Bearer <CRON_SECRET>" https://gyaku-fukushou-app.vercel.app/api/cron/reminder`）。
+
+### Vercel Cronの実行頻度制限（Hobbyプラン）
+
+Vercel HobbyプランはCronジョブを**1日1回まで**しか実行できない（`0 * * * *`のような毎時実行はデプロイ時に失敗する）。そのため`vercel.json`は`0 12 * * *`（UTC 12:00 = JST 21:00ごろ、実行は最大59分前後する）の1日1回実行にしている。ユーザーごとに送信時刻を選ばせる設計は行っていない（全ユーザー共通の固定時刻）。より高頻度・高精度なCronが必要な場合はVercel Proプランへのアップグレードが必要。
 
 ## デプロイ前のローカル確認
 

@@ -6,7 +6,9 @@
 
 ### Added
 
-- プッシュ通知リマインダー機能を追加（オプトイン、既定オフ）。その日1回もプレイしていない場合、設定画面で指定した時刻（JST）に通知でお知らせする。継続利用率の向上を狙った施策。Vercel Serverless Functions + Redisストレージ（`@upstash/redis`）+ Vercel Cron（毎時実行）を用いた最小限のバックエンドを追加し、アプリ全体の「バックエンドを持たないSPA」という方針の例外として位置づける（`src/lib/push.ts`、`src/lib/reminder.ts`、`src/sw.ts`（`injectManifest`戦略へ移行）、`api/`配下のServerless Functions、`vercel.json`）。PRIVACY.md/privacy.html/PrivacyScreen.tsx/CLAUDE.md/DEPLOYMENT.mdを本機能に合わせて更新
+- プッシュ通知リマインダー機能を追加（オプトイン、既定オフ）。その日1回もプレイしていない場合、毎日21時ごろ（JST、Vercel Cronの実行タイミングにより前後あり）に通知でお知らせする。継続利用率の向上を狙った施策。Vercel Serverless Functions + Redisストレージ（`@upstash/redis`）+ Vercel Cron（1日1回実行）を用いた最小限のバックエンドを追加し、アプリ全体の「バックエンドを持たないSPA」という方針の例外として位置づける（`src/lib/push.ts`、`src/lib/reminder.ts`、`src/sw.ts`（`injectManifest`戦略へ移行）、`api/`配下のServerless Functions、`vercel.json`）。PRIVACY.md/privacy.html/PrivacyScreen.tsx/CLAUDE.md/DEPLOYMENT.mdを本機能に合わせて更新
+- （上記の追加実装）Vercel Hobbyプランの「Cronは1日1回まで」という制約が判明したため、当初予定していた「ユーザーごとに送信時刻を選べる」設計を撤回し、全ユーザー共通の固定時刻方式に変更。設定画面の時刻選択UI・`api/push/settings.ts`エンドポイント・`notifyHourJst`設定項目を削除
+- Vercel CLIを用いてUpstash for Redis連携・VAPID鍵生成・環境変数（`VITE_VAPID_PUBLIC_KEY`/`VAPID_PUBLIC_KEY`/`VAPID_PRIVATE_KEY`/`VAPID_SUBJECT`/`CRON_SECRET`）設定を実施し、本番環境でのプッシュ通知配信基盤を構築
 - 空間・変化検出・音/色モードのE2Eスモークテストを追加し、CLAUDE.md（画面遷移図・Feature requirements・実績一覧・データモデル）とREADME.mdを新3モードの内容で更新
 - 音・色モードを追加。4色のパッドが音とともに光る順番を覚え、同じ順にタップして再現する非言語性の聴覚ワーキングメモリトレーニング（ピッチ記憶が言語・数字の記憶と独立した貯蔵系であることを示すDeutsch 1970などの知見を参考）。レベル1（3音）／レベル2（4音）／レベル3（5音）の3段階（`src/lib/tone.ts`、`ToneLevelSelect`、`ToneGameScreen`、`playPadTone`）
 - 変化検出モードを追加。一瞬表示される模様を覚え、もう一度見せたときに変化しているかどうかを判定する視覚パターン記憶トレーニング（Luck & Vogel 1997の変化検出課題を参考）。レベル1（4×4・4マス）／レベル2（4×4・6マス）／レベル3（5×5・8マス）の3段階（`src/lib/pattern.ts`、`PatternLevelSelect`、`PatternGameScreen`）

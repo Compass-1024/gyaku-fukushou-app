@@ -49,7 +49,6 @@ export interface AppSettings {
   soundEnabled: boolean
   dailyGoal: number
   notificationsEnabled: boolean
-  notifyHourJst: number
 }
 
 export interface NBackTrial {

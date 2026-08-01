@@ -1,10 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import {
-  getJstDateKey,
-  getJstHour,
-  shouldSendReminder,
-  buildReminderMessage,
-} from './reminder'
+import { getJstDateKey, shouldSendReminder, buildReminderMessage } from './reminder'
 
 describe('getJstDateKey', () => {
   it('converts a UTC time within the same JST day', () => {
@@ -23,39 +18,17 @@ describe('getJstDateKey', () => {
   })
 })
 
-describe('getJstHour', () => {
-  it('returns the JST hour for a UTC time', () => {
-    expect(getJstHour(new Date('2026-08-01T12:00:00Z'))).toBe(21)
-  })
-
-  it('wraps around midnight correctly', () => {
-    expect(getJstHour(new Date('2026-08-01T16:00:00Z'))).toBe(1)
-  })
-})
-
 describe('shouldSendReminder', () => {
-  const nowUtc = new Date('2026-08-01T12:00:00Z') // 21時 JST, 2026-08-01
+  const nowUtc = new Date('2026-08-01T12:00:00Z') // 21時ごろ JST, 2026-08-01
 
-  it('sends when the hour matches and nothing has happened today', () => {
+  it('sends when nothing has happened today', () => {
     expect(
       shouldSendReminder({
         lastPracticedDateKey: null,
         lastReminderSentDateKey: null,
-        notifyHourJst: 21,
         nowUtc,
       }),
     ).toBe(true)
-  })
-
-  it('does not send when the hour does not match', () => {
-    expect(
-      shouldSendReminder({
-        lastPracticedDateKey: null,
-        lastReminderSentDateKey: null,
-        notifyHourJst: 20,
-        nowUtc,
-      }),
-    ).toBe(false)
   })
 
   it('does not send when the user already practiced today (JST)', () => {
@@ -63,7 +36,6 @@ describe('shouldSendReminder', () => {
       shouldSendReminder({
         lastPracticedDateKey: '2026-08-01',
         lastReminderSentDateKey: null,
-        notifyHourJst: 21,
         nowUtc,
       }),
     ).toBe(false)
@@ -74,7 +46,6 @@ describe('shouldSendReminder', () => {
       shouldSendReminder({
         lastPracticedDateKey: null,
         lastReminderSentDateKey: '2026-08-01',
-        notifyHourJst: 21,
         nowUtc,
       }),
     ).toBe(false)
@@ -85,7 +56,6 @@ describe('shouldSendReminder', () => {
       shouldSendReminder({
         lastPracticedDateKey: '2026-07-31',
         lastReminderSentDateKey: '2026-07-31',
-        notifyHourJst: 21,
         nowUtc,
       }),
     ).toBe(true)

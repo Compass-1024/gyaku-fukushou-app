@@ -19,26 +19,20 @@ export function getJstDateKey(date: Date): string {
 }
 
 // UTCの日時をJSTの時（0〜23）に変換する
-export function getJstHour(date: Date): number {
-  return toJstDate(date).getUTCHours()
-}
-
 export interface ReminderCheckInput {
   // 'YYYY-MM-DD'（JST）。まだ一度も同期していなければnull
   lastPracticedDateKey: string | null
   // 直近でリマインドを送った日（JST）。二重送信防止用。まだ未送信ならnull
   lastReminderSentDateKey: string | null
-  // ユーザーが設定画面で選んだ送信希望時刻（0〜23、JST）
-  notifyHourJst: number
   // 判定基準時刻（UTC）。Cronの実行時刻を渡す
   nowUtc: Date
 }
 
-// 「今日まだプレイしていない」かつ「今日まだ送信していない」かつ
-// 「現在のJST時が希望時刻と一致する」場合にのみ送信する
+// Vercel Cronは1日1回のみ・実行時刻は指定時刻から最大59分ずれ得るため、
+// 時刻の一致は見ずに「今日まだプレイしていない」かつ「今日まだ送信していない」
+// 場合にのみ送信する（Cronが1日1回しか呼ばれない前提で、これで二重送信も防げる）
 export function shouldSendReminder(input: ReminderCheckInput): boolean {
   const todayKey = getJstDateKey(input.nowUtc)
-  if (getJstHour(input.nowUtc) !== input.notifyHourJst) return false
   if (input.lastPracticedDateKey === todayKey) return false
   if (input.lastReminderSentDateKey === todayKey) return false
   return true

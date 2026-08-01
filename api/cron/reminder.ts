@@ -54,7 +54,6 @@ export default async function handler(request: Request): Promise<Response> {
     const send = shouldSendReminder({
       lastPracticedDateKey: record.lastPracticedDateKey,
       lastReminderSentDateKey: record.lastReminderSentDateKey,
-      notifyHourJst: record.notifyHourJst,
       nowUtc,
     })
     if (!send) continue

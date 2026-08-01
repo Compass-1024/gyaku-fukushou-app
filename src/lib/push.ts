@@ -48,9 +48,7 @@ export type SubscribeResult =
   | { ok: true }
   | { ok: false; reason: 'unsupported' | 'permission-denied' | 'error' }
 
-export async function subscribeToPush(
-  notifyHourJst: number,
-): Promise<SubscribeResult> {
+export async function subscribeToPush(): Promise<SubscribeResult> {
   if (!isPushSupported()) return { ok: false, reason: 'unsupported' }
 
   try {
@@ -67,7 +65,6 @@ export async function subscribeToPush(
 
     const response = await postJson('/api/push/subscribe', {
       subscription: subscription.toJSON(),
-      notifyHourJst,
     })
     if (!response.ok) return { ok: false, reason: 'error' }
     return { ok: true }
@@ -87,22 +84,6 @@ export async function unsubscribeFromPush(): Promise<void> {
     await subscription.unsubscribe()
   } catch {
     /* ベストエフォート。失敗してもUIをブロックしない */
-  }
-}
-
-export async function updateNotifyHour(notifyHourJst: number): Promise<void> {
-  try {
-    if (!('serviceWorker' in navigator)) return
-    const registration = await navigator.serviceWorker.ready
-    const subscription = await registration.pushManager.getSubscription()
-    if (!subscription) return
-
-    await postJson('/api/push/settings', {
-      endpoint: subscription.endpoint,
-      notifyHourJst,
-    })
-  } catch {
-    /* ベストエフォート */
   }
 }
 

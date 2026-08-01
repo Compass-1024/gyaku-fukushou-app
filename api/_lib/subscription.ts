@@ -12,7 +12,6 @@ export interface StoredSubscription {
   subscription: PushSubscriptionJSON
   lastPracticedDateKey: string | null
   lastReminderSentDateKey: string | null
-  notifyHourJst: number
   updatedAt: string
 }
 
