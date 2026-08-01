@@ -6,6 +6,7 @@ import { DigitLevelSelect } from './components/DigitLevelSelect'
 import { NBackLevelSelect } from './components/NBackLevelSelect'
 import { SpatialLevelSelect } from './components/SpatialLevelSelect'
 import { PatternLevelSelect } from './components/PatternLevelSelect'
+import { ToneLevelSelect } from './components/ToneLevelSelect'
 import { SettingsScreen } from './components/SettingsScreen'
 import { StatsScreen } from './components/StatsScreen'
 import { PrivacyScreen } from './components/PrivacyScreen'
@@ -40,6 +41,11 @@ const PatternGameScreen = lazy(() =>
     default: m.PatternGameScreen,
   })),
 )
+const ToneGameScreen = lazy(() =>
+  import('./components/ToneGameScreen').then((m) => ({
+    default: m.ToneGameScreen,
+  })),
+)
 
 type View =
   | { screen: 'top' }
@@ -54,6 +60,8 @@ type View =
   | { screen: 'spatial-game'; level: Level }
   | { screen: 'pattern-level' }
   | { screen: 'pattern-game'; level: Level }
+  | { screen: 'tone-level' }
+  | { screen: 'tone-game'; level: Level }
   | { screen: 'settings' }
   | { screen: 'stats' }
   | { screen: 'privacy' }
@@ -99,6 +107,7 @@ function App() {
       next.screen === 'nback-level' ||
       next.screen === 'spatial-level' ||
       next.screen === 'pattern-level' ||
+      next.screen === 'tone-level' ||
       next.screen === 'stats'
     ) {
       setHistory(loadHistory())
@@ -119,7 +128,7 @@ function App() {
             else if (mode === 'nback') goTo({ screen: 'nback-level' })
             else if (mode === 'spatial') goTo({ screen: 'spatial-level' })
             else if (mode === 'pattern') goTo({ screen: 'pattern-level' })
-            else goTo({ screen: 'top' })
+            else goTo({ screen: 'tone-level' })
           }}
           onOpenSettings={() => goTo({ screen: 'settings' })}
           onOpenStats={() => goTo({ screen: 'stats' })}
@@ -138,6 +147,8 @@ function App() {
               goTo({ screen: 'spatial-game', level: area.level })
             } else if (area.mode === 'pattern') {
               goTo({ screen: 'pattern-game', level: area.level })
+            } else if (area.mode === 'tone') {
+              goTo({ screen: 'tone-game', level: area.level })
             }
           }}
         />
@@ -252,6 +263,25 @@ function App() {
           level={view.level}
           onExit={() => goTo({ screen: 'pattern-level' })}
           onSelectLevel={(level) => goTo({ screen: 'pattern-game', level })}
+        />
+      )
+      break
+    case 'tone-level':
+      content = (
+        <ToneLevelSelect
+          history={history}
+          onSelect={(level) => goTo({ screen: 'tone-game', level })}
+          onBack={() => goTo({ screen: 'top' })}
+        />
+      )
+      break
+    case 'tone-game':
+      content = (
+        <ToneGameScreen
+          key={view.level}
+          level={view.level}
+          onExit={() => goTo({ screen: 'tone-level' })}
+          onSelectLevel={(level) => goTo({ screen: 'tone-game', level })}
         />
       )
       break

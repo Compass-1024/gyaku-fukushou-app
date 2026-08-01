@@ -194,6 +194,21 @@ export function TopScreen({
             一瞬表示される模様を覚えて、変化したかどうかを見分けるワーキングメモリトレーニングです。
           </p>
         </button>
+
+        <button
+          type="button"
+          onClick={() => {
+            if (loadSettings().soundEnabled) playButtonTap()
+            onSelect('tone')
+          }}
+          className="touch-manipulation rounded-2xl bg-gradient-to-br from-violet-500 to-pink-500 px-6 py-6 text-left text-white shadow-lg shadow-violet-500/20 transition hover:scale-[1.02] hover:shadow-xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-500"
+        >
+          <span className="text-4xl">🎵</span>
+          <p className="mt-2 text-xl font-bold">音・色モード</p>
+          <p className="mt-1 text-sm opacity-90">
+            色のパッドが音とともに光る順番を覚えて、同じ順にタップして再現する非言語性のワーキングメモリトレーニングです。
+          </p>
+        </button>
       </div>
     </div>
   )

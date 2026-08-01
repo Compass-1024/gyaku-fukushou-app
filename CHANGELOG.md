@@ -6,6 +6,7 @@
 
 ### Added
 
+- 音・色モードを追加。4色のパッドが音とともに光る順番を覚え、同じ順にタップして再現する非言語性の聴覚ワーキングメモリトレーニング（ピッチ記憶が言語・数字の記憶と独立した貯蔵系であることを示すDeutsch 1970などの知見を参考）。レベル1（3音）／レベル2（4音）／レベル3（5音）の3段階（`src/lib/tone.ts`、`ToneLevelSelect`、`ToneGameScreen`、`playPadTone`）
 - 変化検出モードを追加。一瞬表示される模様を覚え、もう一度見せたときに変化しているかどうかを判定する視覚パターン記憶トレーニング（Luck & Vogel 1997の変化検出課題を参考）。レベル1（4×4・4マス）／レベル2（4×4・6マス）／レベル3（5×5・8マス）の3段階（`src/lib/pattern.ts`、`PatternLevelSelect`、`PatternGameScreen`）
 - 空間モードを追加。マスが一定順序で光る様子を覚え、逆の順番でタップして答える視空間ワーキングメモリトレーニング（Corsi Block-Tapping Taskを参考）。レベル1（3×3・3マス）／レベル2（3×3・4マス）／レベル3（4×4・5マス）の3段階（`src/lib/spatial.ts`、`SpatialLevelSelect`、`SpatialGameScreen`）
 - 結果画面（SetSummary、全モード共通）に「結果をシェア」機能を追加。正答数・連続挑戦日数・新規実績をまとめたテキストを`navigator.share`で共有し、非対応環境ではクリップボードコピーにフォールバックする（`src/lib/share.ts`）
