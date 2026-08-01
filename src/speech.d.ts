@@ -1,5 +1,6 @@
-// lib.dom.d.ts has SpeechRecognitionEvent/ErrorEvent but not the
-// SpeechRecognition constructor itself (still vendor-prefixed in Chrome).
+// lib.dom.d.tsにはSpeechRecognitionEvent/ErrorEventの型はあるが、
+// SpeechRecognitionコンストラクタ自体は含まれない（Chromeでは今も
+// ベンダープレフィックス付きのため）
 interface SpeechRecognition extends EventTarget {
   lang: string
   continuous: boolean
