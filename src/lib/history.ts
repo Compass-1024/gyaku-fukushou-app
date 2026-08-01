@@ -23,6 +23,15 @@ export function clearHistory(): void {
   }
 }
 
+// バックアップからのインポートなど、履歴全体を丸ごと置き換える用途向け
+export function replaceHistory(entries: HistoryEntry[]): void {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(entries.slice(-MAX_ENTRIES)))
+  } catch {
+    /* localStorage unavailable (private mode, quota, etc.) */
+  }
+}
+
 export function appendHistoryEntry(
   entry: Omit<HistoryEntry, 'timestamp'>,
 ): void {
