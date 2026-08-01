@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import {
   getAllAreaStats,
   getWeakestAreas,
@@ -205,12 +206,18 @@ function AccuracyTrendChart({ trend }: { trend: DailyAccuracy[] }) {
 }
 
 export function StatsScreen({ history, onBack }: StatsScreenProps) {
-  const areas = getAllAreaStats(history)
-  const weakest = getWeakestAreas(history, 2)
-  const weakestKeys = new Set(weakest.map((a) => `${areaKey(a)}-${a.level}`))
+  const areas = useMemo(() => getAllAreaStats(history), [history])
+  const weakest = useMemo(() => getWeakestAreas(history, 2), [history])
+  const weakestKeys = useMemo(
+    () => new Set(weakest.map((a) => `${areaKey(a)}-${a.level}`)),
+    [weakest],
+  )
   const hasAnyAttempts = areas.some((a) => a.stats.attempts > 0)
-  const trend = getDailyAccuracyTrend(history, TREND_DAYS)
-  const activityCalendar = getActivityCalendar(history, ACTIVITY_WEEKS)
+  const trend = useMemo(() => getDailyAccuracyTrend(history, TREND_DAYS), [history])
+  const activityCalendar = useMemo(
+    () => getActivityCalendar(history, ACTIVITY_WEEKS),
+    [history],
+  )
 
   return (
     <div className="mx-auto flex w-full max-w-md flex-col gap-6 px-4 py-8 sm:px-6 sm:py-12">
