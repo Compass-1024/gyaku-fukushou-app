@@ -1,0 +1,191 @@
+import { describe, expect, it, beforeEach } from 'vitest'
+import {
+  loadHistory,
+  appendHistoryEntry,
+  getLevelStats,
+  getTodayCount,
+  getStreakDays,
+  getAllAreaStats,
+  getWeakestAreas,
+  getDailyAccuracyTrend,
+} from './history'
+import type { HistoryEntry } from '../types'
+
+function createMemoryStorage(): Storage {
+  let store: Record<string, string> = {}
+  return {
+    getItem: (key: string) => (key in store ? store[key] : null),
+    setItem: (key: string, value: string) => {
+      store[key] = value
+    },
+    removeItem: (key: string) => {
+      delete store[key]
+    },
+    clear: () => {
+      store = {}
+    },
+    key: (i: number) => Object.keys(store)[i] ?? null,
+    get length() {
+      return Object.keys(store).length
+    },
+  }
+}
+
+beforeEach(() => {
+  globalThis.localStorage = createMemoryStorage()
+})
+
+describe('loadHistory / appendHistoryEntry', () => {
+  it('starts empty', () => {
+    expect(loadHistory()).toEqual([])
+  })
+
+  it('persists an entry with a generated timestamp', () => {
+    appendHistoryEntry({ mode: 'word', level: 1, correct: 2, total: 3 })
+    const history = loadHistory()
+    expect(history).toHaveLength(1)
+    expect(history[0]).toMatchObject({
+      mode: 'word',
+      level: 1,
+      correct: 2,
+      total: 3,
+    })
+    expect(typeof history[0].timestamp).toBe('string')
+  })
+})
+
+describe('getLevelStats', () => {
+  it('returns null accuracy with no matching entries', () => {
+    expect(getLevelStats([], 1, 'word')).toEqual({
+      attempts: 0,
+      accuracy: null,
+    })
+  })
+
+  it('aggregates only entries matching level/mode/gameType', () => {
+    const now = new Date().toISOString()
+    const history: HistoryEntry[] = [
+      { mode: 'word', level: 1, correct: 2, total: 3, timestamp: now },
+      { mode: 'word', level: 2, correct: 1, total: 3, timestamp: now },
+      {
+        mode: 'digit',
+        gameType: 'reverse',
+        level: 1,
+        correct: 3,
+        total: 3,
+        timestamp: now,
+      },
+    ]
+    expect(getLevelStats(history, 1, 'word')).toEqual({
+      attempts: 1,
+      accuracy: 67,
+    })
+    expect(getLevelStats(history, 1, 'digit', 'reverse')).toEqual({
+      attempts: 1,
+      accuracy: 100,
+    })
+    expect(getLevelStats(history, 1, 'digit', 'sum')).toEqual({
+      attempts: 0,
+      accuracy: null,
+    })
+  })
+})
+
+function daysAgo(n: number): string {
+  const d = new Date()
+  d.setDate(d.getDate() - n)
+  return d.toISOString()
+}
+
+function entryOn(timestamp: string): HistoryEntry {
+  return { mode: 'word', level: 1, correct: 1, total: 1, timestamp }
+}
+
+describe('getTodayCount', () => {
+  it('counts only entries from today', () => {
+    const history = [entryOn(daysAgo(0)), entryOn(daysAgo(1))]
+    expect(getTodayCount(history)).toBe(1)
+  })
+})
+
+describe('getStreakDays', () => {
+  it('counts consecutive days including today', () => {
+    const history = [entryOn(daysAgo(0)), entryOn(daysAgo(1)), entryOn(daysAgo(2))]
+    expect(getStreakDays(history)).toBe(3)
+  })
+
+  it('keeps the streak alive if today has not been played yet', () => {
+    const history = [entryOn(daysAgo(1)), entryOn(daysAgo(2))]
+    expect(getStreakDays(history)).toBe(2)
+  })
+
+  it('breaks the streak when there is a gap', () => {
+    const history = [entryOn(daysAgo(2))]
+    expect(getStreakDays(history)).toBe(0)
+  })
+
+  it('returns 0 for empty history', () => {
+    expect(getStreakDays([])).toBe(0)
+  })
+})
+
+describe('getAllAreaStats', () => {
+  it('enumerates all 12 mode/gameType/level combinations', () => {
+    const areas = getAllAreaStats([])
+    expect(areas).toHaveLength(12)
+    expect(areas.every((a) => a.stats.attempts === 0)).toBe(true)
+  })
+})
+
+describe('getWeakestAreas', () => {
+  it('excludes areas with no attempts and sorts ascending by accuracy', () => {
+    const now = new Date().toISOString()
+    const history: HistoryEntry[] = [
+      { mode: 'word', level: 1, correct: 3, total: 3, timestamp: now },
+      { mode: 'word', level: 2, correct: 1, total: 4, timestamp: now },
+      {
+        mode: 'digit',
+        gameType: 'reverse',
+        level: 1,
+        correct: 2,
+        total: 4,
+        timestamp: now,
+      },
+    ]
+    const weakest = getWeakestAreas(history, 2)
+    expect(weakest).toHaveLength(2)
+    expect(weakest[0]).toMatchObject({ mode: 'word', level: 2 })
+    expect(weakest[1]).toMatchObject({ mode: 'digit', gameType: 'reverse', level: 1 })
+  })
+
+  it('returns an empty array when nothing has been attempted', () => {
+    expect(getWeakestAreas([], 2)).toEqual([])
+  })
+})
+
+describe('getDailyAccuracyTrend', () => {
+  it('returns the requested number of days, oldest first', () => {
+    const trend = getDailyAccuracyTrend([], 7)
+    expect(trend).toHaveLength(7)
+    expect(trend[6].dateKey).toBe(
+      (() => {
+        const d = new Date()
+        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+      })(),
+    )
+  })
+
+  it('returns null accuracy for days with no entries', () => {
+    const trend = getDailyAccuracyTrend([], 3)
+    expect(trend.every((d) => d.accuracy === null)).toBe(true)
+  })
+
+  it('aggregates accuracy for a day with entries', () => {
+    const history = [
+      entryOn(daysAgo(0)),
+      { mode: 'word' as const, level: 1 as const, correct: 0, total: 1, timestamp: daysAgo(0) },
+    ]
+    const trend = getDailyAccuracyTrend(history, 1)
+    expect(trend[0].accuracy).toBe(50)
+  })
+})
