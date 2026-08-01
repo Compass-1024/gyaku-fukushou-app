@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import { useSpeechSynthesis } from '../hooks/useSpeechSynthesis'
 import { useSpeechRecognition } from '../hooks/useSpeechRecognition'
 import {
@@ -9,7 +9,7 @@ import {
   LEVEL_LABELS,
 } from '../lib/phrases'
 import { reverseText } from '../lib/reverse'
-import { findMatchingAlternative } from '../lib/kana'
+import { findMatchingAlternative, normalizeForCompare } from '../lib/kana'
 import {
   appendHistoryEntry,
   getBestSetAccuracy,
@@ -50,7 +50,8 @@ interface GameScreenProps {
 
 export function GameScreen({ level, onExit, onSelectLevel }: GameScreenProps) {
   const { supported: synthesisSupported, speak } = useSpeechSynthesis()
-  const { listening, listenOnce } = useSpeechRecognition()
+  const { listening, listenOnce, supported: recognitionSupported } =
+    useSpeechRecognition()
 
   const [questions, setQuestions] = useState<Phrase[]>(() =>
     pickQuestionSet(level),
@@ -60,6 +61,7 @@ export function GameScreen({ level, onExit, onSelectLevel }: GameScreenProps) {
   const [repeatRemaining, setRepeatRemaining] = useState(
     REPEAT_SECONDS[level],
   )
+  const [typedAnswer, setTypedAnswer] = useState('')
   const [currentResult, setCurrentResult] = useState<QuestionResult | null>(
     null,
   )
@@ -85,6 +87,7 @@ export function GameScreen({ level, onExit, onSelectLevel }: GameScreenProps) {
     let cancelled = false
     setPhase('reading')
     setCurrentResult(null)
+    setTypedAnswer('')
     speak(currentPhrase.text).then(() => {
       if (!cancelled) setPhase('repeat')
     })
@@ -120,8 +123,9 @@ export function GameScreen({ level, onExit, onSelectLevel }: GameScreenProps) {
   }, [phase, listenTimeoutMs])
 
   // 逆復唱フェーズ: 音声認識で回答を受け取り正誤判定する
+  // （非対応ブラウザではテキスト入力フォームでの回答に切り替えるため、ここでは何もしない）
   useEffect(() => {
-    if (phase !== 'listening') return
+    if (phase !== 'listening' || !recognitionSupported) return
     let cancelled = false
     listenOnce(listenTimeoutMs).then(
       ({ transcript, alternatives, error }) => {
@@ -152,7 +156,7 @@ export function GameScreen({ level, onExit, onSelectLevel }: GameScreenProps) {
     return () => {
       cancelled = true
     }
-  }, [phase, currentPhrase, listenTimeoutMs, listenOnce, level])
+  }, [phase, currentPhrase, listenTimeoutMs, listenOnce, level, recognitionSupported])
 
   // 3問セットが完了するたびに結果を記録し、新規実績の解除やレベルアップを演出する
   useEffect(() => {
@@ -204,6 +208,27 @@ export function GameScreen({ level, onExit, onSelectLevel }: GameScreenProps) {
   function handleRetryListening() {
     setCurrentResult(null)
     setPhase('listening')
+  }
+
+  // 音声認識非対応ブラウザ向け: テキスト入力での回答を判定する
+  function handleSubmitTypedAnswer(e: FormEvent) {
+    e.preventDefault()
+    const expectedAnswer = reverseText(currentPhrase.text)
+    const correct =
+      typedAnswer.length > 0 &&
+      normalizeForCompare(typedAnswer) === normalizeForCompare(expectedAnswer)
+    if (loadSettings().soundEnabled) {
+      if (correct) playCorrectSound()
+      else playIncorrectSound()
+    }
+    setCurrentResult({
+      phrase: currentPhrase,
+      expectedAnswer,
+      heard: typedAnswer,
+      correct,
+      micError: null,
+    })
+    setPhase('result')
   }
 
   // 結果表示中はEnterキーでも次の問題へ進めるようにし、テンポよく周回できるようにする
@@ -304,7 +329,7 @@ export function GameScreen({ level, onExit, onSelectLevel }: GameScreenProps) {
           </>
         )}
 
-        {phase === 'listening' && (
+        {phase === 'listening' && recognitionSupported && (
           <>
             <span
               className={`text-5xl ${listening ? 'animate-pop' : ''}`}
@@ -321,6 +346,32 @@ export function GameScreen({ level, onExit, onSelectLevel }: GameScreenProps) {
               聞き取っています…
             </p>
           </>
+        )}
+
+        {phase === 'listening' && !recognitionSupported && (
+          <form
+            onSubmit={handleSubmitTypedAnswer}
+            className="flex w-full max-w-xs flex-col items-center gap-3"
+          >
+            <p className="text-lg font-medium text-gray-800 dark:text-gray-100">
+              今度は反対から入力してください
+            </p>
+            <input
+              type="text"
+              value={typedAnswer}
+              onChange={(e) => setTypedAnswer(e.target.value)}
+              autoFocus
+              aria-label="逆から読んだ答え"
+              className="w-full rounded-lg border border-gray-300 bg-gray-50 px-4 py-2 text-center text-2xl font-bold tracking-widest text-gray-900 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"
+            />
+            <button
+              type="submit"
+              disabled={typedAnswer.length === 0}
+              className="touch-manipulation rounded-lg bg-indigo-500 px-5 py-3 font-semibold text-white shadow-sm transition hover:bg-indigo-400 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              決定
+            </button>
+          </form>
         )}
 
         {phase === 'result' && currentResult && (

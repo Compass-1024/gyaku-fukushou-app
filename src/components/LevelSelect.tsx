@@ -47,8 +47,9 @@ export function LevelSelect({
           role="status"
           className="rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-700 dark:bg-amber-900/30 dark:text-amber-200"
         >
-          お使いのブラウザは音声認識に対応していません。Google Chrome や
-          Microsoft Edge でお試しください。
+          お使いのブラウザは音声認識に対応していません。代わりにテキスト入力で
+          回答できます。音声で発話練習したい場合は Google Chrome や Microsoft
+          Edge でお試しください。
         </div>
       )}
 
@@ -57,7 +58,6 @@ export function LevelSelect({
         descriptionFor={(level) => LEVEL_DESCRIPTIONS[level]}
         colorFor={(level) => LEVEL_STYLES[level]}
         statsFor={(level) => getLevelStats(history, level, 'word')}
-        disabled={!recognitionSupported}
         onSelect={onSelect}
       />
     </div>
