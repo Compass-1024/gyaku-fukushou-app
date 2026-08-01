@@ -29,6 +29,8 @@
 
 ### Changed
 
+- 品質・保守性向上のためのリファクタリング3周目を実施（機能仕様・UIの変更なし）
+  - `SettingsScreen.tsx`（419行、テーマ/音声/効果音/日次目標/通知/バックアップが1コンポーネントに同居）を6つのセクションコンポーネント（`SettingsThemeSection`/`SettingsVoiceSection`/`SettingsDailyGoalSection`/`SettingsSoundSection`/`SettingsNotificationSection`/`SettingsDataSection`）に分割。`SettingsScreen.tsx`は`AppSettings`の保持とprops受け渡しのみを担うシェルに縮小（419行→99行）
 - 品質・保守性向上のためのリファクタリング2周目を実施（機能仕様・UIの変更なし）
   - Digit/Spatial/Tone/NBackの4画面で重複していた「ready→showing」ステップ式の出題演出（数字・マス・パッドを1つずつ表示）を`src/hooks/useStepReveal.ts`へ共通化
   - 6つのゲーム画面で約150行ほぼ同一のまま重複していた「セット完了時の履歴記録・自己ベスト判定・新規実績判定・レベルアップ/実績解除の効果音再生」処理を`src/hooks/useSetCompletionRecorder.ts`へ共通化（最大のDRY違反だった箇所）
