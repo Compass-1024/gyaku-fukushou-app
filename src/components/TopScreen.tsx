@@ -1,7 +1,14 @@
+import { useEffect, useState } from 'react'
 import { getStreakDays, getTodayCount, getWeakestAreas } from '../lib/history'
 import type { AreaStats } from '../lib/history'
 import { loadSettings } from '../lib/settings'
 import { playButtonTap } from '../lib/sound'
+import {
+  getWeeklyRecap,
+  getLastShownRecapWeekKey,
+  markRecapShown,
+} from '../lib/recap'
+import type { WeeklyRecap } from '../lib/recap'
 import type { HistoryEntry, Mode } from '../types'
 
 const AREA_LABELS: Record<string, string> = {
@@ -41,6 +48,23 @@ export function TopScreen({
     dailyGoal > 0 ? Math.min(100, Math.round((todayCount / dailyGoal) * 100)) : 0
   const recommended = getWeakestAreas(history, 1)[0]
   const streakAtRisk = streakDays > 0 && todayCount === 0
+
+  // 週が変わるたびに、直近に完了した週の振り返りを1回だけ表示する
+  const [recap, setRecap] = useState<WeeklyRecap | null>(null)
+  useEffect(() => {
+    const latest = getWeeklyRecap(history)
+    if (latest && latest.weekKey !== getLastShownRecapWeekKey()) {
+      setRecap(latest)
+    } else {
+      setRecap(null)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [history])
+
+  function handleDismissRecap() {
+    if (recap) markRecapShown(recap.weekKey)
+    setRecap(null)
+  }
 
   return (
     <div className="mx-auto flex w-full max-w-md flex-col gap-8 px-4 py-8 sm:px-6 sm:py-12">
@@ -99,6 +123,37 @@ export function TopScreen({
           </p>
         )}
       </div>
+
+      {recap && (
+        <div className="animate-pop relative rounded-xl border border-sky-200 bg-sky-50 px-4 py-3 dark:border-sky-800 dark:bg-sky-900/20">
+          <button
+            type="button"
+            onClick={handleDismissRecap}
+            aria-label="振り返りを閉じる"
+            className="absolute top-2 right-2 touch-manipulation rounded-full p-1 text-sky-400 hover:bg-sky-100 dark:text-sky-500 dark:hover:bg-sky-900/40"
+          >
+            ✕
+          </button>
+          <p className="text-xs font-semibold text-sky-600 dark:text-sky-300">
+            📅 先週の振り返り
+          </p>
+          <p className="mt-1 text-sm text-gray-700 dark:text-gray-200">
+            {recap.totalSets}セット完了
+            {recap.accuracyPercent !== null && `、正答率${recap.accuracyPercent}%`}
+            でした
+          </p>
+          {recap.previousWeekSets > 0 && (
+            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+              {recap.totalSets > recap.previousWeekSets &&
+                `📈 前々週（${recap.previousWeekSets}セット）より増えています！`}
+              {recap.totalSets < recap.previousWeekSets &&
+                `前々週は${recap.previousWeekSets}セットでした。無理のないペースで続けましょう`}
+              {recap.totalSets === recap.previousWeekSets &&
+                `前々週と同じペースです`}
+            </p>
+          )}
+        </div>
+      )}
 
       {recommended && (
         <button

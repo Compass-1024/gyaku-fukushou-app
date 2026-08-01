@@ -72,7 +72,7 @@ export function getLevelStats(
 }
 
 // タイムスタンプをローカルタイムゾーンの日付キー（YYYY-MM-DD）に変換する
-function localDateKey(date: Date): string {
+export function localDateKey(date: Date): string {
   const y = date.getFullYear()
   const m = String(date.getMonth() + 1).padStart(2, '0')
   const d = String(date.getDate()).padStart(2, '0')
