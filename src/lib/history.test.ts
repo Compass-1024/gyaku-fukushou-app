@@ -10,6 +10,7 @@ import {
   getWeakestAreas,
   getBestSetAccuracy,
   getDailyAccuracyTrend,
+  getActivityCalendar,
 } from './history'
 import type { HistoryEntry } from '../types'
 
@@ -101,6 +102,12 @@ function daysAgo(n: number): string {
 
 function entryOn(timestamp: string): HistoryEntry {
   return { mode: 'word', level: 1, correct: 1, total: 1, timestamp }
+}
+
+function localKeyDaysAgo(n: number): string {
+  const d = new Date()
+  d.setDate(d.getDate() - n)
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 }
 
 describe('getTodayCount', () => {
@@ -276,5 +283,42 @@ describe('getDailyAccuracyTrend', () => {
     ]
     const trend = getDailyAccuracyTrend(history, 1)
     expect(trend[0].accuracy).toBe(50)
+  })
+})
+
+describe('getActivityCalendar', () => {
+  it('returns exactly weeks*7 cells', () => {
+    const calendar = getActivityCalendar([], 4)
+    expect(calendar).toHaveLength(28)
+  })
+
+  it('starts each week on Sunday and ends on Saturday', () => {
+    const calendar = getActivityCalendar([], 2)
+    expect(calendar[0].weekday).toBe(0)
+    expect(calendar[13].weekday).toBe(6)
+  })
+
+  it('marks days after today as -1 (no data yet)', () => {
+    const calendar = getActivityCalendar([], 2)
+    const todayKey = localKeyDaysAgo(0)
+    const todayEntry = calendar.find((d) => d.dateKey === todayKey)
+    expect(todayEntry?.count).toBeGreaterThanOrEqual(0)
+    for (const day of calendar) {
+      if (day.dateKey > todayKey) expect(day.count).toBe(-1)
+    }
+  })
+
+  it('counts the number of completed sets per day', () => {
+    const history = [entryOn(daysAgo(0)), entryOn(daysAgo(0)), entryOn(daysAgo(1))]
+    const calendar = getActivityCalendar(history, 1)
+    const todayKey = localKeyDaysAgo(0)
+    const yesterdayKey = localKeyDaysAgo(1)
+    expect(calendar.find((d) => d.dateKey === todayKey)?.count).toBe(2)
+    expect(calendar.find((d) => d.dateKey === yesterdayKey)?.count).toBe(1)
+  })
+
+  it('returns 0 for days with no activity', () => {
+    const calendar = getActivityCalendar([], 1)
+    expect(calendar.every((d) => d.count === 0 || d.count === -1)).toBe(true)
   })
 })

@@ -2,9 +2,10 @@ import {
   getAllAreaStats,
   getWeakestAreas,
   getDailyAccuracyTrend,
+  getActivityCalendar,
 } from '../lib/history'
 import { ACHIEVEMENTS } from '../lib/achievements'
-import type { DailyAccuracy } from '../lib/history'
+import type { ActivityDay, DailyAccuracy } from '../lib/history'
 import type { DigitGameType, HistoryEntry, Mode } from '../types'
 
 interface StatsScreenProps {
@@ -20,6 +21,87 @@ const AREA_LABELS: Record<string, string> = {
 }
 
 const TREND_DAYS = 14
+const ACTIVITY_WEEKS = 18
+
+const WEEKDAY_LABELS = ['日', '月', '火', '水', '木', '金', '土']
+
+function activityLevel(count: number): 0 | 1 | 2 | 3 {
+  if (count <= 0) return 0
+  if (count === 1) return 1
+  if (count === 2) return 2
+  return 3
+}
+
+const ACTIVITY_LEVEL_CLASSES: Record<0 | 1 | 2 | 3, string> = {
+  0: 'fill-gray-100 dark:fill-gray-700',
+  1: 'fill-indigo-200 dark:fill-indigo-900',
+  2: 'fill-indigo-400 dark:fill-indigo-600',
+  3: 'fill-indigo-600 dark:fill-indigo-400',
+}
+
+function ActivityHeatmap({ calendar }: { calendar: ActivityDay[] }) {
+  const weeks = calendar.length / 7
+  const gap = 2
+  const cellSize = 12
+  const width = weeks * cellSize + (weeks - 1) * gap
+  const height = 7 * cellSize + 6 * gap
+  const activeDays = calendar.filter((d) => d.count > 0).length
+
+  return (
+    <div className="flex flex-col gap-2">
+      <div className="overflow-x-auto">
+        <svg
+          viewBox={`0 0 ${width} ${height}`}
+          width={width}
+          height={height}
+          role="img"
+          aria-label={`直近${weeks}週間の学習カレンダー。学習した日数は${activeDays}日`}
+        >
+          {calendar.map((day, i) => {
+            if (day.count < 0) return null
+            const col = Math.floor(i / 7)
+            const row = day.weekday
+            const x = col * (cellSize + gap)
+            const y = row * (cellSize + gap)
+            return (
+              <rect
+                key={day.dateKey}
+                x={x}
+                y={y}
+                width={cellSize}
+                height={cellSize}
+                rx={2}
+                className={ACTIVITY_LEVEL_CLASSES[activityLevel(day.count)]}
+              >
+                <title>{`${day.dateKey}: ${day.count}セット`}</title>
+              </rect>
+            )
+          })}
+        </svg>
+      </div>
+      <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
+        <span>直近{weeks}週間で{activeDays}日学習</span>
+        <span className="flex items-center gap-1">
+          少ない
+          {([0, 1, 2, 3] as const).map((level) => (
+            <svg key={level} width={10} height={10} aria-hidden="true">
+              <rect
+                width={10}
+                height={10}
+                rx={2}
+                className={ACTIVITY_LEVEL_CLASSES[level]}
+              />
+            </svg>
+          ))}
+          多い
+        </span>
+      </div>
+      <span className="sr-only">
+        曜日は上から{WEEKDAY_LABELS.join('・')}の順で、左が過去・右が直近の週です。
+      </span>
+    </div>
+  )
+}
 
 function areaKey(area: { mode: Mode; gameType?: DigitGameType }): string {
   return area.gameType ? `${area.mode}-${area.gameType}` : area.mode
@@ -125,6 +207,7 @@ export function StatsScreen({ history, onBack }: StatsScreenProps) {
   const weakestKeys = new Set(weakest.map((a) => `${areaKey(a)}-${a.level}`))
   const hasAnyAttempts = areas.some((a) => a.stats.attempts > 0)
   const trend = getDailyAccuracyTrend(history, TREND_DAYS)
+  const activityCalendar = getActivityCalendar(history, ACTIVITY_WEEKS)
 
   return (
     <div className="mx-auto flex w-full max-w-md flex-col gap-6 px-4 py-8 sm:px-6 sm:py-12">
@@ -146,6 +229,15 @@ export function StatsScreen({ history, onBack }: StatsScreenProps) {
         </p>
       ) : (
         <>
+          <section className="flex flex-col gap-2">
+            <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400">
+              学習カレンダー
+            </h2>
+            <div className="rounded-lg border border-gray-200 bg-white px-3 py-3 dark:border-gray-700 dark:bg-gray-800">
+              <ActivityHeatmap calendar={activityCalendar} />
+            </div>
+          </section>
+
           <section className="flex flex-col gap-2">
             <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400">
               正答率の推移（直近{TREND_DAYS}日間）

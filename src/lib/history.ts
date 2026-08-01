@@ -176,6 +176,47 @@ export interface DailyAccuracy {
   accuracy: number | null
 }
 
+export interface ActivityDay {
+  dateKey: string
+  // 完了セット数。-1は未来日（まだ存在しない日、グリッドの穴埋め用）を示す
+  count: number
+  weekday: number
+}
+
+// 直近N週間分の日別活動量（GitHub風ヒートマップ用）。
+// 日曜始まり・土曜終わりの週単位グリッドに揃え、今週の残り（未来日）はcount: -1で埋める
+export function getActivityCalendar(
+  history: HistoryEntry[],
+  weeks: number,
+): ActivityDay[] {
+  const counts = new Map<string, number>()
+  for (const e of history) {
+    const key = localDateKey(new Date(e.timestamp))
+    counts.set(key, (counts.get(key) ?? 0) + 1)
+  }
+
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  const gridEnd = new Date(today)
+  gridEnd.setDate(gridEnd.getDate() + (6 - today.getDay()))
+  const gridStart = new Date(gridEnd)
+  gridStart.setDate(gridStart.getDate() - (weeks * 7 - 1))
+
+  const result: ActivityDay[] = []
+  const cursor = new Date(gridStart)
+  while (cursor <= gridEnd) {
+    const dateKey = localDateKey(cursor)
+    const isFuture = cursor > today
+    result.push({
+      dateKey,
+      count: isFuture ? -1 : (counts.get(dateKey) ?? 0),
+      weekday: cursor.getDay(),
+    })
+    cursor.setDate(cursor.getDate() + 1)
+  }
+  return result
+}
+
 // 直近N日間（今日を含む）の日別正答率の推移。挑戦していない日はnull
 export function getDailyAccuracyTrend(
   history: HistoryEntry[],
