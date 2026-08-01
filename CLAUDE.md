@@ -320,6 +320,43 @@ interface AppSettings {
 
 React描画時の例外は`src/components/ErrorBoundary.tsx`で捕捉し、`window.onerror`/`unhandledrejection`は`src/lib/logger.ts`の`installGlobalErrorHandlers`（`main.tsx`で起動時に登録）で捕捉する。バックエンドを持たないため外部監視サービスへの送信は行わず、`console.error`への構造化ログ出力とメモリ上への直近件数の保持のみ。詳細は[ERROR_HANDLING.md](ERROR_HANDLING.md)を参照。
 
+## 開発サイクル（自走改善時の運用ルール）
+
+1. **分析**: ROADMAP.mdの「候補」欄から次の1件を選ぶ。なければ新規に改善案を提案してから着手する。既存コード・設計・CHANGELOG.md/ROADMAP.mdの完了履歴も参照し、重複や矛盾がないか確認する。
+2. **実装**: 新機能または改善を実装する。1サイクルの粒度は「動作する状態を保ったまま完結する1つの変更」を目安にする。大きな機能（新モード追加など）は「型定義→ロジック→UI→ナビゲーション統合」のようにサブサイクルへ分割し、サブサイクルごとにコミットしてよい。
+3. **検証**: 以下を順に実施する。
+   - `npm run build`（型チェック含む）
+   - `npm run lint`
+   - `npm run test`（新規ロジックには`src/lib/`に`*.test.ts`を併置）
+   - 影響範囲のE2E（`npm run test:e2e -- <対象spec>`）。新しい画面・主要フローを追加した場合は`e2e/`にスモークテストを追加する
+   - タイマー/アニメーションを伴うUIは、対話的なブラウザ確認より実プロセス内タイマーで動くE2Eの方が正確。ブラウザでの確認は補助的な位置づけとする
+4. **コミット**: 検証が通った状態でコミットする（ビルド可能な状態を維持）。
+5. **CHANGELOG.md更新**: `[Unreleased]`セクションに変更内容を追記する。
+6. **ROADMAP.md更新**: 完了項目を「候補」→「完了」へ移動し、日付を付す。新たに見つかった改善案があれば「候補」に追加する。
+7. **次のサイクルへ**: 1〜6を繰り返す。
+
+### push・デプロイのタイミング
+
+コミットまでを1サイクルの範囲とし、`git push`（Vercelへの自動デプロイのトリガーになる）は都度ユーザーに確認してから行う。複数サイクル分をまとめて1回のpushにするかは、ユーザーの指示に従う。
+
+### 新モード・新画面を追加する際に触るべきファイル
+
+新しいトレーニングモードを追加する場合、以下が影響範囲になりやすい（実装時のチェックリスト）:
+
+- `src/types.ts`: `Mode`型の拡張、出題/結果の型定義
+- `src/lib/<mode>.ts`＋`<mode>.test.ts`: 出題生成・正誤判定ロジック
+- `src/lib/history.ts`: `ALL_AREAS`への追加（統計集計対象になる）
+- `src/lib/achievements.ts`: レベル3到達実績などの追加検討
+- `src/components/<Mode>LevelSelect.tsx` / `<Mode>GameScreen.tsx`: 画面実装
+- `src/components/StatsScreen.tsx` / `TopScreen.tsx`: `AREA_LABELS`などのラベル追加
+- `src/App.tsx`: `View`型・`goTo`の履歴再読み込み条件・ルーティングのcase分岐
+- `e2e/`: 主要導線のスモークテスト
+- CLAUDE.md（本ファイル）: Screen structure図・Feature requirements・実績一覧・データモデルの反映
+
+### 設計ドキュメント（CLAUDE.md）反映のタイミング
+
+CHANGELOG.md/ROADMAP.mdは毎サイクル更新するが、CLAUDE.mdのような設計ドキュメントは複数サイクルにまたがる開発の完了後にまとめて反映してよい（開発途中の頻繁な書き換えによるノイズを避けるため）。ただしユーザーから都度反映の指示があればそれに従う。
+
 ## See also
 
 - [README.md](README.md) — ユーザー向けの簡潔な概要
