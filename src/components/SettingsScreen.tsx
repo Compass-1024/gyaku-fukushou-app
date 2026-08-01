@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type ChangeEvent } from 'react'
 import { loadSettings, saveSettings } from '../lib/settings'
 import { clearHistory, loadHistory, replaceHistory } from '../lib/history'
 import {
@@ -115,7 +115,7 @@ export function SettingsScreen({
     fileInputRef.current?.click()
   }
 
-  async function handleImportFile(e: React.ChangeEvent<HTMLInputElement>) {
+  async function handleImportFile(e: ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     e.target.value = ''
     if (!file) return
