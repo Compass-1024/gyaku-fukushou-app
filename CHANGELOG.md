@@ -29,7 +29,14 @@
 
 ### Changed
 
-- 品質・保守性向上のためのリファクタリングを実施（機能仕様・UIの変更なし）
+- 品質・保守性向上のためのリファクタリング2周目を実施（機能仕様・UIの変更なし）
+  - Digit/Spatial/Tone/NBackの4画面で重複していた「ready→showing」ステップ式の出題演出（数字・マス・パッドを1つずつ表示）を`src/hooks/useStepReveal.ts`へ共通化
+  - 6つのゲーム画面で約150行ほぼ同一のまま重複していた「セット完了時の履歴記録・自己ベスト判定・新規実績判定・レベルアップ/実績解除の効果音再生」処理を`src/hooks/useSetCompletionRecorder.ts`へ共通化（最大のDRY違反だった箇所）
+  - 6つのゲーム画面で再定義されていた同一形状のprops型（`level`/`onExit`/`onSelectLevel`）を`types.ts`の`BaseGameScreenProps`に共通化
+  - `src/lib/push.ts`の`urlBase64ToUint8Array`をexportしユニットテストを追加（push.ts自体はこれまでテストが無かった）
+  - `getActivityCalendar`にテスト用の`now`引数（デフォルト値付き、既存呼び出しへの影響なし）を追加。あわせて、実時刻（daysAgo）依存で実行タイミング（日曜日・月境界）によりまれに失敗していた`history.test.ts`の2テストを固定日付での検証に修正
+  - コードコメントの表記統一（既存の英語コメント数箇所を日本語に修正）
+- 品質・保守性向上のためのリファクタリング1周目を実施（機能仕様・UIの変更なし）
   - 結果表示中にEnterキーで次の問題へ進める処理が5つのゲーム画面コンポーネントで重複していたため、`src/hooks/useEnterKey.ts`へ共通化
   - 回答フェーズの残り時間カウントダウン＋タイムアウト自動採点が4つのゲーム画面コンポーネントで重複していたため、`src/hooks/useCountdown.ts`へ共通化。あわせて、タイムアウト時に最新の入力値を読むために`setState`のアップデータ関数内で採点処理（副作用）を呼んでいた実装をrefベースの読み取りに修正
   - `StatsScreen`の統計計算（`getAllAreaStats`等）を`useMemo`化し、不要な再計算を回避
