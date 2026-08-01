@@ -3,6 +3,9 @@ import { loadSettings } from '../lib/settings'
 
 const supported = typeof window !== 'undefined' && 'speechSynthesis' in window
 
+const SPEECH_TIMEOUT_BASE_MS = 4000
+const SPEECH_TIMEOUT_PER_CHAR_MS = 700
+
 export function useSpeechSynthesis() {
   const voiceRef = useRef<SpeechSynthesisVoice | null>(null)
 
@@ -39,8 +42,24 @@ export function useSpeechSynthesis() {
       utterance.lang = 'ja-JP'
       utterance.rate = loadSettings().speechRate
       if (voiceRef.current) utterance.voice = voiceRef.current
-      utterance.onend = () => resolve()
-      utterance.onerror = () => resolve()
+
+      let settled = false
+      // タブが非アクティブになるとonend/onerrorが発火しないブラウザがあるため、
+      // 発火しなかった場合に備えてフォールバックのタイムアウトを設ける
+      const timeoutMs = SPEECH_TIMEOUT_BASE_MS + text.length * SPEECH_TIMEOUT_PER_CHAR_MS
+      const timeoutId = window.setTimeout(() => {
+        if (settled) return
+        settled = true
+        resolve()
+      }, timeoutMs)
+      const settle = () => {
+        if (settled) return
+        settled = true
+        window.clearTimeout(timeoutId)
+        resolve()
+      }
+      utterance.onend = settle
+      utterance.onerror = settle
       window.speechSynthesis.speak(utterance)
     })
   }, [])
