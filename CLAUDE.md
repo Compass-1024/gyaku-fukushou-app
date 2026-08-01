@@ -231,6 +231,14 @@ flowchart TD
 - セット完了直前・直後の履歴を比較し、新規解除された実績を検出する（`getNewlyUnlockedAchievements`）。検出時は効果音＋結果画面に「🎉 新しい実績を獲得しました！」バッジを表示。
 - 統計画面では全実績を常時グリッド表示し、未解除は半透明表示。
 
+### 週間振り返りカード（`src/lib/recap.ts`）
+
+トップ画面（`TopScreen`）に表示する、継続利用率向上のための動機付け施策。直近に完了した週（月曜〜日曜）のセット数・正答率を集計し、前々週のセット数と比較したメッセージ（増加/減少/同数）を添えて表示する（`getWeeklyRecap`）。
+
+- その週に1件も記録がなければ何も表示しない（振り返る内容がないため）。
+- 週が変わるたびに1回だけ表示する。表示済みの週キーは`localStorage`（`gyaku-fukushou:lastRecapWeekKey`）に保存し、閉じる操作（`markRecapShown`）で更新する。
+- SNSシェア（「結果をシェア」機能）と相性の良い訴求内容を意図して設計。
+
 ### サプライズ演出（`src/lib/luckyBonus.ts`）
 
 実績のような「達成すれば必ずもらえる」確定報酬とは別に、結果画面（SetSummary）表示のたびに12%の確率で「🍀 ラッキーデー！」バッジを表示する完全にランダムな演出（`rollLuckyBonus`）。実績・統計・レベル判定など、いかなる評価軸にも一切影響しない飾りの演出として意図的に設計しており、実績システムの価値を損なわない。SetSummaryのマウント時に1回だけ判定し、以降の再描画では再抽選しない。
@@ -294,6 +302,7 @@ Web Audio APIによる完全プログラム生成のシンセサイザー方式�
 |---|---|---|
 | `gyaku-fukushou:history` | セット完了履歴（最大200件、古い順に切り捨て） | `HistoryEntry[]`のJSON配列 |
 | `gyaku-fukushou:settings` | アプリ設定 | `AppSettings`のJSONオブジェクト |
+| `gyaku-fukushou:lastRecapWeekKey` | 週間振り返りカードの表示済み週（[週間振り返りカード](#週間振り返りカードsrclibrecapts)参照。読み書きは`src/lib/recap.ts`が単独で担い、上記2ファイルには集約していない） | 週の月曜日を表す日付キー文字列 |
 
 ```ts
 interface HistoryEntry {
@@ -346,6 +355,7 @@ interface AppSettings {
   加えて`api/_lib/reminder.ts`（`src/lib/reminder.ts`の複製）にも同期確認用の軽量テスト`api/_lib/reminder.test.ts`がある。
   新しいロジックを`src/lib/`に追加する場合は、同ディレクトリに`*.test.ts`を併置してVitestでカバーすること。`vitest.config.ts`で`e2e/`ディレクトリは除外している。
 - **E2Eテスト（Playwright）**: `e2e/`配下に主要な画面遷移・操作フローのスモークテストを配置している（`playwright.config.ts`、本番ビルドを`vite preview`で配信して実行）。新しい画面や主要フローを追加した場合は、ここにスモークテストを追加することを検討する。
+- **アクセシビリティ自動検証（axe-core）**: `@axe-core/playwright`を用いた`e2e/accessibility.spec.ts`で、主要画面についてWCAG AA準拠を自動チェックする。新しい画面を追加した場合はここに対象を追加することを検討する。詳細は[ACCESSIBILITY.md](ACCESSIBILITY.md)を参照。
 
 ## Error handling / logging
 
