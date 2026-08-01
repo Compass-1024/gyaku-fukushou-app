@@ -144,13 +144,13 @@ describe('getStreakDays', () => {
   })
 
   it('bridges a single missed day using a streak freeze', () => {
-    // day0, day1 played, day2 missed, day3 played
+    // day0, day1 プレイ、day2 欠落、day3 プレイ
     const history = [entryOn(daysAgo(0)), entryOn(daysAgo(1)), entryOn(daysAgo(3))]
     expect(getStreakDays(history)).toBe(3)
   })
 
   it('does not bridge two consecutive missed days', () => {
-    // day0, day1 played, day2 and day3 missed
+    // day0, day1 プレイ、day2・day3 欠落（2日連続）
     const history = [entryOn(daysAgo(0)), entryOn(daysAgo(1)), entryOn(daysAgo(4))]
     expect(getStreakDays(history)).toBe(2)
   })
