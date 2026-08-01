@@ -31,3 +31,8 @@ dist-ssr
 /playwright-report/
 /blob-report/
 /playwright/.cache/
+
+# Vercelマーケットプレイス連携が自動インストールするエージェントスキル
+.agents/
+.claude/skills/
+skills-lock.json
