@@ -69,6 +69,13 @@ export function PrivacyScreen({ onBack }: PrivacyScreenProps) {
             ブラウザの設定からサイトデータ（localStorage）を削除する方法でも
             同様に消去できます。
           </p>
+          <p>
+            「設定」画面の「バックアップを書き出す」から、保存されている全データ
+            （トレーニング履歴・アプリ設定）をJSONファイルとして端末にダウンロード
+            できます。同画面の「バックアップから復元」で、書き出したファイルを
+            別の端末・ブラウザに読み込ませることも可能です（現在保存されている
+            データは上書きされます）。
+          </p>
         </section>
 
         <section className="flex flex-col gap-1">
