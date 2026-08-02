@@ -27,6 +27,7 @@
 - `src/lib/push.ts`の`subscribeToPush()`が失敗理由を握りつぶしていたため、実機で購読に失敗しても原因を特定できなかった問題を修正。`console.error`で実際のエラー内容を出力するようにした
 - `api/cron/reminder.ts`で`web-push`（CommonJSパッケージ）から名前付きimportしていたため、Vercel Functions（ESM）環境で`SyntaxError`が発生し関数が起動しなかった問題を修正。default importしてから分割する形に変更
 - `api/`配下の全ハンドラがWeb標準の`Request`/`Response`を前提にしていたため、実際のVercel Node Functionsのランタイム（Node.js標準の`(req, res)`形式、`req.headers`はプレーンオブジェクトで`.get()`を持たない）と不一致を起こしTypeErrorで落ちていた問題を修正。`api/_lib/http.ts`にNode.js形式向けのJSON送受信ヘルパーを追加し、全ハンドラをNode.js形式に書き直した
+- 学習データのバックアップ（エクスポート/インポート）機能で、空間・変化検出・音/色モード（新3モード）の履歴を含むバックアップファイルがインポート時に「学習履歴のデータ形式が正しくありません」として一律拒否される不具合を修正。`src/lib/backup.ts`の`VALID_MODES`が新3モード追加時に更新されておらず、`word`/`digit`/`nback`のみを許可していたのが原因（`spatial`/`pattern`/`tone`を追加）
 
 ### Changed
 

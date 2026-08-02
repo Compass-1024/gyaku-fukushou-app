@@ -10,7 +10,14 @@ export interface BackupData {
   settings: AppSettings
 }
 
-const VALID_MODES: readonly Mode[] = ['word', 'digit', 'nback']
+const VALID_MODES: readonly Mode[] = [
+  'word',
+  'digit',
+  'nback',
+  'spatial',
+  'pattern',
+  'tone',
+]
 const VALID_GAME_TYPES: readonly DigitGameType[] = ['reverse', 'sum']
 const VALID_LEVELS: readonly Level[] = [1, 2, 3]
 

@@ -33,6 +33,19 @@ describe('createBackup / serializeBackup / parseBackupJson roundtrip', () => {
   })
 })
 
+describe('createBackup / serializeBackup / parseBackupJson roundtrip（新3モード）', () => {
+  it('spatial/pattern/toneモードの履歴も正しく往復できる', () => {
+    const history: HistoryEntry[] = [
+      { mode: 'spatial', level: 1, correct: 3, total: 3, timestamp: '2026-08-01T00:00:00.000Z' },
+      { mode: 'pattern', level: 2, correct: 2, total: 3, timestamp: '2026-08-01T01:00:00.000Z' },
+      { mode: 'tone', level: 3, correct: 1, total: 3, timestamp: '2026-08-01T02:00:00.000Z' },
+    ]
+    const result = parseBackupJson(serializeBackup(createBackup(history, DEFAULT_SETTINGS)))
+    expect(result.ok).toBe(true)
+    if (result.ok) expect(result.data.history).toEqual(history)
+  })
+})
+
 describe('parseBackupJson', () => {
   it('rejects invalid JSON', () => {
     const result = parseBackupJson('not json')
