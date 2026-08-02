@@ -1,4 +1,5 @@
 import type { Level, Phrase } from '../types'
+import { getPhraseWeight, type PhraseStats } from './phraseStats'
 
 // 全てひらがな表記。読み上げ・逆復唱の判定の両方でこの文字列をそのまま使う。
 const RAW_PHRASES: Record<Level, string[]> = {
@@ -196,11 +197,26 @@ export const PHRASES: Record<Level, Phrase[]> = {
 
 const QUESTIONS_PER_SET = 3
 
-export function pickQuestionSet(level: Level): Phrase[] {
+// phraseStatsを渡すと、誤答が多いフレーズほど選ばれやすい重み付き抽選になる
+// （省略時は全フレーズ等確率＝従来どおりの挙動）
+export function pickQuestionSet(
+  level: Level,
+  phraseStats: PhraseStats = {},
+): Phrase[] {
   const pool = [...PHRASES[level]]
   const picked: Phrase[] = []
   for (let i = 0; i < QUESTIONS_PER_SET && pool.length > 0; i++) {
-    const index = Math.floor(Math.random() * pool.length)
+    const weights = pool.map((p) => getPhraseWeight(phraseStats, p.id))
+    const totalWeight = weights.reduce((sum, w) => sum + w, 0)
+    let r = Math.random() * totalWeight
+    let index = pool.length - 1
+    for (let j = 0; j < weights.length; j++) {
+      r -= weights[j]
+      if (r <= 0) {
+        index = j
+        break
+      }
+    }
     picked.push(pool[index])
     pool.splice(index, 1)
   }

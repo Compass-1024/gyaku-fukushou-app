@@ -6,6 +6,7 @@
 
 ### Added
 
+- ことばモードの出題プールに、フレーズ単位の苦手判定を反映。正誤履歴をフレーズごとに記録し（`src/lib/phraseStats.ts`、`localStorage`キー`gyaku-fukushou:phraseStats`）、誤答が多いフレーズほど次回以降の出題で選ばれやすくなる重み付き抽選に変更した（`pickQuestionSet`）。未挑戦のフレーズは標準ウェイトのまま
 - サプライズ演出「🍀 ラッキーデー！」を追加。結果画面表示のたびに12%の確率で表示される完全ランダムな演出で、実績・統計・レベル判定には一切影響しない（`src/lib/luckyBonus.ts`）
 - E2Eテストに`@axe-core/playwright`を導入し、主要な静的画面へのWCAG AA自動アクセシビリティ検証（カラーコントラスト含む）を追加（`e2e/accessibility.spec.ts`）
 - SetSummaryの結果画面完了までのEnterキー操作をE2Eでカバー（すうじモード）

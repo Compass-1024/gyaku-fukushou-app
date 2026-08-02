@@ -100,9 +100,9 @@ flowchart TD
 
 ## Feature requirements
 
-### ことばモード（`src/lib/reverse.ts`, `src/lib/kana.ts`, `src/lib/phrases.ts`）
+### ことばモード（`src/lib/reverse.ts`, `src/lib/kana.ts`, `src/lib/phrases.ts`, `src/lib/phraseStats.ts`）
 
-- **出題方式**: `PHRASES`（ひらがな表記の単語・文リスト）からレベルごとに重複なくランダムに3問抽出。
+- **出題方式**: `PHRASES`（ひらがな表記の単語・文リスト）からレベルごとに重複なく3問抽出する。等確率のランダム抽選ではなく、`src/lib/phraseStats.ts`に蓄積したフレーズ単位の正誤履歴（`localStorage`キー`gyaku-fukushou:phraseStats`）に基づく重み付き抽選（`pickQuestionSet`）。誤答が多いフレーズほどウェイトが上がり選ばれやすくなり、未挑戦のフレーズは標準ウェイトのまま（既存フレーズより優先も劣後もしない）。1問終えるたびに`recordPhraseAttempt`でそのフレーズの正誤を記録する。この仕組みはことばモード固有（他5モードは固定候補プールを持たずその場で乱数生成する方式のため未対応、[ROADMAP.md](ROADMAP.md)参照）。
 - **レベル定義**:
   | レベル | 文字数 | 収録語数 | 復唱の持ち時間 | 一致許容編集距離 |
   |---|---|---|---|---|
@@ -309,6 +309,7 @@ Web Audio APIによる完全プログラム生成のシンセサイザー方式�
 | `gyaku-fukushou:history` | セット完了履歴（最大200件、古い順に切り捨て） | `HistoryEntry[]`のJSON配列 |
 | `gyaku-fukushou:settings` | アプリ設定 | `AppSettings`のJSONオブジェクト |
 | `gyaku-fukushou:lastRecapWeekKey` | 週間振り返りカードの表示済み週（[週間振り返りカード](#週間振り返りカードsrclibrecapts)参照。読み書きは`src/lib/recap.ts`が単独で担い、上記2ファイルには集約していない） | 週の月曜日を表す日付キー文字列 |
+| `gyaku-fukushou:phraseStats` | ことばモードのフレーズ単位の正誤履歴（[ことばモード](#ことばモードsrclibreversets-srclibkanats-srclibphrasests-srclibphrasestatsts)参照。読み書きは`src/lib/phraseStats.ts`が単独で担う） | `Record<phraseId, { correct: number; total: number }>`のJSONオブジェクト |
 
 ```ts
 interface HistoryEntry {

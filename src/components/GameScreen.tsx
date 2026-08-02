@@ -11,6 +11,7 @@ import {
   LEVEL_LABELS,
 } from '../lib/phrases'
 import { reverseText } from '../lib/reverse'
+import { loadPhraseStats, recordPhraseAttempt } from '../lib/phraseStats'
 import { findMatchingAlternative, normalizeForCompare } from '../lib/kana'
 import { confirmExit } from '../lib/confirmExit'
 import { getSuggestedLevel } from '../lib/difficulty'
@@ -44,7 +45,7 @@ export function GameScreen({ level, onExit, onSelectLevel }: GameScreenProps) {
     useSpeechRecognition()
 
   const [questions, setQuestions] = useState<Phrase[]>(() =>
-    pickQuestionSet(level),
+    pickQuestionSet(level, loadPhraseStats()),
   )
   const [currentIndex, setCurrentIndex] = useState(0)
   const [phase, setPhase] = useState<QuestionPhase>('reading')
@@ -158,6 +159,7 @@ export function GameScreen({ level, onExit, onSelectLevel }: GameScreenProps) {
   function handleNext() {
     if (!currentResult) return
     if (loadSettings().soundEnabled) playButtonTap()
+    recordPhraseAttempt(currentResult.phrase.id, currentResult.correct)
     const updated = [...results, currentResult]
     setResults(updated)
     if (currentIndex + 1 >= questions.length) {
@@ -205,7 +207,7 @@ export function GameScreen({ level, onExit, onSelectLevel }: GameScreenProps) {
   useEnterKey(phase === 'result' && !finished, handleNext)
 
   function handleRetry() {
-    setQuestions(pickQuestionSet(level))
+    setQuestions(pickQuestionSet(level, loadPhraseStats()))
     setCurrentIndex(0)
     setResults([])
     setCurrentResult(null)
