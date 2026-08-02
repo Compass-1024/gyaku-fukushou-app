@@ -6,6 +6,7 @@
 
 ### Added
 
+- 統計画面に「ことばモード: 苦手なフレーズ」セクションを追加。フレーズ単位の正誤履歴（`gyaku-fukushou:phraseStats`）から、最低2回以上挑戦しかつ1回以上誤答したフレーズを正答率の低い順に最大5件表示する（`getWeakestPhrases`）
 - ことばモードの出題プールに、フレーズ単位の苦手判定を反映。正誤履歴をフレーズごとに記録し（`src/lib/phraseStats.ts`、`localStorage`キー`gyaku-fukushou:phraseStats`）、誤答が多いフレーズほど次回以降の出題で選ばれやすくなる重み付き抽選に変更した（`pickQuestionSet`）。未挑戦のフレーズは標準ウェイトのまま
 - サプライズ演出「🍀 ラッキーデー！」を追加。結果画面表示のたびに12%の確率で表示される完全ランダムな演出で、実績・統計・レベル判定には一切影響しない（`src/lib/luckyBonus.ts`）
 - E2Eテストに`@axe-core/playwright`を導入し、主要な静的画面へのWCAG AA自動アクセシビリティ検証（カラーコントラスト含む）を追加（`e2e/accessibility.spec.ts`）

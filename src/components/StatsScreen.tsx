@@ -6,6 +6,8 @@ import {
   getActivityCalendar,
 } from '../lib/history'
 import { ACHIEVEMENTS } from '../lib/achievements'
+import { loadPhraseStats, getWeakestPhrases } from '../lib/phraseStats'
+import { findPhraseById } from '../lib/phrases'
 import type { ActivityDay, DailyAccuracy } from '../lib/history'
 import type { DigitGameType, HistoryEntry, Mode } from '../types'
 
@@ -214,6 +216,8 @@ export function StatsScreen({ history, onBack }: StatsScreenProps) {
   )
   const hasAnyAttempts = areas.some((a) => a.stats.attempts > 0)
   const trend = useMemo(() => getDailyAccuracyTrend(history, TREND_DAYS), [history])
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- historyの更新に連動してlocalStorageを読み直す
+  const weakPhrases = useMemo(() => getWeakestPhrases(loadPhraseStats(), 5), [history])
   const activityCalendar = useMemo(
     () => getActivityCalendar(history, ACTIVITY_WEEKS),
     [history],
@@ -324,6 +328,33 @@ export function StatsScreen({ history, onBack }: StatsScreenProps) {
               })}
             </ul>
           </section>
+
+          {weakPhrases.length > 0 && (
+            <section className="flex flex-col gap-2">
+              <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400">
+                ことばモード: 苦手なフレーズ
+              </h2>
+              <ul className="flex flex-col gap-2">
+                {weakPhrases.map((wp) => {
+                  const phrase = findPhraseById(wp.phraseId)
+                  if (!phrase) return null
+                  return (
+                    <li
+                      key={wp.phraseId}
+                      className="flex items-center justify-between rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm dark:border-amber-700 dark:bg-amber-900/30"
+                    >
+                      <span className="text-gray-700 dark:text-gray-200">
+                        {phrase.text}
+                      </span>
+                      <span className="text-gray-500 dark:text-gray-400">
+                        {wp.accuracyPercent}%（{wp.total}回中{wp.correct}回正解）
+                      </span>
+                    </li>
+                  )
+                })}
+              </ul>
+            </section>
+          )}
         </>
       )}
     </div>

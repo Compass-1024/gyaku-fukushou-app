@@ -43,3 +43,30 @@ export function getPhraseWeight(stats: PhraseStats, phraseId: string): number {
   const errorRate = 1 - stat.correct / stat.total
   return 1 + errorRate * WEAK_PHRASE_FACTOR
 }
+
+export interface WeakPhraseEntry {
+  phraseId: string
+  correct: number
+  total: number
+  accuracyPercent: number
+}
+
+// 統計画面での「苦手なフレーズ」表示用。1回だけのまぐれ誤答で表示されないよう、
+// 最低挑戦回数（minAttempts）に満たないフレーズは対象外にする。全問正解のフレーズは
+// （相対順位に関わらず）「苦手」ではないため、一度も誤答していないものも除外する。
+export function getWeakestPhrases(
+  stats: PhraseStats,
+  count: number,
+  minAttempts = 2,
+): WeakPhraseEntry[] {
+  return Object.entries(stats)
+    .filter(([, stat]) => stat.total >= minAttempts && stat.correct < stat.total)
+    .map(([phraseId, stat]) => ({
+      phraseId,
+      correct: stat.correct,
+      total: stat.total,
+      accuracyPercent: Math.round((stat.correct / stat.total) * 100),
+    }))
+    .sort((a, b) => a.accuracyPercent - b.accuracyPercent || b.total - a.total)
+    .slice(0, count)
+}

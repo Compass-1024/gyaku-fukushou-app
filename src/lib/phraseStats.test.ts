@@ -1,5 +1,10 @@
 import { describe, expect, it, beforeEach } from 'vitest'
-import { loadPhraseStats, recordPhraseAttempt, getPhraseWeight } from './phraseStats'
+import {
+  loadPhraseStats,
+  recordPhraseAttempt,
+  getPhraseWeight,
+  getWeakestPhrases,
+} from './phraseStats'
 
 function createMemoryStorage(): Storage {
   let store: Record<string, string> = {}
@@ -72,5 +77,37 @@ describe('getPhraseWeight', () => {
   it('正答率50%のフレーズは中間のウェイト', () => {
     const stats = { '1-0': { correct: 2, total: 4 } }
     expect(getPhraseWeight(stats, '1-0')).toBe(2.5)
+  })
+})
+
+describe('getWeakestPhrases', () => {
+  it('正答率の低い順に並べ、指定件数までに絞る', () => {
+    const stats = {
+      '1-0': { correct: 4, total: 4 }, // 100%
+      '1-1': { correct: 0, total: 4 }, // 0%
+      '1-2': { correct: 2, total: 4 }, // 50%
+    }
+    const result = getWeakestPhrases(stats, 2)
+    expect(result.map((r) => r.phraseId)).toEqual(['1-1', '1-2'])
+    expect(result[0].accuracyPercent).toBe(0)
+    expect(result[1].accuracyPercent).toBe(50)
+  })
+
+  it('最低挑戦回数に満たないフレーズは除外する', () => {
+    const stats = {
+      '1-0': { correct: 0, total: 1 }, // 1回しか挑戦していない（まぐれ誤答の可能性）
+      '1-1': { correct: 1, total: 2 },
+    }
+    const result = getWeakestPhrases(stats, 5, 2)
+    expect(result.map((r) => r.phraseId)).toEqual(['1-1'])
+  })
+
+  it('正答率が同じ場合は挑戦回数が多い方を優先する', () => {
+    const stats = {
+      '1-0': { correct: 1, total: 2 },
+      '1-1': { correct: 5, total: 10 },
+    }
+    const result = getWeakestPhrases(stats, 5)
+    expect(result.map((r) => r.phraseId)).toEqual(['1-1', '1-0'])
   })
 })

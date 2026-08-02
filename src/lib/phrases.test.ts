@@ -1,5 +1,5 @@
 import { describe, expect, it, vi, afterEach } from 'vitest'
-import { PHRASES, pickQuestionSet } from './phrases'
+import { PHRASES, pickQuestionSet, findPhraseById } from './phrases'
 import type { PhraseStats } from './phraseStats'
 
 afterEach(() => {
@@ -25,5 +25,16 @@ describe('pickQuestionSet', () => {
     vi.spyOn(Math, 'random').mockReturnValue(0.01)
     const [first] = pickQuestionSet(1, stats)
     expect(first.id).toBe(weakId)
+  })
+})
+
+describe('findPhraseById', () => {
+  it('存在するIDならフレーズを返す', () => {
+    const target = PHRASES[2][3]
+    expect(findPhraseById(target.id)).toEqual(target)
+  })
+
+  it('存在しないIDならundefinedを返す', () => {
+    expect(findPhraseById('not-an-id')).toBeUndefined()
   })
 })

@@ -195,6 +195,14 @@ export const PHRASES: Record<Level, Phrase[]> = {
   3: RAW_PHRASES[3].map((text, i) => ({ id: `3-${i}`, text })),
 }
 
+const PHRASE_BY_ID: Map<string, Phrase> = new Map(
+  ([1, 2, 3] as const).flatMap((level) => PHRASES[level].map((p) => [p.id, p])),
+)
+
+export function findPhraseById(id: string): Phrase | undefined {
+  return PHRASE_BY_ID.get(id)
+}
+
 const QUESTIONS_PER_SET = 3
 
 // phraseStatsを渡すと、誤答が多いフレーズほど選ばれやすい重み付き抽選になる
