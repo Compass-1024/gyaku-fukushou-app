@@ -102,4 +102,163 @@ export const en: Translations = {
     retry: 'Try again at this level',
     changeLevel: 'Back to level select',
   },
+  settings: {
+    heading: 'Settings',
+    theme: {
+      title: 'Theme',
+      system: 'System',
+      light: 'Light',
+      dark: 'Dark',
+    },
+    language: {
+      title: 'Language',
+      ja: '日本語',
+      en: 'English',
+    },
+    dailyGoalTitle: "Daily goal (sets)",
+    soundTitle: 'Sound effects',
+    on: 'On',
+    off: 'Off',
+    notifications: {
+      title: 'Reminder notifications',
+      unsupported:
+        'Notifications are not supported on this device/browser (on iOS, only apps added to the Home Screen support this).',
+      supportedDescription:
+        "If you haven't played at all that day, we'll send a reminder around 9 PM JST (the exact time may vary).",
+      permissionDenied:
+        'Notification permission was denied. Please enable notifications for this site in your browser settings.',
+      genericError:
+        "Couldn't set up notifications. Please try again later. If the problem persists, check that this browser is allowed to send notifications in your device's OS settings.",
+      unsupportedResult:
+        'Notifications are not supported on this device/browser.',
+    },
+    data: {
+      title: 'Data',
+      description:
+        'Your training history, achievements, and settings are stored only on this device/browser. We recommend backing up regularly in case you switch devices or clear browser data.',
+      exportButton: '⬇️ Export backup',
+      importButton: '⬆️ Restore from backup',
+      clearHistoryButton: 'Delete all training history',
+      clearHistoryConfirm:
+        'This will delete all training history, stats, and achievements. This cannot be undone. Continue?',
+      clearedMessage: 'Deleted. This will take effect when you return to the top screen.',
+      importConfirm: (historyCount) =>
+        `This will overwrite your current history and settings with the backup file's contents (${historyCount} history record${historyCount === 1 ? '' : 's'}). This cannot be undone. Continue?`,
+      importSuccess:
+        'Imported. This will take effect when you return to the top screen.',
+      importErrors: {
+        'invalid-json': "This file isn't valid (couldn't be read as JSON).",
+        'invalid-content': "This file's contents aren't valid.",
+        'invalid-history':
+          "This file's training history is not in a valid format. Please try a different file.",
+        'invalid-settings':
+          "This file's settings are not in a valid format. Please try a different file.",
+      },
+    },
+  },
+  stats: {
+    heading: 'Stats',
+    noRecordsYet: 'No records yet. Stats will appear once you start playing.',
+    calendarTitle: 'Activity calendar',
+    calendarSummary: (weeks, activeDays) =>
+      `${activeDays} active day${activeDays === 1 ? '' : 's'} in the last ${weeks} weeks`,
+    calendarAriaLabel: (weeks, activeDays) =>
+      `Activity calendar for the last ${weeks} weeks. You practiced on ${activeDays} day${activeDays === 1 ? '' : 's'}.`,
+    calendarLegendLow: 'Less',
+    calendarLegendHigh: 'More',
+    weekdayLabels: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
+    dayCellTooltip: (dateKey, count) => `${dateKey}: ${count} set${count === 1 ? '' : 's'}`,
+    trendTitle: (days) => `Accuracy trend (last ${days} days)`,
+    trendAriaLabel: (days) => `Accuracy trend over the last ${days} days`,
+    trendNoRecord: (dateKey) => `${dateKey}: no record`,
+    trendDaysAgo: (days) => `${days}d ago`,
+    trendToday: 'Today',
+    achievementsTitle: 'Achievements',
+    achievementUnlocked: 'Unlocked',
+    achievementLocked: 'Locked',
+    areaAccuracyTitle: 'Accuracy by mode',
+    areaLabel: (label, level) => `${label} Level ${level}`,
+    needsReview: '⚠️ Needs review',
+    accuracySummary: (accuracyPercent, attempts) =>
+      `${accuracyPercent}% (${attempts} attempt${attempts === 1 ? '' : 's'})`,
+    notAttempted: 'Not attempted',
+    weakPhrasesTitle: 'Word Mode: Phrases to review',
+    weakPhraseStat: (accuracyPercent, total, correct) =>
+      `${accuracyPercent}% (${correct}/${total} correct)`,
+  },
+  privacy: {
+    heading: 'Privacy Policy',
+    dataLocationTitle: 'Where your data is stored',
+    dataLocationBody:
+      'Most of this app has no backend server — your training history and settings are stored only in your browser (localStorage) on this device. No data is sent to any third party, including us, unless you turn on Reminder Notifications (see below).',
+    notificationsTitle: 'About reminder notifications',
+    notificationsBody:
+      "Reminder Notifications in Settings is an opt-in feature that's off by default. When enabled, whether you practiced that day, your preferred notification time, and your push subscription info are sent to this app's server (Vercel Serverless Functions). The content of your training history is never sent. Turning it back off deletes the server-side data too.",
+    micTitle: 'About microphone (voice) use',
+    micBody:
+      "Word Mode uses your browser's speech recognition (the Web Speech API) to check your spoken answers. This app itself never collects or stores voice data, but depending on your browser, voice data may be processed on the browser vendor's servers — this is a property of the browser, not something this app controls.",
+    cookieTitle: 'Cookies & analytics',
+    cookieBody: 'This app uses no cookies, analytics tools, or ad tracking.',
+    deletionTitle: 'Deleting your data',
+    deletionBody:
+      "You can delete everything at once from Settings → \"Delete all training history\". You can also clear it by removing this site's data (localStorage) from your browser settings.",
+    backupBody:
+      'From Settings → "Export backup", you can download all your stored data (training history and settings) as a JSON file. "Restore from backup" on the same screen lets you load that file on another device or browser (this overwrites whatever is currently stored).',
+    contactTitle: 'Contact',
+    contactBody: 'A contact channel is not yet available.',
+    summaryNotice: 'This page is a summary. For full details, see the ',
+    fullPolicyLink: 'full privacy policy',
+    fullPolicyLinkSuffix: '.',
+  },
+  achievements: {
+    'first-session': {
+      label: 'First Step',
+      description: 'Completed your first set',
+    },
+    'perfect-score': {
+      label: 'Perfect',
+      description: 'Got every question right in a set',
+    },
+    'streak-3': { label: 'Past the 3-Day Wall', description: 'A 3-day streak' },
+    'streak-7': { label: 'Consistency Pays Off', description: 'A 7-day streak' },
+    'streak-30': { label: 'Unstoppable', description: 'A 30-day streak' },
+    'level-3-word': {
+      label: 'Word Expert',
+      description: 'Reached Level 3 in Word Mode',
+    },
+    'level-3-digit': {
+      label: 'Digit Expert',
+      description: 'Reached Level 3 in Digit Mode',
+    },
+    'level-3-nback': {
+      label: 'N-Back Expert',
+      description: 'Reached Level 3 in N-Back Mode',
+    },
+    'level-3-spatial': {
+      label: 'Spatial Memory Expert',
+      description: 'Reached Level 3 in Spatial Mode',
+    },
+    'level-3-pattern': {
+      label: 'Sharp Eye',
+      description: 'Reached Level 3 in Change Detection Mode',
+    },
+    'level-3-tone': {
+      label: 'Golden Ear',
+      description: 'Reached Level 3 in Tone & Color Mode',
+    },
+    'total-10': { label: 'Building a Habit', description: 'Completed 10 sets total' },
+    'total-50': {
+      label: 'Building a Habit (Advanced)',
+      description: 'Completed 50 sets total',
+    },
+    'all-modes': {
+      label: 'All-Rounder',
+      description: 'Tried every mode',
+    },
+    'all-six-modes': {
+      label: 'Full House',
+      description:
+        'Tried all six modes: Word, Digit, N-Back, Spatial, Change Detection, and Tone',
+    },
+  },
 }

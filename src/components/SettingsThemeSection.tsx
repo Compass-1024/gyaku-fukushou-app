@@ -1,10 +1,5 @@
+import { useTranslation } from '../contexts/LanguageContext'
 import type { ThemeMode } from '../types'
-
-const THEME_OPTIONS: { value: ThemeMode; label: string }[] = [
-  { value: 'system', label: 'システム' },
-  { value: 'light', label: 'ライト' },
-  { value: 'dark', label: 'ダーク' },
-]
 
 interface SettingsThemeSectionProps {
   themeMode: ThemeMode
@@ -15,10 +10,16 @@ export function SettingsThemeSection({
   themeMode,
   onChangeTheme,
 }: SettingsThemeSectionProps) {
+  const t = useTranslation()
+  const THEME_OPTIONS: { value: ThemeMode; label: string }[] = [
+    { value: 'system', label: t.settings.theme.system },
+    { value: 'light', label: t.settings.theme.light },
+    { value: 'dark', label: t.settings.theme.dark },
+  ]
   return (
     <section className="flex flex-col gap-3">
       <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400">
-        テーマ
+        {t.settings.theme.title}
       </h2>
       <div className="flex gap-2">
         {THEME_OPTIONS.map((opt) => (

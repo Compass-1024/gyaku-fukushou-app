@@ -2,6 +2,8 @@
 // TypeScriptの型チェック（tsc -b、npm run build/verifyに含まれる）で
 // 保証する。値は固定文字列のほか、埋め込みが必要なものは関数にする。
 import type { ShareTemplates } from '../share'
+import type { ParseBackupError } from '../backup'
+import type { AchievementId } from '../achievements'
 
 export interface ModeCopy {
   title: string
@@ -73,4 +75,92 @@ export interface Translations {
       tone: ModeCopy
     }
   }
+  settings: {
+    heading: string
+    theme: {
+      title: string
+      system: string
+      light: string
+      dark: string
+    }
+    language: {
+      title: string
+      ja: string
+      en: string
+    }
+    dailyGoalTitle: string
+    soundTitle: string
+    on: string
+    off: string
+    notifications: {
+      title: string
+      unsupported: string
+      supportedDescription: string
+      permissionDenied: string
+      genericError: string
+      unsupportedResult: string
+    }
+    data: {
+      title: string
+      description: string
+      exportButton: string
+      importButton: string
+      clearHistoryButton: string
+      clearHistoryConfirm: string
+      clearedMessage: string
+      importConfirm: (historyCount: number) => string
+      importSuccess: string
+      importErrors: Record<ParseBackupError, string>
+    }
+  }
+  stats: {
+    heading: string
+    noRecordsYet: string
+    calendarTitle: string
+    calendarSummary: (weeks: number, activeDays: number) => string
+    calendarAriaLabel: (weeks: number, activeDays: number) => string
+    calendarLegendLow: string
+    calendarLegendHigh: string
+    weekdayLabels: string[]
+    dayCellTooltip: (dateKey: string, count: number) => string
+    trendTitle: (days: number) => string
+    trendAriaLabel: (days: number) => string
+    trendNoRecord: (dateKey: string) => string
+    trendDaysAgo: (days: number) => string
+    trendToday: string
+    achievementsTitle: string
+    achievementUnlocked: string
+    achievementLocked: string
+    areaAccuracyTitle: string
+    areaLabel: (label: string, level: number) => string
+    needsReview: string
+    accuracySummary: (accuracyPercent: number, attempts: number) => string
+    notAttempted: string
+    weakPhrasesTitle: string
+    weakPhraseStat: (
+      accuracyPercent: number,
+      total: number,
+      correct: number,
+    ) => string
+  }
+  privacy: {
+    heading: string
+    dataLocationTitle: string
+    dataLocationBody: string
+    notificationsTitle: string
+    notificationsBody: string
+    micTitle: string
+    micBody: string
+    cookieTitle: string
+    cookieBody: string
+    deletionTitle: string
+    deletionBody: string
+    backupBody: string
+    contactTitle: string
+    contactBody: string
+    summaryNotice: string
+    fullPolicyLink: string
+    fullPolicyLinkSuffix: string
+  }
+  achievements: Record<AchievementId, { label: string; description: string }>
 }

@@ -62,9 +62,16 @@ export function backupFileName(date = new Date()): string {
   return `gyaku-fukushou-backup-${y}${m}${d}.json`
 }
 
+// UIでの文言表示はi18n辞書（settings.data.importErrors）が担う
+export type ParseBackupError =
+  | 'invalid-json'
+  | 'invalid-content'
+  | 'invalid-history'
+  | 'invalid-settings'
+
 export type ParseBackupResult =
   | { ok: true; data: BackupData }
-  | { ok: false; error: string }
+  | { ok: false; error: ParseBackupError }
 
 // バックアップファイルの内容を検証しつつ読み込む。壊れたJSONや型の合わない
 // データでlocalStorageを汚さないよう、フィールドごとに厳格にチェックする
@@ -73,27 +80,18 @@ export function parseBackupJson(raw: string): ParseBackupResult {
   try {
     parsed = JSON.parse(raw)
   } catch {
-    return {
-      ok: false,
-      error: 'ファイルの形式が正しくありません（JSONとして読み込めませんでした）',
-    }
+    return { ok: false, error: 'invalid-json' }
   }
   if (typeof parsed !== 'object' || parsed === null) {
-    return { ok: false, error: 'ファイルの内容が正しくありません' }
+    return { ok: false, error: 'invalid-content' }
   }
   const obj = parsed as Record<string, unknown>
 
   if (!Array.isArray(obj.history) || !obj.history.every(isValidHistoryEntry)) {
-    return {
-      ok: false,
-      error: '学習履歴のデータ形式が正しくありません。別のファイルをお試しください',
-    }
+    return { ok: false, error: 'invalid-history' }
   }
   if (typeof obj.settings !== 'object' || obj.settings === null) {
-    return {
-      ok: false,
-      error: '設定のデータ形式が正しくありません。別のファイルをお試しください',
-    }
+    return { ok: false, error: 'invalid-settings' }
   }
 
   const settings: AppSettings = {

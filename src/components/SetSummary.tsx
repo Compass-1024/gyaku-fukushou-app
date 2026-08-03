@@ -64,7 +64,7 @@ export function SetSummary({
       total: items.length,
       streakDays: getStreakDays(loadHistory()),
       achievementLabels: (newAchievements ?? []).map(
-        (a) => `${a.icon} ${a.label}`,
+        (a) => `${a.icon} ${t.achievements[a.id].label}`,
       ),
     }, t.share)
     const outcome = await shareText(text)
@@ -141,7 +141,7 @@ export function SetSummary({
                 key={a.id}
                 className="rounded-full bg-white px-3 py-1 text-sm text-amber-700 shadow-sm dark:bg-gray-800 dark:text-amber-300"
               >
-                {a.icon} {a.label}
+                {a.icon} {t.achievements[a.id].label}
               </span>
             ))}
           </div>

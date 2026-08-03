@@ -8,7 +8,9 @@ import {
 import { ACHIEVEMENTS } from '../lib/achievements'
 import { loadPhraseStats, getWeakestPhrases } from '../lib/phraseStats'
 import { findPhraseById } from '../lib/phrases'
+import { useLanguage, useTranslation } from '../contexts/LanguageContext'
 import type { ActivityDay, DailyAccuracy } from '../lib/history'
+import type { Translations } from '../lib/i18n'
 import type { DigitGameType, HistoryEntry, Mode } from '../types'
 
 interface StatsScreenProps {
@@ -16,20 +18,8 @@ interface StatsScreenProps {
   onBack: () => void
 }
 
-const AREA_LABELS: Record<string, string> = {
-  word: 'ことば',
-  'digit-reverse': 'すうじ（逆から）',
-  'digit-sum': 'すうじ（合計）',
-  nback: 'Nバック',
-  spatial: '空間',
-  pattern: '変化検出',
-  tone: '音・色の順番',
-}
-
 const TREND_DAYS = 14
 const ACTIVITY_WEEKS = 18
-
-const WEEKDAY_LABELS = ['日', '月', '火', '水', '木', '金', '土']
 
 function activityLevel(count: number): 0 | 1 | 2 | 3 {
   if (count <= 0) return 0
@@ -45,7 +35,13 @@ const ACTIVITY_LEVEL_CLASSES: Record<0 | 1 | 2 | 3, string> = {
   3: 'fill-indigo-600 dark:fill-indigo-400',
 }
 
-function ActivityHeatmap({ calendar }: { calendar: ActivityDay[] }) {
+function ActivityHeatmap({
+  calendar,
+  t,
+}: {
+  calendar: ActivityDay[]
+  t: Translations
+}) {
   const weeks = calendar.length / 7
   const gap = 2
   const cellSize = 12
@@ -61,7 +57,7 @@ function ActivityHeatmap({ calendar }: { calendar: ActivityDay[] }) {
           width={width}
           height={height}
           role="img"
-          aria-label={`直近${weeks}週間の学習カレンダー。学習した日数は${activeDays}日`}
+          aria-label={t.stats.calendarAriaLabel(weeks, activeDays)}
         >
           {calendar.map((day, i) => {
             if (day.count < 0) return null
@@ -79,16 +75,16 @@ function ActivityHeatmap({ calendar }: { calendar: ActivityDay[] }) {
                 rx={2}
                 className={ACTIVITY_LEVEL_CLASSES[activityLevel(day.count)]}
               >
-                <title>{`${day.dateKey}: ${day.count}セット`}</title>
+                <title>{t.stats.dayCellTooltip(day.dateKey, day.count)}</title>
               </rect>
             )
           })}
         </svg>
       </div>
       <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
-        <span>直近{weeks}週間で{activeDays}日学習</span>
+        <span>{t.stats.calendarSummary(weeks, activeDays)}</span>
         <span className="flex items-center gap-1">
-          少ない
+          {t.stats.calendarLegendLow}
           {([0, 1, 2, 3] as const).map((level) => (
             <svg key={level} width={10} height={10} aria-hidden="true">
               <rect
@@ -99,11 +95,11 @@ function ActivityHeatmap({ calendar }: { calendar: ActivityDay[] }) {
               />
             </svg>
           ))}
-          多い
+          {t.stats.calendarLegendHigh}
         </span>
       </div>
       <span className="sr-only">
-        曜日は上から{WEEKDAY_LABELS.join('・')}の順で、左が過去・右が直近の週です。
+        {t.stats.weekdayLabels.join('・')}
       </span>
     </div>
   )
@@ -113,7 +109,13 @@ function areaKey(area: { mode: Mode; gameType?: DigitGameType }): string {
   return area.gameType ? `${area.mode}-${area.gameType}` : area.mode
 }
 
-function AccuracyTrendChart({ trend }: { trend: DailyAccuracy[] }) {
+function AccuracyTrendChart({
+  trend,
+  t,
+}: {
+  trend: DailyAccuracy[]
+  t: Translations
+}) {
   const width = 320
   const chartHeight = 90
   const labelHeight = 16
@@ -125,7 +127,7 @@ function AccuracyTrendChart({ trend }: { trend: DailyAccuracy[] }) {
       viewBox={`0 0 ${width} ${chartHeight + labelHeight}`}
       className="w-full"
       role="img"
-      aria-label={`直近${TREND_DAYS}日間の正答率の推移`}
+      aria-label={t.stats.trendAriaLabel(TREND_DAYS)}
     >
       {[0, 50, 100].map((v) => {
         const y = chartHeight - (v / 100) * chartHeight
@@ -155,7 +157,7 @@ function AccuracyTrendChart({ trend }: { trend: DailyAccuracy[] }) {
               rx={1.5}
               className="fill-gray-300 dark:fill-gray-600"
             >
-              <title>{`${d.dateKey}: 記録なし`}</title>
+              <title>{t.stats.trendNoRecord(d.dateKey)}</title>
             </rect>
           )
         }
@@ -192,7 +194,7 @@ function AccuracyTrendChart({ trend }: { trend: DailyAccuracy[] }) {
         fontSize={8}
         className="fill-gray-500 dark:fill-gray-400"
       >
-        {TREND_DAYS}日前
+        {t.stats.trendDaysAgo(TREND_DAYS)}
       </text>
       <text
         x={width}
@@ -201,14 +203,25 @@ function AccuracyTrendChart({ trend }: { trend: DailyAccuracy[] }) {
         fontSize={8}
         className="fill-gray-500 dark:fill-gray-400"
       >
-        今日
+        {t.stats.trendToday}
       </text>
     </svg>
   )
 }
 
 export function StatsScreen({ history, onBack }: StatsScreenProps) {
-  const areas = useMemo(() => getAllAreaStats(history), [history])
+  const t = useTranslation()
+  const { language } = useLanguage()
+  const allAreas = useMemo(() => getAllAreaStats(history), [history])
+  // 英語版ではことばモードは選択できないため、統計にも出さない
+  const areas = useMemo(
+    () => allAreas.filter((a) => language === 'ja' || a.mode !== 'word'),
+    [allAreas, language],
+  )
+  const achievements = useMemo(
+    () => ACHIEVEMENTS.filter((a) => language === 'ja' || !a.requiresWordMode),
+    [language],
+  )
   const weakest = useMemo(() => getWeakestAreas(history, 2), [history])
   const weakestKeys = useMemo(
     () => new Set(weakest.map((a) => `${areaKey(a)}-${a.level}`)),
@@ -216,8 +229,12 @@ export function StatsScreen({ history, onBack }: StatsScreenProps) {
   )
   const hasAnyAttempts = areas.some((a) => a.stats.attempts > 0)
   const trend = useMemo(() => getDailyAccuracyTrend(history, TREND_DAYS), [history])
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- historyの更新に連動してlocalStorageを読み直す
-  const weakPhrases = useMemo(() => getWeakestPhrases(loadPhraseStats(), 5), [history])
+  const weakPhrases = useMemo(
+    () => (language === 'ja' ? getWeakestPhrases(loadPhraseStats(), 5) : []),
+    // historyの更新に連動してlocalStorageを読み直す
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [history, language],
+  )
   const activityCalendar = useMemo(
     () => getActivityCalendar(history, ACTIVITY_WEEKS),
     [history],
@@ -230,48 +247,49 @@ export function StatsScreen({ history, onBack }: StatsScreenProps) {
         onClick={onBack}
         className="-m-2 touch-manipulation self-start p-2 text-sm text-gray-500 hover:underline dark:text-gray-400"
       >
-        ← 戻る
+        {t.common.back}
       </button>
 
       <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-        統計
+        {t.stats.heading}
       </h1>
 
       {!hasAnyAttempts ? (
         <p className="text-center text-sm text-gray-500 dark:text-gray-400">
-          まだ記録がありません。プレイすると統計が表示されます。
+          {t.stats.noRecordsYet}
         </p>
       ) : (
         <>
           <section className="flex flex-col gap-2">
             <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400">
-              学習カレンダー
+              {t.stats.calendarTitle}
             </h2>
             <div className="rounded-lg border border-gray-200 bg-white px-3 py-3 dark:border-gray-700 dark:bg-gray-800">
-              <ActivityHeatmap calendar={activityCalendar} />
+              <ActivityHeatmap calendar={activityCalendar} t={t} />
             </div>
           </section>
 
           <section className="flex flex-col gap-2">
             <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400">
-              正答率の推移（直近{TREND_DAYS}日間）
+              {t.stats.trendTitle(TREND_DAYS)}
             </h2>
             <div className="rounded-lg border border-gray-200 bg-white px-3 py-3 dark:border-gray-700 dark:bg-gray-800">
-              <AccuracyTrendChart trend={trend} />
+              <AccuracyTrendChart trend={trend} t={t} />
             </div>
           </section>
 
           <section className="flex flex-col gap-2">
             <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400">
-              実績
+              {t.stats.achievementsTitle}
             </h2>
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-              {ACHIEVEMENTS.map((achievement) => {
+              {achievements.map((achievement) => {
                 const unlocked = achievement.isUnlocked(history)
+                const copy = t.achievements[achievement.id]
                 return (
                   <div
                     key={achievement.id}
-                    title={achievement.description}
+                    title={copy.description}
                     className={`flex flex-col items-center gap-1 rounded-lg border px-2 py-3 text-center ${
                       unlocked
                         ? 'border-amber-300 bg-amber-50 dark:border-amber-700 dark:bg-amber-900/30'
@@ -282,10 +300,12 @@ export function StatsScreen({ history, onBack }: StatsScreenProps) {
                       {achievement.icon}
                     </span>
                     <span className="text-xs font-medium text-gray-700 dark:text-gray-200">
-                      {achievement.label}
+                      {copy.label}
                     </span>
                     <span className="sr-only">
-                      {unlocked ? '解除済み' : '未解除'}
+                      {unlocked
+                        ? t.stats.achievementUnlocked
+                        : t.stats.achievementLocked}
                     </span>
                   </div>
                 )
@@ -295,12 +315,16 @@ export function StatsScreen({ history, onBack }: StatsScreenProps) {
 
           <section className="flex flex-col gap-2">
             <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400">
-              モード別の正答率
+              {t.stats.areaAccuracyTitle}
             </h2>
             <ul className="flex flex-col gap-2">
               {areas.map((area) => {
                 const key = `${areaKey(area)}-${area.level}`
                 const isWeak = weakestKeys.has(key)
+                const label =
+                  t.common.areaLabels[
+                    areaKey(area) as keyof typeof t.common.areaLabels
+                  ]
                 return (
                   <li
                     key={key}
@@ -311,17 +335,20 @@ export function StatsScreen({ history, onBack }: StatsScreenProps) {
                     }`}
                   >
                     <span className="text-gray-700 dark:text-gray-200">
-                      {AREA_LABELS[areaKey(area)]} レベル{area.level}
+                      {t.stats.areaLabel(label, area.level)}
                       {isWeak && (
                         <span className="ml-2 text-amber-600 dark:text-amber-400">
-                          ⚠️ 要復習
+                          {t.stats.needsReview}
                         </span>
                       )}
                     </span>
                     <span className="text-gray-500 dark:text-gray-400">
                       {area.stats.accuracy !== null
-                        ? `${area.stats.accuracy}%（${area.stats.attempts}回）`
-                        : '未挑戦'}
+                        ? t.stats.accuracySummary(
+                            area.stats.accuracy,
+                            area.stats.attempts,
+                          )
+                        : t.stats.notAttempted}
                     </span>
                   </li>
                 )
@@ -332,7 +359,7 @@ export function StatsScreen({ history, onBack }: StatsScreenProps) {
           {weakPhrases.length > 0 && (
             <section className="flex flex-col gap-2">
               <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400">
-                ことばモード: 苦手なフレーズ
+                {t.stats.weakPhrasesTitle}
               </h2>
               <ul className="flex flex-col gap-2">
                 {weakPhrases.map((wp) => {
@@ -347,7 +374,11 @@ export function StatsScreen({ history, onBack }: StatsScreenProps) {
                         {phrase.text}
                       </span>
                       <span className="text-gray-500 dark:text-gray-400">
-                        {wp.accuracyPercent}%（{wp.total}回中{wp.correct}回正解）
+                        {t.stats.weakPhraseStat(
+                          wp.accuracyPercent,
+                          wp.total,
+                          wp.correct,
+                        )}
                       </span>
                     </li>
                   )
