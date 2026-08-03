@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Overview
 
-**逆復唱トレーニング**（`gyaku-fukushou-app`）は、ワーキングメモリ（作業記憶）を鍛えるトレーニングアプリ。「ことば」「すうじ」「Nバック」「空間」「変化検出」「音・色」の6モードを提供する。UIは日本語のみ。トレーニング機能自体はバックエンドを持たないSPAで、全データはブラウザの`localStorage`に保存する。**例外として、オプトインの「リマインド通知」機能のみ、Vercel Serverless Functions + Redisストレージを使う最小限のバックエンドを持つ**（詳細は「プッシュ通知リマインダー」セクションを参照）。PWA対応でホーム画面に追加してネイティブアプリ風に利用可能。デプロイ先: https://gyaku-fukushou-app.vercel.app/
+**逆復唱トレーニング**（`gyaku-fukushou-app`）は、ワーキングメモリ（作業記憶）を鍛えるトレーニングアプリ。「ことば」「すうじ」「Nバック」「空間」「変化検出」「音・色」の6モードを提供する。UIは日本語/英語の2言語に対応（設定画面でいつでも切り替え可能、詳細は「多言語化（i18n）」セクションを参照）。トレーニング機能自体はバックエンドを持たないSPAで、全データはブラウザの`localStorage`に保存する。**例外として、オプトインの「リマインド通知」機能のみ、Vercel Serverless Functions + Redisストレージを使う最小限のバックエンドを持つ**（詳細は「プッシュ通知リマインダー」セクションを参照）。PWA対応でホーム画面に追加してネイティブアプリ風に利用可能。デプロイ先: https://gyaku-fukushou-app.vercel.app/
 
 ## 応答言語
 
@@ -102,6 +102,7 @@ flowchart TD
 
 ### ことばモード（`src/lib/reverse.ts`, `src/lib/kana.ts`, `src/lib/phrases.ts`, `src/lib/phraseStats.ts`）
 
+- **多言語対応**: 日本語の音韻に強く依存するため、UI言語を英語にすると選択できなくなる（トップ画面にボタン自体が表示されない）。詳細は「多言語化（i18n）」セクションを参照。
 - **出題方式**: `PHRASES`（ひらがな表記の単語・文リスト）からレベルごとに重複なく3問抽出する。等確率のランダム抽選ではなく、`src/lib/phraseStats.ts`に蓄積したフレーズ単位の正誤履歴（`localStorage`キー`gyaku-fukushou:phraseStats`）に基づく重み付き抽選（`pickQuestionSet`）。誤答が多いフレーズほどウェイトが上がり選ばれやすくなり、未挑戦のフレーズは標準ウェイトのまま（既存フレーズより優先も劣後もしない）。1問終えるたびに`recordPhraseAttempt`でそのフレーズの正誤を記録する。この仕組みはことばモード固有（他5モードは固定候補プールを持たずその場で乱数生成する方式のため未対応、[ROADMAP.md](ROADMAP.md)参照）。
 - **レベル定義**:
   | レベル | 文字数 | 収録語数 | 復唱の持ち時間 | 一致許容編集距離 |
@@ -301,6 +302,16 @@ Web Audio APIによる完全プログラム生成のシンセサイザー方式�
 - **必要な環境変数**: `VITE_VAPID_PUBLIC_KEY`（クライアント、ビルド時埋め込み）、`VAPID_PUBLIC_KEY`／`VAPID_PRIVATE_KEY`／`VAPID_SUBJECT`（サーバー、`web-push`用）、`CRON_SECRET`（Cron認証）、Redis接続用の環境変数（Vercel連携時に自動付与）。セットアップ手順は[DEPLOYMENT.md](DEPLOYMENT.md)を参照
 - VAPID公開鍵が未設定（ビルド時に`VITE_VAPID_PUBLIC_KEY`が空）の場合、`isPushSupported()`が`false`を返し設定画面には非対応メッセージが表示される（機能自体は壊れない）
 
+## 多言語化（i18n）
+
+アプリ全体のUIは日本語（既定）と英語の2言語に対応する。react-i18nextのような外部i18nライブラリは使わず、TypeScriptの型チェックだけでキー網羅性を保証する軽量な自前実装にしている（このプロジェクトが「状態管理はuseState＋localStorageのみ、外部ライブラリなし」という方針を持つため）。
+
+- **辞書**: `src/lib/i18n/types.ts`に`Translations`インターフェースを画面/機能ごとにグルーピングして定義。`src/lib/i18n/ja.ts`・`en.ts`が同じ型を満たす（型チェックに通らなければビルド自体が失敗するため、キー漏れはビルド時に検出できる）。値は固定文字列のほか、埋め込みが必要なもの（件数・レベル番号など）は関数にする。
+- **状態管理**: `src/contexts/LanguageContext.tsx`の`LanguageProvider`（`main.tsx`で`<App />`をラップ）。`useTranslation()`で現在の言語の辞書を、`useLanguage()`で`{ language, setLanguage }`を取得する。`language`は`AppSettings.language`として`localStorage`に永続化される（`useThemeMode`と同じread-modify-writeパターン）。翻訳文字列はほぼ全コンポーネントが必要とするため、`themeMode`のようなprops drillingではなくContextを使っている（この機能に限った例外）。
+- **ことばモードの扱い**: ことばモード（かな文字列の逆復唱）は日本語の音韻に強く依存するため、**英語版では選択できない**。`TopScreen.tsx`でモードボタンを`language === 'ja'`でガードし、`App.tsx`側でも`?shortcut=word`や`popstate`での復元に対するガードを入れている（多重防御）。ことばモード専用の画面（`GameScreen.tsx`, `LevelSelect.tsx`）と関連lib（`reverse.ts`/`phrases.ts`/`kana.ts`）は英語版では到達不能なため翻訳対象外（既存の日本語ハードコードのまま）。実績のうち`level-3-word`/`all-modes`/`all-six-modes`の3件も`Achievement.requiresWordMode`フラグで英語版の実績グリッドから除外している。
+- **対象外（既知の制約）**: PWAマニフェスト（`vite.config.ts`の`manifest.name`/`description`/`shortcuts`）と`index.html`のmeta description/OGP/Twitter Cardはビルド時に固定される静的アセットのため、訪問者ごとの動的切り替えができず日本語のまま。`public/privacy.html`（静的な法的文書ページ）も英語版は用意していない（アプリ内`PrivacyScreen.tsx`のみ言語設定に連動）。
+- **新しい文言を追加する場合**: `src/lib/i18n/types.ts`にキーを追加 → `ja.ts`・`en.ts`の両方に実装 → コンポーネントで`useTranslation()`経由で参照、の順で行う。モード横断で使う文言（「結果を見る」「← レベル選択」「正しい答え:」等）は`common`に集約し、モード固有の文言のみ各モードのセクション（`digit`/`nback`/`spatial`/`pattern`/`tone`）に置く。
+
 ## Data model (localStorage)
 
 すべてのキーと読み書きロジックは`src/lib/history.ts`と`src/lib/settings.ts`に集約されている。新しい永続化データを追加する場合はこの2ファイルを拡張すること。
@@ -324,6 +335,7 @@ interface HistoryEntry {
 
 interface AppSettings {
   themeMode: 'system' | 'light' | 'dark'
+  language: 'ja' | 'en'
   speechRate: number
   voiceURI: string | null
   soundEnabled: boolean
@@ -332,7 +344,7 @@ interface AppSettings {
 }
 ```
 
-デフォルト設定: `{ themeMode: 'system', speechRate: 0.95, voiceURI: null, soundEnabled: true, dailyGoal: 3, notificationsEnabled: false }`
+デフォルト設定: `{ themeMode: 'system', language: 'ja', speechRate: 0.95, voiceURI: null, soundEnabled: true, dailyGoal: 3, notificationsEnabled: false }`
 
 読み込み・保存とも`try/catch`でlocalStorage利用不可（プライベートモード等）を許容し、失敗時はデフォルト値やno-opにフォールバックする。
 
