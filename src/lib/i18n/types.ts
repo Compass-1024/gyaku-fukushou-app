@@ -32,6 +32,7 @@ export interface Translations {
     correctOrderLabel: string
     yourAnswerLabel: string
     noAnswer: string
+    confirmExitMessage: string
     questionProgress: (current: number, total: number) => string
     attemptStats: (accuracyPercent: number, attempts: number) => string
     // モード×レベルの表示ラベル（TopScreen/StatsScreenで共有）

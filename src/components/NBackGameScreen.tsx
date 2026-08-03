@@ -129,7 +129,9 @@ export function NBackGameScreen({
     <div className="mx-auto flex w-full max-w-md flex-col gap-6 px-4 py-8 sm:gap-8 sm:px-6 sm:py-12">
       <GameHeader
         backLabel={t.common.backToLevelSelect}
-        onBack={() => confirmExit(trialIndex > 0, onExit)}
+        onBack={() =>
+          confirmExit(trialIndex > 0, onExit, t.common.confirmExitMessage)
+        }
         currentIndex={trialIndex}
         total={trials.length}
       />

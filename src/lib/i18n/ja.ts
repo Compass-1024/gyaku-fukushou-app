@@ -23,6 +23,7 @@ export const ja: Translations = {
     correctOrderLabel: '正しい順番: ',
     yourAnswerLabel: 'あなたの回答: ',
     noAnswer: '（未回答）',
+    confirmExitMessage: '回答中のセットが破棄されます。よろしいですか？',
     questionProgress: (current, total) => `問題 ${current} / ${total}`,
     attemptStats: (accuracyPercent, attempts) =>
       `これまでの正答率: ${accuracyPercent}%（${attempts}回挑戦）`,

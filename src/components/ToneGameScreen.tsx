@@ -192,7 +192,11 @@ export function ToneGameScreen({
       <GameHeader
         backLabel={t.common.backToLevelSelect}
         onBack={() =>
-          confirmExit(results.length > 0 || currentResult !== null, onExit)
+          confirmExit(
+            results.length > 0 || currentResult !== null,
+            onExit,
+            t.common.confirmExitMessage,
+          )
         }
         currentIndex={currentIndex}
         total={questions.length}

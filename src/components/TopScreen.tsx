@@ -32,7 +32,8 @@ export function TopScreen({
 
   function areaLabel(area: AreaStats): string {
     const key = area.gameType ? `${area.mode}-${area.gameType}` : area.mode
-    return `${t.common.areaLabels[key as keyof typeof t.common.areaLabels]} レベル${area.level}`
+    const label = t.common.areaLabels[key as keyof typeof t.common.areaLabels]
+    return t.stats.areaLabel(label, area.level)
   }
 
   const streakDays = getStreakDays(history)

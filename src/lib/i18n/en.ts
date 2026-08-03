@@ -22,6 +22,8 @@ export const en: Translations = {
     correctOrderLabel: 'Correct order: ',
     yourAnswerLabel: 'Your answer: ',
     noAnswer: '(no answer)',
+    confirmExitMessage:
+      "This set's answers will be discarded. Are you sure?",
     questionProgress: (current, total) => `Question ${current} / ${total}`,
     attemptStats: (accuracyPercent, attempts) =>
       `Accuracy so far: ${accuracyPercent}% (${attempts} attempt${attempts === 1 ? '' : 's'})`,
