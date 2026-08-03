@@ -12,7 +12,9 @@ import { StatsScreen } from './components/StatsScreen'
 import { PrivacyScreen } from './components/PrivacyScreen'
 import { useSpeechRecognition } from './hooks/useSpeechRecognition'
 import { useThemeMode } from './hooks/useThemeMode'
+import { useLanguage, useTranslation } from './contexts/LanguageContext'
 import { loadHistory } from './lib/history'
+import { loadSettings } from './lib/settings'
 import type { AreaStats } from './lib/history'
 import type { DigitGameType, HistoryEntry, Level } from './types'
 
@@ -75,7 +77,8 @@ function getShortcutView(): View | null {
   const shortcut = new URLSearchParams(window.location.search).get('shortcut')
   switch (shortcut) {
     case 'word':
-      return { screen: 'word-level' }
+      // 英語版ではことばモードは提供しない
+      return loadSettings().language === 'en' ? null : { screen: 'word-level' }
     case 'digit':
       return { screen: 'digit-type' }
     case 'nback':
@@ -93,11 +96,24 @@ function getShortcutView(): View | null {
 
 function App() {
   const { themeMode, setThemeMode } = useThemeMode()
+  const { language } = useLanguage()
+  const t = useTranslation()
   const { supported: recognitionSupported } = useSpeechRecognition()
   const [view, setView] = useState<View>(() => getShortcutView() ?? TOP_VIEW)
   const [history, setHistory] = useState<HistoryEntry[]>(() => loadHistory())
   const mainRef = useRef<HTMLElement>(null)
   const isFirstRender = useRef(true)
+
+  // 英語版ではことばモードを提供しないため、ブラウザの戻る/進む操作で
+  // ことばモードの画面状態が復元されてしまった場合もトップへ逃がす
+  useEffect(() => {
+    if (
+      language === 'en' &&
+      (view.screen === 'word-level' || view.screen === 'word-game')
+    ) {
+      setView(TOP_VIEW)
+    }
+  }, [language, view.screen])
 
   // スクリーンリーダー利用者が画面遷移に気づけるよう、遷移のたびに
   // メインコンテンツへフォーカスを移す（初回描画時は移さない）
@@ -355,7 +371,7 @@ function App() {
         <Suspense
           fallback={
             <p className="py-12 text-center text-sm text-gray-500 dark:text-gray-400">
-              読み込み中…
+              {t.common.loading}
             </p>
           }
         >

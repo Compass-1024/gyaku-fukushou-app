@@ -1,8 +1,11 @@
+import { useTranslation } from '../contexts/LanguageContext'
+
 interface ResultBadgeProps {
   correct: boolean
 }
 
 export function ResultBadge({ correct }: ResultBadgeProps) {
+  const t = useTranslation()
   return (
     <>
       <span aria-hidden="true" className="animate-pop text-5xl">
@@ -13,7 +16,7 @@ export function ResultBadge({ correct }: ResultBadgeProps) {
           correct ? 'text-emerald-500' : 'text-rose-500'
         }`}
       >
-        {correct ? '正解' : '不正解'}
+        {correct ? t.common.correct : t.common.incorrect}
       </p>
     </>
   )

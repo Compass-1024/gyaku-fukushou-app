@@ -1,3 +1,5 @@
+import { useTranslation } from '../contexts/LanguageContext'
+
 interface NumpadInputProps {
   value: string
   maxLength: number
@@ -19,6 +21,7 @@ export function NumpadInput({
   onBackspace,
   onSubmit,
 }: NumpadInputProps) {
+  const t = useTranslation()
   function handleDigit(d: string) {
     if (value.length >= maxLength) return
     onDigit(d)
@@ -43,7 +46,7 @@ export function NumpadInput({
         <button
           type="button"
           onClick={onBackspace}
-          aria-label="1文字削除"
+          aria-label={t.common.deleteChar}
           className="touch-manipulation rounded-lg bg-gray-200 py-3 text-lg font-semibold text-gray-700 transition hover:bg-gray-300 dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-500"
         >
           ⌫
@@ -61,7 +64,7 @@ export function NumpadInput({
           disabled={value.length === 0}
           className="touch-manipulation rounded-lg bg-indigo-500 py-3 text-lg font-semibold text-white transition hover:bg-indigo-400 disabled:cursor-not-allowed disabled:opacity-50"
         >
-          決定
+          {t.common.confirm}
         </button>
       </div>
     </div>

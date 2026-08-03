@@ -1,5 +1,6 @@
 import { loadSettings } from '../lib/settings'
 import { playButtonTap } from '../lib/sound'
+import { useTranslation } from '../contexts/LanguageContext'
 import type { LevelStats } from '../lib/history'
 import type { Level } from '../types'
 
@@ -22,6 +23,7 @@ export function LevelPicker({
   disabled,
   onSelect,
 }: LevelPickerProps) {
+  const t = useTranslation()
   return (
     <div className="flex flex-col gap-4">
       {LEVELS.map((level) => {
@@ -45,7 +47,7 @@ export function LevelPicker({
             )}
             {stats.accuracy !== null && (
               <span className="text-xs">
-                これまでの正答率: {stats.accuracy}%（{stats.attempts}回挑戦）
+                {t.common.attemptStats(stats.accuracy, stats.attempts)}
               </span>
             )}
           </button>

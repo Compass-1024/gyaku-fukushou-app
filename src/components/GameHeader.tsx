@@ -1,3 +1,5 @@
+import { useTranslation } from '../contexts/LanguageContext'
+
 interface GameHeaderProps {
   backLabel: string
   onBack: () => void
@@ -11,6 +13,7 @@ export function GameHeader({
   currentIndex,
   total,
 }: GameHeaderProps) {
+  const t = useTranslation()
   return (
     <>
       <div className="flex items-center justify-between">
@@ -38,7 +41,7 @@ export function GameHeader({
       </div>
 
       <p className="text-center text-sm text-gray-500 dark:text-gray-400">
-        問題 {currentIndex + 1} / {total}
+        {t.common.questionProgress(currentIndex + 1, total)}
       </p>
     </>
   )

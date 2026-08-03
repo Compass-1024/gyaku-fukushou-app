@@ -7,16 +7,32 @@ export interface ShareStats {
   achievementLabels: string[]
 }
 
-// 結果画面からシェアするテキストを組み立てる（DOM APIに依存しない純関数）
-export function buildResultShareText(stats: ShareStats): string {
-  const lines = [
-    `逆復唱トレーニングで${stats.correctCount}/${stats.total}問正解しました！`,
-  ]
+export interface ShareTemplates {
+  resultLine: (correct: number, total: number) => string
+  streakLine: (days: number) => string
+  achievementsLine: (labels: string[]) => string
+}
+
+// 日本語版の文言。i18n辞書（src/lib/i18n/ja.ts）からも同じものを参照する
+export const JA_SHARE_TEMPLATES: ShareTemplates = {
+  resultLine: (correct, total) =>
+    `逆復唱トレーニングで${correct}/${total}問正解しました！`,
+  streakLine: (days) => `🔥 ${days}日連続で挑戦中`,
+  achievementsLine: (labels) => `🎉 新しい実績: ${labels.join('、')}`,
+}
+
+// 結果画面からシェアするテキストを組み立てる（DOM APIに依存しない純関数）。
+// templatesを省略すると日本語版になる
+export function buildResultShareText(
+  stats: ShareStats,
+  templates: ShareTemplates = JA_SHARE_TEMPLATES,
+): string {
+  const lines = [templates.resultLine(stats.correctCount, stats.total)]
   if (stats.streakDays >= 2) {
-    lines.push(`🔥 ${stats.streakDays}日連続で挑戦中`)
+    lines.push(templates.streakLine(stats.streakDays))
   }
   if (stats.achievementLabels.length > 0) {
-    lines.push(`🎉 新しい実績: ${stats.achievementLabels.join('、')}`)
+    lines.push(templates.achievementsLine(stats.achievementLabels))
   }
   lines.push(APP_URL)
   return lines.join('\n')

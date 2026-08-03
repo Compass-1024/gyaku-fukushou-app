@@ -4,6 +4,7 @@ import { buildResultShareText, shareText } from '../lib/share'
 import { loadSettings } from '../lib/settings'
 import { rollLuckyBonus } from '../lib/luckyBonus'
 import { playAchievementUnlock } from '../lib/sound'
+import { useTranslation } from '../contexts/LanguageContext'
 import type { Achievement } from '../lib/achievements'
 
 export interface SummaryItem {
@@ -34,6 +35,7 @@ export function SetSummary({
   newAchievements,
   isNewBest,
 }: SetSummaryProps) {
+  const t = useTranslation()
   const correctCount = items.filter((item) => item.correct).length
   const [shareStatus, setShareStatus] = useState<
     'idle' | 'shared' | 'copied' | 'error'
@@ -64,7 +66,7 @@ export function SetSummary({
       achievementLabels: (newAchievements ?? []).map(
         (a) => `${a.icon} ${a.label}`,
       ),
-    })
+    }, t.share)
     const outcome = await shareText(text)
     if (outcome === 'shared') setShareStatus('shared')
     else if (outcome === 'copied') setShareStatus('copied')
@@ -87,26 +89,27 @@ export function SetSummary({
   return (
     <div className="mx-auto flex w-full max-w-md flex-col gap-6 px-4 py-8 sm:px-6 sm:py-12">
       <div className="text-center">
-        <p className="text-sm text-gray-500 dark:text-gray-400">結果</p>
+        <p className="text-sm text-gray-500 dark:text-gray-400">
+          {t.setSummary.resultLabel}
+        </p>
         <p className="mt-1 text-4xl font-bold text-gray-900 dark:text-gray-100">
-          {correctCount} / {items.length} 問正解
+          {t.setSummary.scoreLabel(correctCount, items.length)}
         </p>
         <button
           type="button"
           onClick={handleShare}
           className="mt-2 touch-manipulation text-sm text-gray-500 underline decoration-dotted underline-offset-2 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
         >
-          📤 結果をシェア
+          {t.setSummary.shareButton}
         </button>
         {shareStatus !== 'idle' && (
           <p
             role="status"
             className="mt-1 text-xs text-gray-500 dark:text-gray-400"
           >
-            {shareStatus === 'shared' && 'シェアしました'}
-            {shareStatus === 'copied' && 'クリップボードにコピーしました'}
-            {shareStatus === 'error' &&
-              'シェアに対応していない環境です。テキストを選択してコピーしてください。'}
+            {shareStatus === 'shared' && t.setSummary.shareStatusShared}
+            {shareStatus === 'copied' && t.setSummary.shareStatusCopied}
+            {shareStatus === 'error' && t.setSummary.shareStatusError}
           </p>
         )}
       </div>
@@ -114,7 +117,7 @@ export function SetSummary({
       {isLucky && (
         <div className="animate-pop rounded-lg border border-fuchsia-300 bg-fuchsia-50 px-4 py-3 text-center dark:border-fuchsia-700 dark:bg-fuchsia-900/30">
           <p className="text-sm font-semibold text-fuchsia-700 dark:text-fuchsia-300">
-            🍀 ラッキーデー！ たまたま今日は運が良いようです
+            {t.setSummary.luckyBonus}
           </p>
         </div>
       )}
@@ -122,7 +125,7 @@ export function SetSummary({
       {isNewBest && (
         <div className="animate-pop rounded-lg border border-sky-300 bg-sky-50 px-4 py-3 text-center dark:border-sky-700 dark:bg-sky-900/30">
           <p className="text-sm font-semibold text-sky-700 dark:text-sky-300">
-            🏅 自己ベスト更新！
+            {t.setSummary.newBest}
           </p>
         </div>
       )}
@@ -130,7 +133,7 @@ export function SetSummary({
       {newAchievements && newAchievements.length > 0 && (
         <div className="animate-pop rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-center dark:border-amber-700 dark:bg-amber-900/30">
           <p className="text-sm font-semibold text-amber-700 dark:text-amber-300">
-            🎉 新しい実績を獲得しました！
+            {t.setSummary.newAchievementsTitle}
           </p>
           <div className="mt-2 flex flex-wrap justify-center gap-2">
             {newAchievements.map((a) => (
@@ -156,7 +159,8 @@ export function SetSummary({
             }`}
           >
             <span className="text-gray-500 dark:text-gray-400">
-              問題{i + 1}: {item.label}
+              {t.setSummary.questionLabel(i + 1)}
+              {item.label}
             </span>
             <span
               className={
@@ -165,7 +169,7 @@ export function SetSummary({
                   : 'font-semibold text-rose-700 dark:text-rose-300'
               }
             >
-              {item.correct ? '正解' : '不正解'}
+              {item.correct ? t.common.correct : t.common.incorrect}
             </span>
           </li>
         ))}
@@ -174,7 +178,7 @@ export function SetSummary({
       {dailyGoal > 0 && (
         <div className="rounded-lg border border-gray-200 px-4 py-3 dark:border-gray-700">
           <p className="text-xs text-gray-500 dark:text-gray-400">
-            今日の目標: {todayCount} / {dailyGoal} セット
+            {t.setSummary.dailyGoal(todayCount, dailyGoal)}
           </p>
           <div className="mt-1.5 h-2 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
             <div
@@ -184,7 +188,7 @@ export function SetSummary({
           </div>
           {goalReached && (
             <p className="mt-1.5 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
-              🎉 今日の目標セット数を達成しました！
+              {t.setSummary.dailyGoalReached}
             </p>
           )}
         </div>
@@ -205,14 +209,14 @@ export function SetSummary({
           onClick={onRetry}
           className="touch-manipulation rounded-lg bg-indigo-500 px-5 py-3 font-semibold text-white shadow-sm transition hover:bg-indigo-400"
         >
-          同じレベルでもう一度
+          {t.setSummary.retry}
         </button>
         <button
           type="button"
           onClick={onChangeLevel}
           className="touch-manipulation rounded-lg border border-gray-300 px-5 py-3 font-semibold text-gray-700 transition hover:bg-gray-50 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-800"
         >
-          レベル選択に戻る
+          {t.setSummary.changeLevel}
         </button>
       </div>
     </div>
