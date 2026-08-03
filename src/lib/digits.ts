@@ -2,12 +2,6 @@ import type { DigitQuestion, Level } from '../types'
 
 const DIGIT_LENGTH: Record<Level, number> = { 1: 3, 2: 5, 3: 7 }
 
-export const DIGIT_LEVEL_LABELS: Record<Level, string> = {
-  1: 'レベル1（3桁）',
-  2: 'レベル2（5桁）',
-  3: 'レベル3（7桁）',
-}
-
 const QUESTIONS_PER_SET = 3
 
 function generateDigits(length: number): number[] {

@@ -12,6 +12,11 @@ export const ja: Translations = {
     incorrect: '不正解',
     confirm: '決定',
     deleteChar: '1文字削除',
+    seeResults: '結果を見る',
+    next: '次へ',
+    backToLevelSelect: '← レベル選択',
+    suggestionUp: (levelLabel) => `🎉 ${levelLabel}に挑戦する`,
+    suggestionDown: (levelLabel) => `${levelLabel}に戻って練習する`,
     questionProgress: (current, total) => `問題 ${current} / ${total}`,
     attemptStats: (accuracyPercent, attempts) =>
       `これまでの正答率: ${accuracyPercent}%（${attempts}回挑戦）`,
@@ -240,5 +245,33 @@ export const ja: Translations = {
       label: '全モード制覇',
       description: 'ことば・すうじ・Nバック・空間・変化検出・音の全6モードに挑戦した',
     },
+  },
+  digit: {
+    backToModeSelect: '← モード選択',
+    title: 'すうじモード',
+    subtitle: '表示された数字を覚えて答えるワーキングメモリトレーニングです。',
+    gameTypes: {
+      reverse: {
+        title: '逆から入力',
+        description: '表示された数字を逆の順番で入力しましょう',
+      },
+      sum: {
+        title: '合計を入力',
+        description: '表示された数字をすべて足した合計を入力しましょう',
+      },
+    },
+    backToTypeSelect: '← すうじモード選択',
+    levelSelectTitle: (gameTypeTitle) => `すうじモード（${gameTypeTitle}）`,
+    levelLabel: (level) =>
+      ({ 1: 'レベル1（3桁）', 2: 'レベル2（5桁）', 3: 'レベル3（7桁）' })[level],
+    rememberPrompt: 'よく覚えてください',
+    answerPrompt: {
+      reverse: '逆から入力してください',
+      sum: '全部たすといくつ？',
+    },
+    noInput: '（未入力）',
+    questionLabel: '出題: ',
+    correctAnswerLabel: '正しい答え: ',
+    yourAnswerLabel: 'あなたの回答: ',
   },
 }

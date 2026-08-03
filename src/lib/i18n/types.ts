@@ -21,6 +21,11 @@ export interface Translations {
     incorrect: string
     confirm: string
     deleteChar: string
+    seeResults: string
+    next: string
+    backToLevelSelect: string
+    suggestionUp: (levelLabel: string) => string
+    suggestionDown: (levelLabel: string) => string
     questionProgress: (current: number, total: number) => string
     attemptStats: (accuracyPercent: number, attempts: number) => string
     // モード×レベルの表示ラベル（TopScreen/StatsScreenで共有）
@@ -163,4 +168,25 @@ export interface Translations {
     fullPolicyLinkSuffix: string
   }
   achievements: Record<AchievementId, { label: string; description: string }>
+  digit: {
+    backToModeSelect: string
+    title: string
+    subtitle: string
+    gameTypes: {
+      reverse: ModeCopy
+      sum: ModeCopy
+    }
+    backToTypeSelect: string
+    levelSelectTitle: (gameTypeTitle: string) => string
+    levelLabel: (level: 1 | 2 | 3) => string
+    rememberPrompt: string
+    answerPrompt: {
+      reverse: string
+      sum: string
+    }
+    noInput: string
+    questionLabel: string
+    correctAnswerLabel: string
+    yourAnswerLabel: string
+  }
 }

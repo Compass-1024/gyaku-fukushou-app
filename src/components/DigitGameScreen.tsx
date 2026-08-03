@@ -8,7 +8,6 @@ import {
   reverseDigits,
   sumDigits,
   isDigitAnswerCorrect,
-  DIGIT_LEVEL_LABELS,
   DIGIT_SHOWN_MS,
   DIGIT_GAP_MS,
   READY_MS,
@@ -22,6 +21,7 @@ import { NumpadInput } from './NumpadInput'
 import { SetSummary } from './SetSummary'
 import { GameHeader } from './GameHeader'
 import { ResultBadge } from './ResultBadge'
+import { useTranslation } from '../contexts/LanguageContext'
 import type {
   BaseGameScreenProps,
   DigitGameType,
@@ -39,11 +39,6 @@ function computeExpectedAnswer(
     : sumDigits(question.digits)
 }
 
-const GAME_TYPE_PROMPTS: Record<DigitGameType, string> = {
-  reverse: '逆から入力してください',
-  sum: '全部たすといくつ？',
-}
-
 interface DigitGameScreenProps extends BaseGameScreenProps {
   gameType: DigitGameType
 }
@@ -54,6 +49,7 @@ export function DigitGameScreen({
   onExit,
   onSelectLevel,
 }: DigitGameScreenProps) {
+  const t = useTranslation()
   const [questions, setQuestions] = useState<DigitQuestion[]>(() =>
     pickDigitQuestionSet(level),
   )
@@ -221,8 +217,8 @@ export function DigitGameScreen({
             ? {
                 label:
                   suggestedLevel > level
-                    ? `🎉 ${DIGIT_LEVEL_LABELS[suggestedLevel]}に挑戦する`
-                    : `${DIGIT_LEVEL_LABELS[suggestedLevel]}に戻って練習する`,
+                    ? t.common.suggestionUp(t.digit.levelLabel(suggestedLevel))
+                    : t.common.suggestionDown(t.digit.levelLabel(suggestedLevel)),
                 onSelect: () => onSelectLevel(suggestedLevel),
               }
             : undefined
@@ -234,7 +230,7 @@ export function DigitGameScreen({
   return (
     <div className="mx-auto flex w-full max-w-md flex-col gap-6 px-4 py-8 sm:gap-8 sm:px-6 sm:py-12">
       <GameHeader
-        backLabel="← レベル選択"
+        backLabel={t.common.backToLevelSelect}
         onBack={() =>
           confirmExit(results.length > 0 || currentResult !== null, onExit)
         }
@@ -250,7 +246,7 @@ export function DigitGameScreen({
         {(phase === 'ready' || phase === 'showing') && (
           <>
             <p className="text-lg font-medium text-gray-800 dark:text-gray-100">
-              よく覚えてください
+              {t.digit.rememberPrompt}
             </p>
             <p
               aria-hidden="true"
@@ -264,7 +260,7 @@ export function DigitGameScreen({
         {phase === 'answering' && (
           <>
             <p className="text-lg font-medium text-gray-800 dark:text-gray-100">
-              {GAME_TYPE_PROMPTS[gameType]}
+              {t.digit.answerPrompt[gameType]}
             </p>
             <p aria-hidden="true" className="text-2xl font-bold text-rose-500">
               {answerRemaining}
@@ -283,16 +279,27 @@ export function DigitGameScreen({
           <>
             <ResultBadge correct={currentResult.correct} />
             <div className="mt-2 flex flex-col gap-1 text-sm text-gray-500 dark:text-gray-400">
-              <p>出題: {currentResult.question.digits.join('')}</p>
-              <p>正しい答え: {currentResult.expectedAnswer}</p>
-              <p>あなたの回答: {currentResult.typed || '（未入力）'}</p>
+              <p>
+                {t.digit.questionLabel}
+                {currentResult.question.digits.join('')}
+              </p>
+              <p>
+                {t.digit.correctAnswerLabel}
+                {currentResult.expectedAnswer}
+              </p>
+              <p>
+                {t.digit.yourAnswerLabel}
+                {currentResult.typed || t.digit.noInput}
+              </p>
             </div>
             <button
               type="button"
               onClick={handleNext}
               className="mt-4 touch-manipulation rounded-lg bg-indigo-500 px-5 py-3 font-semibold text-white shadow-sm transition hover:bg-indigo-400"
             >
-              {currentIndex + 1 >= questions.length ? '結果を見る' : '次へ'}
+              {currentIndex + 1 >= questions.length
+                ? t.common.seeResults
+                : t.common.next}
             </button>
           </>
         )}

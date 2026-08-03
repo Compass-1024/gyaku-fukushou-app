@@ -11,6 +11,11 @@ export const en: Translations = {
     incorrect: 'Incorrect',
     confirm: 'OK',
     deleteChar: 'Delete last digit',
+    seeResults: 'See results',
+    next: 'Next',
+    backToLevelSelect: '← Level select',
+    suggestionUp: (levelLabel) => `🎉 Try ${levelLabel}`,
+    suggestionDown: (levelLabel) => `Practice at ${levelLabel} again`,
     questionProgress: (current, total) => `Question ${current} / ${total}`,
     attemptStats: (accuracyPercent, attempts) =>
       `Accuracy so far: ${accuracyPercent}% (${attempts} attempt${attempts === 1 ? '' : 's'})`,
@@ -260,5 +265,39 @@ export const en: Translations = {
       description:
         'Tried all six modes: Word, Digit, N-Back, Spatial, Change Detection, and Tone',
     },
+  },
+  digit: {
+    backToModeSelect: '← Mode select',
+    title: 'Digit Mode',
+    subtitle: 'Remember the digits shown and answer — a working memory challenge.',
+    gameTypes: {
+      reverse: {
+        title: 'Reverse',
+        description: 'Enter the digits shown in reverse order',
+      },
+      sum: {
+        title: 'Sum',
+        description: 'Enter the sum of all the digits shown',
+      },
+    },
+    backToTypeSelect: '← Digit mode select',
+    levelSelectTitle: (gameTypeTitle) => `Digit Mode (${gameTypeTitle})`,
+    levelLabel: (level) =>
+      (
+        {
+          1: 'Level 1 (3 digits)',
+          2: 'Level 2 (5 digits)',
+          3: 'Level 3 (7 digits)',
+        } as const
+      )[level],
+    rememberPrompt: 'Memorize it',
+    answerPrompt: {
+      reverse: 'Enter it in reverse order',
+      sum: "What's the total?",
+    },
+    noInput: '(no input)',
+    questionLabel: 'Shown: ',
+    correctAnswerLabel: 'Correct answer: ',
+    yourAnswerLabel: 'Your answer: ',
   },
 }
