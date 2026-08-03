@@ -4,6 +4,7 @@ const STORAGE_KEY = 'gyaku-fukushou:settings'
 
 export const DEFAULT_SETTINGS: AppSettings = {
   themeMode: 'system',
+  language: 'ja',
   speechRate: 0.95,
   voiceURI: null,
   soundEnabled: true,

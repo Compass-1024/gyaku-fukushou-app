@@ -12,6 +12,7 @@ export interface BaseGameScreenProps {
 export type Mode = 'word' | 'digit' | 'nback' | 'spatial' | 'pattern' | 'tone'
 export type DigitGameType = 'reverse' | 'sum'
 export type ThemeMode = 'system' | 'light' | 'dark'
+export type Language = 'ja' | 'en'
 
 export interface Phrase {
   id: string
@@ -53,6 +54,7 @@ export interface HistoryEntry {
 
 export interface AppSettings {
   themeMode: ThemeMode
+  language: Language
   speechRate: number
   voiceURI: string | null
   soundEnabled: boolean

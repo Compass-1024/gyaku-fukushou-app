@@ -9,7 +9,6 @@ function toJstDate(date: Date): Date {
   return new Date(date.getTime() + JST_OFFSET_MS)
 }
 
-// UTCの日時をJSTの日付キー（YYYY-MM-DD）に変換する
 export function getJstDateKey(date: Date): string {
   const jst = toJstDate(date)
   const y = jst.getUTCFullYear()
@@ -18,13 +17,9 @@ export function getJstDateKey(date: Date): string {
   return `${y}-${m}-${d}`
 }
 
-// UTCの日時をJSTの時（0〜23）に変換する
 export interface ReminderCheckInput {
-  // 'YYYY-MM-DD'（JST）。まだ一度も同期していなければnull
   lastPracticedDateKey: string | null
-  // 直近でリマインドを送った日（JST）。二重送信防止用。まだ未送信ならnull
   lastReminderSentDateKey: string | null
-  // 判定基準時刻（UTC）。Cronの実行時刻を渡す
   nowUtc: Date
 }
 

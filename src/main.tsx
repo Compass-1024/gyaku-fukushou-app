@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.tsx'
 import { ErrorBoundary } from './components/ErrorBoundary.tsx'
+import { LanguageProvider } from './contexts/LanguageContext.tsx'
 import { installGlobalErrorHandlers } from './lib/logger.ts'
 
 installGlobalErrorHandlers()
@@ -10,7 +11,9 @@ installGlobalErrorHandlers()
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <ErrorBoundary>
-      <App />
+      <LanguageProvider>
+        <App />
+      </LanguageProvider>
     </ErrorBoundary>
   </StrictMode>,
 )
