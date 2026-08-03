@@ -13,9 +13,15 @@ export const en: Translations = {
     deleteChar: 'Delete last digit',
     seeResults: 'See results',
     next: 'Next',
+    backToModeSelect: '← Mode select',
     backToLevelSelect: '← Level select',
     suggestionUp: (levelLabel) => `🎉 Try ${levelLabel}`,
     suggestionDown: (levelLabel) => `Practice at ${levelLabel} again`,
+    rememberPrompt: 'Memorize it',
+    correctAnswerLabel: 'Correct answer: ',
+    correctOrderLabel: 'Correct order: ',
+    yourAnswerLabel: 'Your answer: ',
+    noAnswer: '(no answer)',
     questionProgress: (current, total) => `Question ${current} / ${total}`,
     attemptStats: (accuracyPercent, attempts) =>
       `Accuracy so far: ${accuracyPercent}% (${attempts} attempt${attempts === 1 ? '' : 's'})`,
@@ -267,7 +273,6 @@ export const en: Translations = {
     },
   },
   digit: {
-    backToModeSelect: '← Mode select',
     title: 'Digit Mode',
     subtitle: 'Remember the digits shown and answer — a working memory challenge.',
     gameTypes: {
@@ -290,14 +295,75 @@ export const en: Translations = {
           3: 'Level 3 (7 digits)',
         } as const
       )[level],
-    rememberPrompt: 'Memorize it',
     answerPrompt: {
       reverse: 'Enter it in reverse order',
       sum: "What's the total?",
     },
     noInput: '(no input)',
     questionLabel: 'Shown: ',
-    correctAnswerLabel: 'Correct answer: ',
-    yourAnswerLabel: 'Your answer: ',
+  },
+  nback: {
+    title: 'N-Back Mode',
+    subtitle:
+      "Digits appear one at a time. Press \"Match\" whenever the current digit matches the one N steps back.",
+    levelLabel: (level) =>
+      (
+        {
+          1: 'Level 1 (compare to 1 back)',
+          2: 'Level 2 (compare to 2 back)',
+          3: 'Level 3 (compare to 3 back)',
+        } as const
+      )[level],
+    matchPrompt: (n) => `Press "Match" if it's the same as ${n} step${n === 1 ? '' : 's'} back`,
+    matchButton: 'Match',
+    matchButtonPressed: '✓ Match',
+    resultLabel: (digit, isMatch) => (isMatch ? `${digit} (match)` : `${digit}`),
+  },
+  spatial: {
+    title: 'Spatial Mode',
+    subtitle:
+      'Remember the order in which squares light up, then tap them back in reverse — a working memory challenge.',
+    levelLabel: (level) =>
+      (
+        {
+          1: 'Level 1 (3×3, 3 squares)',
+          2: 'Level 2 (3×3, 4 squares)',
+          3: 'Level 3 (4×4, 5 squares)',
+        } as const
+      )[level],
+    answerPrompt: 'Tap the squares back in reverse order',
+    litSquaresAriaLabel: 'Remember the order they light up',
+    cellAriaLabel: (index, tapOrder) =>
+      `Square ${index}${tapOrder !== null ? ` (tapped ${tapOrder}${tapOrder === 1 ? 'st' : tapOrder === 2 ? 'nd' : tapOrder === 3 ? 'rd' : 'th'})` : ''}`,
+    resultLabel: (cellCount) => `${cellCount} square${cellCount === 1 ? '' : 's'}`,
+  },
+  pattern: {
+    title: 'Change Detection Mode',
+    subtitle:
+      'Remember a briefly shown pattern, then spot whether it changed when shown again — a working memory challenge.',
+    levelLabel: (level) =>
+      (
+        {
+          1: 'Level 1 (4×4, 4 squares)',
+          2: 'Level 2 (4×4, 6 squares)',
+          3: 'Level 3 (5×5, 8 squares)',
+        } as const
+      )[level],
+    answerPrompt: 'Has the pattern changed since before?',
+    changed: 'Changed',
+    unchanged: 'Unchanged',
+  },
+  tone: {
+    title: 'Tone & Color Mode',
+    subtitle:
+      'Remember the order in which colored pads light up with sound, then tap them back in the same order — a working memory challenge.',
+    levelLabel: (level) =>
+      ({ 1: 'Level 1 (3 tones)', 2: 'Level 2 (4 tones)', 3: 'Level 3 (5 tones)' })[
+        level
+      ],
+    answerPrompt: 'Tap the pads back in the same order',
+    padColors: ['Red', 'Blue', 'Green', 'Yellow'],
+    padAriaLabel: (color) => `${color} pad`,
+    resultLabel: (padCount) => `${padCount} tone${padCount === 1 ? '' : 's'}`,
   },
 }

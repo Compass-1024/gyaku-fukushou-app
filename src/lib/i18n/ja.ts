@@ -14,9 +14,15 @@ export const ja: Translations = {
     deleteChar: '1文字削除',
     seeResults: '結果を見る',
     next: '次へ',
+    backToModeSelect: '← モード選択',
     backToLevelSelect: '← レベル選択',
     suggestionUp: (levelLabel) => `🎉 ${levelLabel}に挑戦する`,
     suggestionDown: (levelLabel) => `${levelLabel}に戻って練習する`,
+    rememberPrompt: 'よく覚えてください',
+    correctAnswerLabel: '正しい答え: ',
+    correctOrderLabel: '正しい順番: ',
+    yourAnswerLabel: 'あなたの回答: ',
+    noAnswer: '（未回答）',
     questionProgress: (current, total) => `問題 ${current} / ${total}`,
     attemptStats: (accuracyPercent, attempts) =>
       `これまでの正答率: ${accuracyPercent}%（${attempts}回挑戦）`,
@@ -247,7 +253,6 @@ export const ja: Translations = {
     },
   },
   digit: {
-    backToModeSelect: '← モード選択',
     title: 'すうじモード',
     subtitle: '表示された数字を覚えて答えるワーキングメモリトレーニングです。',
     gameTypes: {
@@ -264,14 +269,73 @@ export const ja: Translations = {
     levelSelectTitle: (gameTypeTitle) => `すうじモード（${gameTypeTitle}）`,
     levelLabel: (level) =>
       ({ 1: 'レベル1（3桁）', 2: 'レベル2（5桁）', 3: 'レベル3（7桁）' })[level],
-    rememberPrompt: 'よく覚えてください',
     answerPrompt: {
       reverse: '逆から入力してください',
       sum: '全部たすといくつ？',
     },
     noInput: '（未入力）',
     questionLabel: '出題: ',
-    correctAnswerLabel: '正しい答え: ',
-    yourAnswerLabel: 'あなたの回答: ',
+  },
+  nback: {
+    title: 'Nバックモード',
+    subtitle:
+      '数字が1つずつ表示されます。N個前と同じ数字なら「一致」を押すワーキングメモリトレーニングです。',
+    levelLabel: (level) =>
+      (
+        {
+          1: 'レベル1（1つ前と比較）',
+          2: 'レベル2（2つ前と比較）',
+          3: 'レベル3（3つ前と比較）',
+        } as const
+      )[level],
+    matchPrompt: (n) => `${n}個前と同じなら「一致」を押してください`,
+    matchButton: '一致',
+    matchButtonPressed: '✓ 一致',
+    resultLabel: (digit, isMatch) => (isMatch ? `${digit}（一致）` : `${digit}`),
+  },
+  spatial: {
+    title: '空間モード',
+    subtitle:
+      'マスが光る順番を覚えて、逆から画面をタップして答えるワーキングメモリトレーニングです。',
+    levelLabel: (level) =>
+      (
+        {
+          1: 'レベル1（3×3・3マス）',
+          2: 'レベル2（3×3・4マス）',
+          3: 'レベル3（4×4・5マス）',
+        } as const
+      )[level],
+    answerPrompt: '逆の順番でマスをタップしてください',
+    litSquaresAriaLabel: '光る順番を覚えてください',
+    cellAriaLabel: (index, tapOrder) =>
+      `マス${index}${tapOrder !== null ? `（${tapOrder}番目にタップ）` : ''}`,
+    resultLabel: (cellCount) => `${cellCount}マス`,
+  },
+  pattern: {
+    title: '変化検出モード',
+    subtitle:
+      '一瞬表示される模様を覚えて、もう一度見せたときに変化しているかどうかを見分けるワーキングメモリトレーニングです。',
+    levelLabel: (level) =>
+      (
+        {
+          1: 'レベル1（4×4・4マス）',
+          2: 'レベル2（4×4・6マス）',
+          3: 'レベル3（5×5・8マス）',
+        } as const
+      )[level],
+    answerPrompt: 'さっきと模様は変わっていますか？',
+    changed: '変化あり',
+    unchanged: '変化なし',
+  },
+  tone: {
+    title: '音・色モード',
+    subtitle:
+      '色のパッドが音とともに光る順番を覚えて、同じ順にタップして再現するワーキングメモリトレーニングです。',
+    levelLabel: (level) =>
+      ({ 1: 'レベル1（3音）', 2: 'レベル2（4音）', 3: 'レベル3（5音）' })[level],
+    answerPrompt: '同じ順番でパッドをタップしてください',
+    padColors: ['赤', '青', '緑', '黄'],
+    padAriaLabel: (color) => `${color}のパッド`,
+    resultLabel: (padCount) => `${padCount}音`,
   },
 }

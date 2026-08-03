@@ -15,7 +15,7 @@ export function DigitTypeSelect({ onSelect, onBack }: DigitTypeSelectProps) {
         onClick={onBack}
         className="-m-2 touch-manipulation self-start p-2 text-sm text-gray-500 hover:underline dark:text-gray-400"
       >
-        {t.digit.backToModeSelect}
+        {t.common.backToModeSelect}
       </button>
 
       <div className="text-center">

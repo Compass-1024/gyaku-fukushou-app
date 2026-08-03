@@ -1,7 +1,7 @@
-import { SPATIAL_LEVEL_LABELS } from '../lib/spatial'
 import { getLevelStats } from '../lib/history'
 import { LEVEL_STYLES } from '../lib/levelStyles'
 import { LevelPicker } from './LevelPicker'
+import { useTranslation } from '../contexts/LanguageContext'
 import type { HistoryEntry, Level } from '../types'
 
 interface SpatialLevelSelectProps {
@@ -15,6 +15,7 @@ export function SpatialLevelSelect({
   onSelect,
   onBack,
 }: SpatialLevelSelectProps) {
+  const t = useTranslation()
   return (
     <div className="mx-auto flex w-full max-w-md flex-col gap-6 px-4 py-8 sm:px-6 sm:py-12">
       <button
@@ -22,20 +23,20 @@ export function SpatialLevelSelect({
         onClick={onBack}
         className="-m-2 touch-manipulation self-start p-2 text-sm text-gray-500 hover:underline dark:text-gray-400"
       >
-        ← モード選択
+        {t.common.backToModeSelect}
       </button>
 
       <div className="text-center">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-          空間モード
+          {t.spatial.title}
         </h1>
         <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-          マスが光る順番を覚えて、逆から画面をタップして答えるワーキングメモリトレーニングです。
+          {t.spatial.subtitle}
         </p>
       </div>
 
       <LevelPicker
-        labelFor={(level) => SPATIAL_LEVEL_LABELS[level]}
+        labelFor={(level) => t.spatial.levelLabel(level)}
         colorFor={(level) => LEVEL_STYLES[level]}
         statsFor={(level) => getLevelStats(history, level, 'spatial')}
         onSelect={onSelect}

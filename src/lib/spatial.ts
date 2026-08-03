@@ -3,12 +3,6 @@ import type { Level, SpatialQuestion } from '../types'
 const GRID_SIZE: Record<Level, number> = { 1: 3, 2: 3, 3: 4 }
 const SEQUENCE_LENGTH: Record<Level, number> = { 1: 3, 2: 4, 3: 5 }
 
-export const SPATIAL_LEVEL_LABELS: Record<Level, string> = {
-  1: 'レベル1（3×3・3マス）',
-  2: 'レベル2（3×3・4マス）',
-  3: 'レベル3（4×4・5マス）',
-}
-
 const QUESTIONS_PER_SET = 3
 
 export function getGridSize(level: Level): number {

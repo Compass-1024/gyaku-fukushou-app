@@ -6,13 +6,11 @@ import { useSetCompletionRecorder } from '../hooks/useSetCompletionRecorder'
 import {
   pickToneQuestionSet,
   isToneAnswerCorrect,
-  TONE_LEVEL_LABELS,
   TONE_SHOWN_MS,
   TONE_GAP_MS,
   READY_MS,
   getAnswerTimeoutMs,
   PAD_COUNT,
-  PAD_LABELS,
 } from '../lib/tone'
 import { confirmExit } from '../lib/confirmExit'
 import { getSuggestedLevel } from '../lib/difficulty'
@@ -26,6 +24,7 @@ import {
 import { SetSummary } from './SetSummary'
 import { GameHeader } from './GameHeader'
 import { ResultBadge } from './ResultBadge'
+import { useTranslation } from '../contexts/LanguageContext'
 import type {
   BaseGameScreenProps,
   ToneQuestion,
@@ -48,6 +47,7 @@ export function ToneGameScreen({
   onExit,
   onSelectLevel,
 }: ToneGameScreenProps) {
+  const t = useTranslation()
   const [questions, setQuestions] = useState<ToneQuestion[]>(() =>
     pickToneQuestionSet(level),
   )
@@ -165,7 +165,7 @@ export function ToneGameScreen({
       <SetSummary
         items={results.map((r) => ({
           key: r.question.id,
-          label: `${r.question.sequence.length}音`,
+          label: t.tone.resultLabel(r.question.sequence.length),
           correct: r.correct,
         }))}
         onRetry={handleRetry}
@@ -177,8 +177,8 @@ export function ToneGameScreen({
             ? {
                 label:
                   suggestedLevel > level
-                    ? `🎉 ${TONE_LEVEL_LABELS[suggestedLevel]}に挑戦する`
-                    : `${TONE_LEVEL_LABELS[suggestedLevel]}に戻って練習する`,
+                    ? t.common.suggestionUp(t.tone.levelLabel(suggestedLevel))
+                    : t.common.suggestionDown(t.tone.levelLabel(suggestedLevel)),
                 onSelect: () => onSelectLevel(suggestedLevel),
               }
             : undefined
@@ -190,7 +190,7 @@ export function ToneGameScreen({
   return (
     <div className="mx-auto flex w-full max-w-md flex-col gap-6 px-4 py-8 sm:gap-8 sm:px-6 sm:py-12">
       <GameHeader
-        backLabel="← レベル選択"
+        backLabel={t.common.backToLevelSelect}
         onBack={() =>
           confirmExit(results.length > 0 || currentResult !== null, onExit)
         }
@@ -205,13 +205,13 @@ export function ToneGameScreen({
       >
         {(phase === 'ready' || phase === 'showing') && (
           <p className="text-lg font-medium text-gray-800 dark:text-gray-100">
-            よく覚えてください
+            {t.common.rememberPrompt}
           </p>
         )}
         {phase === 'answering' && (
           <>
             <p className="text-lg font-medium text-gray-800 dark:text-gray-100">
-              同じ順番でパッドをタップしてください
+              {t.tone.answerPrompt}
             </p>
             <p aria-hidden="true" className="text-2xl font-bold text-rose-500">
               {answerRemaining}
@@ -230,7 +230,7 @@ export function ToneGameScreen({
                   type="button"
                   disabled={phase !== 'answering'}
                   onClick={() => handlePadTap(pad)}
-                  aria-label={`${PAD_LABELS[pad]}のパッド`}
+                  aria-label={t.tone.padAriaLabel(t.tone.padColors[pad])}
                   className={`aspect-square touch-manipulation rounded-xl text-white shadow-sm transition disabled:cursor-not-allowed ${
                     isLit ? PAD_LIT_COLORS[pad] : PAD_COLORS[pad]
                   }`}
@@ -249,16 +249,18 @@ export function ToneGameScreen({
             <ResultBadge correct={currentResult.correct} />
             <div className="mt-2 flex flex-col gap-1 text-sm text-gray-500 dark:text-gray-400">
               <p>
-                正しい順番:{' '}
+                {t.common.correctOrderLabel}
                 {currentResult.question.sequence
-                  .map((p) => PAD_LABELS[p])
+                  .map((p) => t.tone.padColors[p])
                   .join(' → ')}
               </p>
               <p>
-                あなたの回答:{' '}
+                {t.common.yourAnswerLabel}
                 {currentResult.tapped.length > 0
-                  ? currentResult.tapped.map((p) => PAD_LABELS[p]).join(' → ')
-                  : '（未回答）'}
+                  ? currentResult.tapped
+                      .map((p) => t.tone.padColors[p])
+                      .join(' → ')
+                  : t.common.noAnswer}
               </p>
             </div>
             <button
@@ -266,7 +268,9 @@ export function ToneGameScreen({
               onClick={handleNext}
               className="mt-4 touch-manipulation rounded-lg bg-indigo-500 px-5 py-3 font-semibold text-white shadow-sm transition hover:bg-indigo-400"
             >
-              {currentIndex + 1 >= questions.length ? '結果を見る' : '次へ'}
+              {currentIndex + 1 >= questions.length
+                ? t.common.seeResults
+                : t.common.next}
             </button>
           </>
         )}

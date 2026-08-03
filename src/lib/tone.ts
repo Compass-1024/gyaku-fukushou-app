@@ -1,15 +1,8 @@
 import type { Level, ToneQuestion } from '../types'
 
 export const PAD_COUNT = 4
-export const PAD_LABELS = ['赤', '青', '緑', '黄'] as const
 
 const SEQUENCE_LENGTH: Record<Level, number> = { 1: 3, 2: 4, 3: 5 }
-
-export const TONE_LEVEL_LABELS: Record<Level, string> = {
-  1: 'レベル1（3音）',
-  2: 'レベル2（4音）',
-  3: 'レベル3（5音）',
-}
 
 const QUESTIONS_PER_SET = 3
 

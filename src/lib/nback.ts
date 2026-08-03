@@ -3,12 +3,6 @@ import type { Level, NBackTrial } from '../types'
 // レベルが上がるほど何個前の数字かを増やす（1back/2back/3back）
 const N_VALUE: Record<Level, number> = { 1: 1, 2: 2, 3: 3 }
 
-export const NBACK_LEVEL_LABELS: Record<Level, string> = {
-  1: 'レベル1（1つ前と比較）',
-  2: 'レベル2（2つ前と比較）',
-  3: 'レベル3（3つ前と比較）',
-}
-
 export const NBACK_SEQUENCE_LENGTH = 15
 const MATCH_PROBABILITY = 0.35
 

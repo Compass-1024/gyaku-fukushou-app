@@ -6,7 +6,6 @@ import {
   scoreNBackTrials,
   getNValue,
   NBACK_SEQUENCE_LENGTH,
-  NBACK_LEVEL_LABELS,
   STIMULUS_MS,
   GAP_MS,
   READY_MS,
@@ -17,6 +16,7 @@ import { loadSettings } from '../lib/settings'
 import { playButtonTap } from '../lib/sound'
 import { SetSummary } from './SetSummary'
 import { GameHeader } from './GameHeader'
+import { useTranslation } from '../contexts/LanguageContext'
 import type { BaseGameScreenProps, NBackPhase, NBackTrial } from '../types'
 
 type NBackGameScreenProps = BaseGameScreenProps
@@ -26,6 +26,7 @@ export function NBackGameScreen({
   onExit,
   onSelectLevel,
 }: NBackGameScreenProps) {
+  const t = useTranslation()
   const n = getNValue(level)
   const [trials, setTrials] = useState<NBackTrial[]>(() =>
     generateNBackSequence(level),
@@ -99,10 +100,11 @@ export function NBackGameScreen({
     const suggestedLevel = getSuggestedLevel(level, score.accuracy)
     return (
       <SetSummary
-        items={trials.map((t, i) => ({
+        items={trials.map((trial, i) => ({
           key: `${i}`,
-          label: t.isMatch ? `${t.digit}（一致）` : `${t.digit}`,
-          correct: (t.isMatch && pressed[i]) || (!t.isMatch && !pressed[i]),
+          label: t.nback.resultLabel(trial.digit, trial.isMatch),
+          correct:
+            (trial.isMatch && pressed[i]) || (!trial.isMatch && !pressed[i]),
         }))}
         onRetry={handleRetry}
         onChangeLevel={onExit}
@@ -113,8 +115,8 @@ export function NBackGameScreen({
             ? {
                 label:
                   suggestedLevel > level
-                    ? `🎉 ${NBACK_LEVEL_LABELS[suggestedLevel]}に挑戦する`
-                    : `${NBACK_LEVEL_LABELS[suggestedLevel]}に戻って練習する`,
+                    ? t.common.suggestionUp(t.nback.levelLabel(suggestedLevel))
+                    : t.common.suggestionDown(t.nback.levelLabel(suggestedLevel)),
                 onSelect: () => onSelectLevel(suggestedLevel),
               }
             : undefined
@@ -126,7 +128,7 @@ export function NBackGameScreen({
   return (
     <div className="mx-auto flex w-full max-w-md flex-col gap-6 px-4 py-8 sm:gap-8 sm:px-6 sm:py-12">
       <GameHeader
-        backLabel="← レベル選択"
+        backLabel={t.common.backToLevelSelect}
         onBack={() => confirmExit(trialIndex > 0, onExit)}
         currentIndex={trialIndex}
         total={trials.length}
@@ -138,7 +140,7 @@ export function NBackGameScreen({
         className="flex min-h-56 flex-col items-center justify-center gap-4 rounded-2xl border border-gray-200 bg-white px-4 py-8 text-center shadow-sm sm:min-h-64 sm:px-6 sm:py-10 dark:border-gray-700 dark:bg-gray-800"
       >
         <p className="text-lg font-medium text-gray-800 dark:text-gray-100">
-          {n}個前と同じなら「一致」を押してください
+          {t.nback.matchPrompt(n)}
         </p>
         <p
           aria-hidden="true"
@@ -157,7 +159,7 @@ export function NBackGameScreen({
                 : 'bg-indigo-500 hover:bg-indigo-400'
             }`}
           >
-            {pressed[trialIndex] ? '✓ 一致' : '一致'}
+            {pressed[trialIndex] ? t.nback.matchButtonPressed : t.nback.matchButton}
           </button>
         )}
       </div>

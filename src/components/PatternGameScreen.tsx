@@ -5,7 +5,6 @@ import { useSetCompletionRecorder } from '../hooks/useSetCompletionRecorder'
 import {
   pickPatternQuestionSet,
   isPatternAnswerCorrect,
-  PATTERN_LEVEL_LABELS,
   PATTERN_SHOWN_MS,
   PATTERN_BLANK_MS,
   READY_MS,
@@ -18,6 +17,7 @@ import { playCorrectSound, playIncorrectSound, playButtonTap } from '../lib/soun
 import { SetSummary } from './SetSummary'
 import { GameHeader } from './GameHeader'
 import { ResultBadge } from './ResultBadge'
+import { useTranslation } from '../contexts/LanguageContext'
 import type {
   BaseGameScreenProps,
   PatternQuestion,
@@ -32,6 +32,7 @@ export function PatternGameScreen({
   onExit,
   onSelectLevel,
 }: PatternGameScreenProps) {
+  const t = useTranslation()
   const [questions, setQuestions] = useState<PatternQuestion[]>(() =>
     pickPatternQuestionSet(level),
   )
@@ -156,7 +157,7 @@ export function PatternGameScreen({
       <SetSummary
         items={results.map((r) => ({
           key: r.question.id,
-          label: r.question.hasChange ? '変化あり' : '変化なし',
+          label: r.question.hasChange ? t.pattern.changed : t.pattern.unchanged,
           correct: r.correct,
         }))}
         onRetry={handleRetry}
@@ -168,8 +169,10 @@ export function PatternGameScreen({
             ? {
                 label:
                   suggestedLevel > level
-                    ? `🎉 ${PATTERN_LEVEL_LABELS[suggestedLevel]}に挑戦する`
-                    : `${PATTERN_LEVEL_LABELS[suggestedLevel]}に戻って練習する`,
+                    ? t.common.suggestionUp(t.pattern.levelLabel(suggestedLevel))
+                    : t.common.suggestionDown(
+                        t.pattern.levelLabel(suggestedLevel),
+                      ),
                 onSelect: () => onSelectLevel(suggestedLevel),
               }
             : undefined
@@ -188,7 +191,7 @@ export function PatternGameScreen({
   return (
     <div className="mx-auto flex w-full max-w-md flex-col gap-6 px-4 py-8 sm:gap-8 sm:px-6 sm:py-12">
       <GameHeader
-        backLabel="← レベル選択"
+        backLabel={t.common.backToLevelSelect}
         onBack={() =>
           confirmExit(results.length > 0 || currentResult !== null, onExit)
         }
@@ -203,12 +206,12 @@ export function PatternGameScreen({
       >
         {phase === 'ready' && (
           <p className="text-lg font-medium text-gray-800 dark:text-gray-100">
-            よく覚えてください
+            {t.common.rememberPrompt}
           </p>
         )}
         {phase === 'showing' && step === 0 && (
           <p className="text-lg font-medium text-gray-800 dark:text-gray-100">
-            よく覚えてください
+            {t.common.rememberPrompt}
           </p>
         )}
         {phase === 'showing' && step === 1 && (
@@ -219,7 +222,7 @@ export function PatternGameScreen({
         {phase === 'answering' && (
           <>
             <p className="text-lg font-medium text-gray-800 dark:text-gray-100">
-              さっきと模様は変わっていますか？
+              {t.pattern.answerPrompt}
             </p>
             <p aria-hidden="true" className="text-2xl font-bold text-rose-500">
               {answerRemaining}
@@ -257,14 +260,14 @@ export function PatternGameScreen({
               onClick={() => handleAnswer(true)}
               className="touch-manipulation rounded-full bg-rose-500 px-6 py-3 font-bold text-white shadow-sm transition hover:bg-rose-400"
             >
-              変化あり
+              {t.pattern.changed}
             </button>
             <button
               type="button"
               onClick={() => handleAnswer(false)}
               className="touch-manipulation rounded-full bg-indigo-500 px-6 py-3 font-bold text-white shadow-sm transition hover:bg-indigo-400"
             >
-              変化なし
+              {t.pattern.unchanged}
             </button>
           </div>
         )}
@@ -274,12 +277,16 @@ export function PatternGameScreen({
             <ResultBadge correct={currentResult.correct} />
             <div className="mt-2 flex flex-col gap-1 text-sm text-gray-500 dark:text-gray-400">
               <p>
-                正しい答え:{' '}
-                {currentResult.question.hasChange ? '変化あり' : '変化なし'}
+                {t.common.correctAnswerLabel}
+                {currentResult.question.hasChange
+                  ? t.pattern.changed
+                  : t.pattern.unchanged}
               </p>
               <p>
-                あなたの回答:{' '}
-                {currentResult.answeredChanged ? '変化あり' : '変化なし'}
+                {t.common.yourAnswerLabel}
+                {currentResult.answeredChanged
+                  ? t.pattern.changed
+                  : t.pattern.unchanged}
               </p>
             </div>
             <button
@@ -287,7 +294,9 @@ export function PatternGameScreen({
               onClick={handleNext}
               className="mt-4 touch-manipulation rounded-lg bg-indigo-500 px-5 py-3 font-semibold text-white shadow-sm transition hover:bg-indigo-400"
             >
-              {currentIndex + 1 >= questions.length ? '結果を見る' : '次へ'}
+              {currentIndex + 1 >= questions.length
+                ? t.common.seeResults
+                : t.common.next}
             </button>
           </>
         )}

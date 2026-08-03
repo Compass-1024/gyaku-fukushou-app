@@ -246,7 +246,7 @@ export function DigitGameScreen({
         {(phase === 'ready' || phase === 'showing') && (
           <>
             <p className="text-lg font-medium text-gray-800 dark:text-gray-100">
-              {t.digit.rememberPrompt}
+              {t.common.rememberPrompt}
             </p>
             <p
               aria-hidden="true"
@@ -284,11 +284,11 @@ export function DigitGameScreen({
                 {currentResult.question.digits.join('')}
               </p>
               <p>
-                {t.digit.correctAnswerLabel}
+                {t.common.correctAnswerLabel}
                 {currentResult.expectedAnswer}
               </p>
               <p>
-                {t.digit.yourAnswerLabel}
+                {t.common.yourAnswerLabel}
                 {currentResult.typed || t.digit.noInput}
               </p>
             </div>

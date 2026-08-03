@@ -7,7 +7,6 @@ import {
   pickSpatialQuestionSet,
   reverseSequence,
   isSpatialAnswerCorrect,
-  SPATIAL_LEVEL_LABELS,
   SPATIAL_SHOWN_MS,
   SPATIAL_GAP_MS,
   READY_MS,
@@ -20,6 +19,7 @@ import { playCorrectSound, playIncorrectSound, playButtonTap } from '../lib/soun
 import { SetSummary } from './SetSummary'
 import { GameHeader } from './GameHeader'
 import { ResultBadge } from './ResultBadge'
+import { useTranslation } from '../contexts/LanguageContext'
 import type {
   BaseGameScreenProps,
   SpatialQuestion,
@@ -34,6 +34,7 @@ export function SpatialGameScreen({
   onExit,
   onSelectLevel,
 }: SpatialGameScreenProps) {
+  const t = useTranslation()
   const [questions, setQuestions] = useState<SpatialQuestion[]>(() =>
     pickSpatialQuestionSet(level),
   )
@@ -154,7 +155,7 @@ export function SpatialGameScreen({
       <SetSummary
         items={results.map((r) => ({
           key: r.question.id,
-          label: `${r.question.sequence.length}マス`,
+          label: t.spatial.resultLabel(r.question.sequence.length),
           correct: r.correct,
         }))}
         onRetry={handleRetry}
@@ -166,8 +167,10 @@ export function SpatialGameScreen({
             ? {
                 label:
                   suggestedLevel > level
-                    ? `🎉 ${SPATIAL_LEVEL_LABELS[suggestedLevel]}に挑戦する`
-                    : `${SPATIAL_LEVEL_LABELS[suggestedLevel]}に戻って練習する`,
+                    ? t.common.suggestionUp(t.spatial.levelLabel(suggestedLevel))
+                    : t.common.suggestionDown(
+                        t.spatial.levelLabel(suggestedLevel),
+                      ),
                 onSelect: () => onSelectLevel(suggestedLevel),
               }
             : undefined
@@ -179,7 +182,7 @@ export function SpatialGameScreen({
   return (
     <div className="mx-auto flex w-full max-w-md flex-col gap-6 px-4 py-8 sm:gap-8 sm:px-6 sm:py-12">
       <GameHeader
-        backLabel="← レベル選択"
+        backLabel={t.common.backToLevelSelect}
         onBack={() =>
           confirmExit(results.length > 0 || currentResult !== null, onExit)
         }
@@ -194,13 +197,13 @@ export function SpatialGameScreen({
       >
         {(phase === 'ready' || phase === 'showing') && (
           <p className="text-lg font-medium text-gray-800 dark:text-gray-100">
-            よく覚えてください
+            {t.common.rememberPrompt}
           </p>
         )}
         {phase === 'answering' && (
           <>
             <p className="text-lg font-medium text-gray-800 dark:text-gray-100">
-              逆の順番でマスをタップしてください
+              {t.spatial.answerPrompt}
             </p>
             <p aria-hidden="true" className="text-2xl font-bold text-rose-500">
               {answerRemaining}
@@ -217,7 +220,7 @@ export function SpatialGameScreen({
               maxWidth: '100%',
             }}
             aria-label={
-              phase === 'showing' ? '光る順番を覚えてください' : undefined
+              phase === 'showing' ? t.spatial.litSquaresAriaLabel : undefined
             }
           >
             {Array.from({ length: cellCount }, (_, cell) => {
@@ -233,7 +236,10 @@ export function SpatialGameScreen({
                   type="button"
                   disabled={phase !== 'answering'}
                   onClick={() => handleCellTap(cell)}
-                  aria-label={`マス${cell + 1}${isTapped ? `（${tapOrder + 1}番目にタップ）` : ''}`}
+                  aria-label={t.spatial.cellAriaLabel(
+                    cell + 1,
+                    isTapped ? tapOrder + 1 : null,
+                  )}
                   className={`aspect-square touch-manipulation rounded-lg text-sm font-bold transition disabled:cursor-not-allowed ${
                     isLit
                       ? 'bg-indigo-500 text-white'
@@ -253,12 +259,15 @@ export function SpatialGameScreen({
           <>
             <ResultBadge correct={currentResult.correct} />
             <div className="mt-2 flex flex-col gap-1 text-sm text-gray-500 dark:text-gray-400">
-              <p>正しい順番: {currentResult.expectedAnswer.map((c) => c + 1).join(' → ')}</p>
               <p>
-                あなたの回答:{' '}
+                {t.common.correctOrderLabel}
+                {currentResult.expectedAnswer.map((c) => c + 1).join(' → ')}
+              </p>
+              <p>
+                {t.common.yourAnswerLabel}
                 {currentResult.tapped.length > 0
                   ? currentResult.tapped.map((c) => c + 1).join(' → ')
-                  : '（未回答）'}
+                  : t.common.noAnswer}
               </p>
             </div>
             <button
@@ -266,7 +275,9 @@ export function SpatialGameScreen({
               onClick={handleNext}
               className="mt-4 touch-manipulation rounded-lg bg-indigo-500 px-5 py-3 font-semibold text-white shadow-sm transition hover:bg-indigo-400"
             >
-              {currentIndex + 1 >= questions.length ? '結果を見る' : '次へ'}
+              {currentIndex + 1 >= questions.length
+                ? t.common.seeResults
+                : t.common.next}
             </button>
           </>
         )}

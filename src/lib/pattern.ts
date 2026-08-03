@@ -3,12 +3,6 @@ import type { Level, PatternQuestion } from '../types'
 const GRID_SIZE: Record<Level, number> = { 1: 4, 2: 4, 3: 5 }
 const FILLED_COUNT: Record<Level, number> = { 1: 4, 2: 6, 3: 8 }
 
-export const PATTERN_LEVEL_LABELS: Record<Level, string> = {
-  1: 'レベル1（4×4・4マス）',
-  2: 'レベル2（4×4・6マス）',
-  3: 'レベル3（5×5・8マス）',
-}
-
 const QUESTIONS_PER_SET = 3
 const CHANGE_PROBABILITY = 0.5
 

@@ -23,9 +23,15 @@ export interface Translations {
     deleteChar: string
     seeResults: string
     next: string
+    backToModeSelect: string
     backToLevelSelect: string
     suggestionUp: (levelLabel: string) => string
     suggestionDown: (levelLabel: string) => string
+    rememberPrompt: string
+    correctAnswerLabel: string
+    correctOrderLabel: string
+    yourAnswerLabel: string
+    noAnswer: string
     questionProgress: (current: number, total: number) => string
     attemptStats: (accuracyPercent: number, attempts: number) => string
     // モード×レベルの表示ラベル（TopScreen/StatsScreenで共有）
@@ -169,7 +175,6 @@ export interface Translations {
   }
   achievements: Record<AchievementId, { label: string; description: string }>
   digit: {
-    backToModeSelect: string
     title: string
     subtitle: string
     gameTypes: {
@@ -179,14 +184,46 @@ export interface Translations {
     backToTypeSelect: string
     levelSelectTitle: (gameTypeTitle: string) => string
     levelLabel: (level: 1 | 2 | 3) => string
-    rememberPrompt: string
     answerPrompt: {
       reverse: string
       sum: string
     }
     noInput: string
     questionLabel: string
-    correctAnswerLabel: string
-    yourAnswerLabel: string
+  }
+  nback: {
+    title: string
+    subtitle: string
+    levelLabel: (level: 1 | 2 | 3) => string
+    matchPrompt: (n: number) => string
+    matchButton: string
+    matchButtonPressed: string
+    resultLabel: (digit: number, isMatch: boolean) => string
+  }
+  spatial: {
+    title: string
+    subtitle: string
+    levelLabel: (level: 1 | 2 | 3) => string
+    answerPrompt: string
+    litSquaresAriaLabel: string
+    cellAriaLabel: (index: number, tapOrder: number | null) => string
+    resultLabel: (cellCount: number) => string
+  }
+  pattern: {
+    title: string
+    subtitle: string
+    levelLabel: (level: 1 | 2 | 3) => string
+    answerPrompt: string
+    changed: string
+    unchanged: string
+  }
+  tone: {
+    title: string
+    subtitle: string
+    levelLabel: (level: 1 | 2 | 3) => string
+    answerPrompt: string
+    padColors: readonly [string, string, string, string]
+    padAriaLabel: (color: string) => string
+    resultLabel: (padCount: number) => string
   }
 }
