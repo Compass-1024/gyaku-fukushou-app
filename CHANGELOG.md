@@ -4,6 +4,10 @@
 
 ## [Unreleased]
 
+### Added
+
+- `public/privacy.html`（静的なプライバシーポリシーページ、ストア審査等でJS起動なしに直接開ける用）の英語版`public/privacy-en.html`を追加。アプリ内`PrivacyScreen.tsx`の「プライバシーポリシー全文」リンクは、現在の言語設定に応じて`/privacy.html`または`/privacy-en.html`を出し分ける
+
 ## [0.3.0] - 2026-08-06
 
 ### Added

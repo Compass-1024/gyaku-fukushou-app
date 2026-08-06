@@ -1,4 +1,4 @@
-import { useTranslation } from '../contexts/LanguageContext'
+import { useLanguage, useTranslation } from '../contexts/LanguageContext'
 
 interface PrivacyScreenProps {
   onBack: () => void
@@ -6,6 +6,8 @@ interface PrivacyScreenProps {
 
 export function PrivacyScreen({ onBack }: PrivacyScreenProps) {
   const t = useTranslation()
+  const { language } = useLanguage()
+  const fullPolicyHref = language === 'en' ? '/privacy-en.html' : '/privacy.html'
   return (
     <div className="mx-auto flex w-full max-w-md flex-col gap-6 px-4 py-8 sm:px-6 sm:py-12">
       <button
@@ -66,7 +68,7 @@ export function PrivacyScreen({ onBack }: PrivacyScreenProps) {
 
         <p className="text-xs text-gray-400 dark:text-gray-500">
           {t.privacy.summaryNotice}
-          <a href="/privacy.html" target="_blank" rel="noreferrer" className="underline">
+          <a href={fullPolicyHref} target="_blank" rel="noreferrer" className="underline">
             {t.privacy.fullPolicyLink}
           </a>
           {t.privacy.fullPolicyLinkSuffix}

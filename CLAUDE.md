@@ -389,7 +389,8 @@ Web Audio APIによる完全プログラム生成のシンセサイザー方式�
 - **辞書**: `src/lib/i18n/types.ts`に`Translations`インターフェースを画面/機能ごとにグルーピングして定義。`src/lib/i18n/ja.ts`・`en.ts`が同じ型を満たす（型チェックに通らなければビルド自体が失敗するため、キー漏れはビルド時に検出できる）。値は固定文字列のほか、埋め込みが必要なもの（件数・レベル番号など）は関数にする。
 - **状態管理**: `src/contexts/LanguageContext.tsx`の`LanguageProvider`（`main.tsx`で`<App />`をラップ）。`useTranslation()`で現在の言語の辞書を、`useLanguage()`で`{ language, setLanguage }`を取得する。`language`は`AppSettings.language`として`localStorage`に永続化される（`useThemeMode`と同じread-modify-writeパターン）。翻訳文字列はほぼ全コンポーネントが必要とするため、`themeMode`のようなprops drillingではなくContextを使っている（この機能に限った例外）。
 - **ことばモードの扱い**: ことばモード（かな文字列の逆復唱）は日本語の音韻に強く依存するため、**英語版では選択できない**。`TopScreen.tsx`でモードボタンを`language === 'ja'`でガードし、`App.tsx`側でも`?shortcut=word`や`popstate`での復元に対するガードを入れている（多重防御）。ことばモード専用の画面（`GameScreen.tsx`, `LevelSelect.tsx`）と関連lib（`reverse.ts`/`phrases.ts`/`kana.ts`）は英語版では到達不能なため翻訳対象外（既存の日本語ハードコードのまま）。実績のうち`level-3-word`/`all-modes`/`all-six-modes`の3件も`Achievement.requiresWordMode`フラグで英語版の実績グリッドから除外している。
-- **対象外（既知の制約）**: PWAマニフェスト（`vite.config.ts`の`manifest.name`/`description`/`shortcuts`）と`index.html`のmeta description/OGP/Twitter Cardはビルド時に固定される静的アセットのため、訪問者ごとの動的切り替えができず日本語のまま。`public/privacy.html`（静的な法的文書ページ）も英語版は用意していない（アプリ内`PrivacyScreen.tsx`のみ言語設定に連動）。
+- **対象外（既知の制約）**: PWAマニフェスト（`vite.config.ts`の`manifest.name`/`description`/`shortcuts`）と`index.html`のmeta description/OGP/Twitter Cardはビルド時に固定される静的アセットのため、訪問者ごとの動的切り替えができず日本語のまま。
+- `public/privacy.html`（静的な法的文書ページ）は日本語版に加えて英語版`public/privacy-en.html`も用意している。アプリ内`PrivacyScreen.tsx`の「プライバシーポリシー全文」リンクは、現在の言語設定（`useLanguage()`）に応じて`/privacy.html`または`/privacy-en.html`を出し分ける。
 - **新しい文言を追加する場合**: `src/lib/i18n/types.ts`にキーを追加 → `ja.ts`・`en.ts`の両方に実装 → コンポーネントで`useTranslation()`経由で参照、の順で行う。モード横断で使う文言（「結果を見る」「← レベル選択」「正しい答え:」等）は`common`に集約し、モード固有の文言のみ各モードのセクション（`digit`/`sequence`/`nback`/`dualNback`/`spatial`/`pattern`/`tone`/`random`）に置く。順唱・Dual N-Back・ランダムは英語版でも提供する（ことばモードのみが英語版で非提供）。
 
 ## Data model (localStorage)
@@ -527,6 +528,6 @@ CHANGELOG.md/ROADMAP.mdは毎サイクル更新するが、CLAUDE.mdのような
 - [ROADMAP.md](ROADMAP.md) — 今後の開発候補・バックログ
 - [CHANGELOG.md](CHANGELOG.md) — バージョンごとの変更履歴
 - [ACCESSIBILITY.md](ACCESSIBILITY.md) — アクセシビリティ方針
-- [PRIVACY.md](PRIVACY.md) — プライバシーポリシー（リポジトリ用。公開URLは`/privacy.html`＝`public/privacy.html`、ストア審査等でJS起動なしに直接開ける静的ページ。アプリ内には設定画面から遷移できる要約画面もある）
+- [PRIVACY.md](PRIVACY.md) — プライバシーポリシー（リポジトリ用。公開URLは`/privacy.html`＝`public/privacy.html`（英語版は`/privacy-en.html`）、ストア審査等でJS起動なしに直接開ける静的ページ。アプリ内には設定画面から遷移できる要約画面もある）
 - [ERROR_HANDLING.md](ERROR_HANDLING.md) — エラー監視・ロギング方針
 - [DEPLOYMENT.md](DEPLOYMENT.md) — デプロイ手順

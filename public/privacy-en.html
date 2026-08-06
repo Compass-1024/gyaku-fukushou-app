@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0ea5e9" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>Privacy Policy | Working Memory Training</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+      }
+      body {
+        margin: 0;
+        padding: 2rem 1.25rem 4rem;
+        font-family:
+          -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Hiragino Kaku Gothic ProN',
+          'Hiragino Sans', Meiryo, sans-serif;
+        line-height: 1.8;
+        color: #1f2937;
+        background: #ffffff;
+      }
+      @media (prefers-color-scheme: dark) {
+        body {
+          color: #f3f4f6;
+          background: #0b1120;
+        }
+        a {
+          color: #93c5fd;
+        }
+        table,
+        th,
+        td {
+          border-color: #374151 !important;
+        }
+      }
+      main {
+        max-width: 40rem;
+        margin: 0 auto;
+      }
+      h1 {
+        font-size: 1.5rem;
+      }
+      h2 {
+        font-size: 1.05rem;
+        margin-top: 2rem;
+      }
+      p {
+        font-size: 0.95rem;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.85rem;
+      }
+      th,
+      td {
+        border: 1px solid #d1d5db;
+        padding: 0.5rem 0.75rem;
+        text-align: left;
+      }
+      .updated {
+        font-size: 0.8rem;
+        color: #6b7280;
+      }
+      a {
+        color: #2563eb;
+      }
+      .back {
+        display: inline-block;
+        margin-top: 2rem;
+        font-size: 0.85rem;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Privacy Policy</h1>
+      <p class="updated">Last updated: 2026-08-06</p>
+
+      <p>
+        This page explains how Working Memory Training (formerly "Reverse Recall Training",
+        the "App") handles user information.
+      </p>
+
+      <h2>1. Basic architecture of this App</h2>
+      <p>
+        Most of this App runs as a backend-free SPA (Single Page Application), and data you
+        enter or record is <strong>stored only in your own browser's localStorage</strong> by
+        default. No data is sent to any third-party server, including ours.
+      </p>
+      <p>
+        The one exception: if you turn on "Reminder Notifications" in Settings (an opt-in
+        feature), the minimum information needed to deliver notifications is sent to this
+        App's server. See "3. About reminder notifications" below. This feature is off by
+        default, and no data leaves your device unless you turn it on.
+      </p>
+
+      <h2>2. Data we store</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Data</th>
+            <th>Contents</th>
+            <th>Stored in</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Training history</td>
+            <td>Mode, level, correct count, timestamp (up to 200 records)</td>
+            <td>Browser localStorage (<code>gyaku-fukushou:history</code>)</td>
+          </tr>
+          <tr>
+            <td>App settings</td>
+            <td>
+              Theme, speech rate/voice, sound effects on/off and volume, daily goal, reminder
+              notification setting
+            </td>
+            <td>Browser localStorage (<code>gyaku-fukushou:settings</code>)</td>
+          </tr>
+          <tr>
+            <td>Push subscription info (only if Reminder Notifications is on)</td>
+            <td>
+              Push subscription details (endpoint, etc.), whether you played that day, and
+              preferred notification time
+            </td>
+            <td>This App's server (Redis storage via Vercel Serverless Functions)</td>
+          </tr>
+        </tbody>
+      </table>
+      <p>
+        We do not collect or store personally identifying information such as your name,
+        email address, or location.
+      </p>
+
+      <h2>3. About reminder notifications</h2>
+      <p>
+        "Reminder Notifications" in Settings is an <strong>opt-in feature that's off by
+        default</strong>. When enabled, if you haven't played at all that day, we send a
+        reminder push notification at the configured time.
+      </p>
+      <ul>
+        <li>
+          Turning it on triggers your browser's own notification permission dialog. If you
+          don't allow it, this feature can't be used.
+        </li>
+        <li>
+          On iOS, this only works when the App has been added to the Home Screen (a
+          limitation of the Web Push standard — it doesn't work from a Safari tab).
+        </li>
+        <li>
+          Turning it on sends the minimum information needed for delivery (the push
+          subscription info issued by your browser — i.e. an endpoint — the date you last
+          played, and your preferred notification time) to this App's server (Vercel
+          Serverless Functions), stored in Redis via Vercel. The contents of your training
+          history (correct counts, question content, etc.) are never sent to the server.
+        </li>
+        <li>
+          Delivery itself goes through your browser vendor's push service as required by the
+          Web Push standard (Chrome/Edge/Android → Google, Firefox → Mozilla, Safari/iOS →
+          Apple). This is part of the Web Push standard, not a third party we chose
+          ourselves.
+        </li>
+        <li>
+          Turning it back off deletes the subscription info stored on the server. Revoking
+          notification permission in your browser also stops delivery.
+        </li>
+      </ul>
+
+      <h2>4. About microphone (voice) use</h2>
+      <p>
+        Word Mode uses your browser's speech recognition feature (the Web Speech API's
+        <code>SpeechRecognition</code>) to check your spoken answers.
+      </p>
+      <ul>
+        <li>
+          Using the microphone triggers your browser's own permission dialog. If you don't
+          allow it, Word Mode's speech recognition can't be used.
+        </li>
+        <li>This App itself (its developer/operator) never collects, stores, or sends voice data.</li>
+        <li>
+          That said, the <code>SpeechRecognition</code> API's implementation depends on your
+          browser — in some browsers (e.g. Google Chrome), voice data may be sent to the
+          browser vendor's servers (e.g. Google) for processing. This is a property of the
+          browser itself, not something this App controls. See your browser's own privacy
+          policy for details.
+        </li>
+        <li>
+          Similarly, the read-aloud feature (<code>SpeechSynthesis</code>) relies on your
+          browser/OS's own speech synthesis engine.
+        </li>
+      </ul>
+
+      <h2>5. Cookies, analytics, and advertising</h2>
+      <p>
+        This App uses no cookies, and includes no analytics tools or ad-tracking of any kind.
+      </p>
+
+      <h2>6. Sharing with third parties</h2>
+      <p>
+        We never share or provide your training history or app settings to any third party
+        (since this data never leaves the App in the first place). Only when Reminder
+        Notifications is on does the minimal information described in "3. About reminder
+        notifications" pass through this App's server and the Web Push delivery path (your
+        browser vendor's push service).
+      </p>
+
+      <h2>7. Deleting your data</h2>
+      <p>
+        To delete your stored data, use "Delete all training history" in Settings. You can
+        also clear it by removing this site's data (localStorage) from your browser
+        settings. If Reminder Notifications was on, turning it off in Settings deletes the
+        subscription info stored on the server.
+      </p>
+      <p>
+        You can also use "Export backup" in Settings to download all your stored data
+        (training history and app settings) as a JSON file. "Restore from backup" on the
+        same screen lets you load that file on another device or browser (this overwrites
+        whatever is currently stored).
+      </p>
+
+      <h2>8. Deployment and hosting</h2>
+      <p>
+        This App is hosted on Vercel. Access logs and similar data may be generated as part
+        of Vercel's standard infrastructure operations — this is not something the App
+        itself collects. When Reminder Notifications is used, notification delivery and
+        subscription storage also run on Vercel's infrastructure (Serverless Functions and
+        Redis storage).
+      </p>
+
+      <h2>9. Contact</h2>
+      <p>A contact channel is not yet available.</p>
+
+      <h2>10. Changes to this policy</h2>
+      <p>
+        We may update this policy without notice as the App's features change. Significant
+        changes will be reflected in the "Last updated" date on this page.
+      </p>
+
+      <a class="back" href="/">← Back to the App</a>
+    </main>
+  </body>
+</html>
