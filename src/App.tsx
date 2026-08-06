@@ -9,6 +9,7 @@ import { DualNBackLevelSelect } from './components/DualNBackLevelSelect'
 import { SpatialLevelSelect } from './components/SpatialLevelSelect'
 import { PatternLevelSelect } from './components/PatternLevelSelect'
 import { ToneLevelSelect } from './components/ToneLevelSelect'
+import { RandomLevelSelect } from './components/RandomLevelSelect'
 import { SettingsScreen } from './components/SettingsScreen'
 import { StatsScreen } from './components/StatsScreen'
 import { PrivacyScreen } from './components/PrivacyScreen'
@@ -60,6 +61,11 @@ const ToneGameScreen = lazy(() =>
     default: m.ToneGameScreen,
   })),
 )
+const RandomGameScreen = lazy(() =>
+  import('./components/RandomGameScreen').then((m) => ({
+    default: m.RandomGameScreen,
+  })),
+)
 
 type View =
   | { screen: 'top' }
@@ -80,6 +86,8 @@ type View =
   | { screen: 'pattern-game'; level: Level }
   | { screen: 'tone-level' }
   | { screen: 'tone-game'; level: Level }
+  | { screen: 'random-level' }
+  | { screen: 'random-game'; level: Level }
   | { screen: 'settings' }
   | { screen: 'stats' }
   | { screen: 'privacy' }
@@ -109,6 +117,8 @@ function getShortcutView(): View | null {
       return { screen: 'pattern-level' }
     case 'tone':
       return { screen: 'tone-level' }
+    case 'random':
+      return { screen: 'random-level' }
     default:
       return null
   }
@@ -172,6 +182,7 @@ function App() {
       next.screen === 'spatial-level' ||
       next.screen === 'pattern-level' ||
       next.screen === 'tone-level' ||
+      next.screen === 'random-level' ||
       next.screen === 'stats'
     ) {
       setHistory(loadHistory())
@@ -195,6 +206,7 @@ function App() {
             else if (mode === 'spatial') goTo({ screen: 'spatial-level' })
             else if (mode === 'pattern') goTo({ screen: 'pattern-level' })
             else if (mode === 'tone') goTo({ screen: 'tone-level' })
+            else if (mode === 'random') goTo({ screen: 'random-level' })
           }}
           onOpenSettings={() => goTo({ screen: 'settings' })}
           onOpenStats={() => goTo({ screen: 'stats' })}
@@ -390,6 +402,25 @@ function App() {
           level={view.level}
           onExit={() => goTo({ screen: 'tone-level' })}
           onSelectLevel={(level) => goTo({ screen: 'tone-game', level })}
+        />
+      )
+      break
+    case 'random-level':
+      content = (
+        <RandomLevelSelect
+          history={history}
+          onSelect={(level) => goTo({ screen: 'random-game', level })}
+          onBack={() => goTo({ screen: 'top' })}
+        />
+      )
+      break
+    case 'random-game':
+      content = (
+        <RandomGameScreen
+          key={view.level}
+          level={view.level}
+          onExit={() => goTo({ screen: 'random-level' })}
+          onSelectLevel={(level) => goTo({ screen: 'random-game', level })}
         />
       )
       break

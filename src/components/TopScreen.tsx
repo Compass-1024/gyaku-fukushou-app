@@ -294,6 +294,20 @@ export function TopScreen({
             {t.top.modes.tone.description}
           </p>
         </button>
+        <button
+          type="button"
+          onClick={() => {
+            if (loadSettings().soundEnabled) playButtonTap()
+            onSelect('random')
+          }}
+          className="touch-manipulation rounded-2xl bg-gradient-to-br from-fuchsia-500 to-orange-400 px-6 py-6 text-left text-white shadow-lg shadow-fuchsia-500/20 transition hover:scale-[1.02] hover:shadow-xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-fuchsia-500"
+        >
+          <span className="text-4xl">🎲</span>
+          <p className="mt-2 text-xl font-bold">{t.top.modes.random.title}</p>
+          <p className="mt-1 text-sm opacity-90">
+            {t.top.modes.random.description}
+          </p>
+        </button>
       </div>
     </div>
   )
