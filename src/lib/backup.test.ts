@@ -22,7 +22,7 @@ const SAMPLE_HISTORY: HistoryEntry[] = [
 
 describe('createBackup / serializeBackup / parseBackupJson roundtrip', () => {
   it('parses back exactly what was exported', () => {
-    const backup = createBackup(SAMPLE_HISTORY, DEFAULT_SETTINGS)
+    const backup = createBackup(SAMPLE_HISTORY, DEFAULT_SETTINGS, [])
     const json = serializeBackup(backup)
     const result = parseBackupJson(json)
     expect(result.ok).toBe(true)
@@ -40,9 +40,44 @@ describe('createBackup / serializeBackup / parseBackupJson roundtrip（新3モ�
       { mode: 'pattern', level: 2, correct: 2, total: 3, timestamp: '2026-08-01T01:00:00.000Z' },
       { mode: 'tone', level: 3, correct: 1, total: 3, timestamp: '2026-08-01T02:00:00.000Z' },
     ]
-    const result = parseBackupJson(serializeBackup(createBackup(history, DEFAULT_SETTINGS)))
+    const result = parseBackupJson(
+      serializeBackup(createBackup(history, DEFAULT_SETTINGS, [])),
+    )
     expect(result.ok).toBe(true)
     if (result.ok) expect(result.data.history).toEqual(history)
+  })
+})
+
+describe('createBackup / serializeBackup / parseBackupJson roundtrip（順唱・DualN-Back・ランダム）', () => {
+  it('sequence/dual-nback/randomモードの履歴も正しく往復できる', () => {
+    const history: HistoryEntry[] = [
+      { mode: 'sequence', level: 1, correct: 3, total: 3, timestamp: '2026-08-01T00:00:00.000Z' },
+      { mode: 'dual-nback', level: 2, correct: 30, total: 40, timestamp: '2026-08-01T01:00:00.000Z' },
+      { mode: 'random', level: 3, correct: 4, total: 5, timestamp: '2026-08-01T02:00:00.000Z' },
+    ]
+    const result = parseBackupJson(
+      serializeBackup(createBackup(history, DEFAULT_SETTINGS, [])),
+    )
+    expect(result.ok).toBe(true)
+    if (result.ok) expect(result.data.history).toEqual(history)
+  })
+})
+
+describe('missionCompletions往復', () => {
+  it('missionCompletionsを含めて往復できる', () => {
+    const completions = [{ dateKey: '2026-08-01', missionId: 'digit-2' }]
+    const result = parseBackupJson(
+      serializeBackup(createBackup([], DEFAULT_SETTINGS, completions)),
+    )
+    expect(result.ok).toBe(true)
+    if (result.ok) expect(result.data.missionCompletions).toEqual(completions)
+  })
+
+  it('v1バックアップ(missionCompletionsフィールド無し)は空配列として扱う', () => {
+    const raw = JSON.stringify({ history: [], settings: DEFAULT_SETTINGS })
+    const result = parseBackupJson(raw)
+    expect(result.ok).toBe(true)
+    if (result.ok) expect(result.data.missionCompletions).toEqual([])
   })
 })
 

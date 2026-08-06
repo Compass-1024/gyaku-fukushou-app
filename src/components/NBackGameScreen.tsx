@@ -81,7 +81,7 @@ export function NBackGameScreen({
 
   // 結果が確定するたびに、履歴の記録・効果音の再生・新規実績の解除演出を行う
   const score = scoreNBackTrials(trials, pressed)
-  const { newAchievements, isNewBest } = useSetCompletionRecorder({
+  const { newAchievements, isNewBest, xpGained, leveledUp, newLevel } = useSetCompletionRecorder({
     trigger: phase === 'result',
     mode: 'nback',
     level,
@@ -110,6 +110,9 @@ export function NBackGameScreen({
         onChangeLevel={onExit}
         newAchievements={newAchievements}
         isNewBest={isNewBest}
+        xpGained={xpGained}
+        leveledUp={leveledUp}
+        newLevel={newLevel}
         suggestion={
           suggestedLevel
             ? {

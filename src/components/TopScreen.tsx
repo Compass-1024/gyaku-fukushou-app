@@ -9,6 +9,12 @@ import {
   markRecapShown,
 } from '../lib/recap'
 import type { WeeklyRecap } from '../lib/recap'
+import {
+  getTodayMission,
+  isTodayMissionComplete,
+  loadMissionCompletions,
+} from '../lib/missions'
+import { computeTotalXp, getXpProgress, XP_PER_MISSION } from '../lib/xp'
 import { useLanguage, useTranslation } from '../contexts/LanguageContext'
 import type { HistoryEntry, Mode } from '../types'
 
@@ -47,6 +53,29 @@ export function TopScreen({
     (area) => language === 'ja' || area.mode !== 'word',
   )
   const streakAtRisk = streakDays > 0 && todayCount === 0
+
+  // プレイヤーレベル/経験値は履歴＋ミッション達成ログから都度計算する
+  // （実績と同じ哲学。専用の可変ストアは持たない）
+  const missionCompletions = loadMissionCompletions()
+  const totalXp = computeTotalXp(history, missionCompletions.length)
+  const xpProgress = getXpProgress(totalXp)
+  const xpBarPercent = Math.round(
+    (xpProgress.currentLevelXp / xpProgress.xpForCurrentLevel) * 100,
+  )
+
+  const todayMission = getTodayMission(language)
+  const missionLabel =
+    todayMission.spec.kind === 'playCount'
+      ? t.missions.playCountLabel(
+          t.common.areaLabels[
+            (todayMission.spec.mode === 'digit'
+              ? 'digit-reverse'
+              : todayMission.spec.mode) as keyof typeof t.common.areaLabels
+          ],
+          todayMission.spec.count,
+        )
+      : t.missions.accuracyLabel(todayMission.spec.percent)
+  const missionCompleted = isTodayMissionComplete(history, language)
 
   // 週が変わるたびに、直近に完了した週の振り返りを1回だけ表示する
   const [recap, setRecap] = useState<WeeklyRecap | null>(null)
@@ -100,6 +129,23 @@ export function TopScreen({
           </div>
         )}
 
+        <div className="mt-4">
+          <div className="flex items-baseline justify-between">
+            <p className="text-xs font-semibold text-indigo-500 dark:text-indigo-300">
+              {t.top.playerLevel(xpProgress.level)}
+            </p>
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              {t.top.xpToNextLevel(xpProgress.xpToNextLevel)}
+            </p>
+          </div>
+          <div className="mt-1 h-2 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
+            <div
+              className="h-full rounded-full bg-gradient-to-r from-indigo-500 to-fuchsia-500 transition-all"
+              style={{ width: `${xpBarPercent}%` }}
+            />
+          </div>
+        </div>
+
         {dailyGoal > 0 && (
           <div className="mt-4">
             <p className="text-xs text-gray-500 dark:text-gray-400">
@@ -121,6 +167,24 @@ export function TopScreen({
             {t.top.streakAtRisk(streakDays)}
           </p>
         )}
+      </div>
+
+      <div
+        className={`animate-pop rounded-xl border px-4 py-3 ${
+          missionCompleted
+            ? 'border-emerald-300 bg-emerald-50 dark:border-emerald-700 dark:bg-emerald-900/20'
+            : 'border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800'
+        }`}
+      >
+        <p className="text-xs font-semibold text-gray-500 dark:text-gray-400">
+          {t.missions.cardTitle}
+        </p>
+        <p className="mt-1 text-sm text-gray-700 dark:text-gray-200">{missionLabel}</p>
+        <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+          {missionCompleted
+            ? t.missions.completedBadge
+            : t.missions.xpReward(XP_PER_MISSION)}
+        </p>
       </div>
 
       {recap && (

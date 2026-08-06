@@ -15,6 +15,11 @@ import {
 } from '../lib/sound'
 import { getNewlyUnlockedAchievements } from '../lib/achievements'
 import type { Achievement } from '../lib/achievements'
+import {
+  checkAndRecordMissionCompletion,
+  loadMissionCompletions,
+} from '../lib/missions'
+import { computeTotalXp, getXpProgress } from '../lib/xp'
 import type { DigitGameType, Level, Mode } from '../types'
 
 interface UseSetCompletionRecorderOptions {
@@ -32,6 +37,9 @@ interface UseSetCompletionRecorderOptions {
 interface SetCompletionRecorderResult {
   newAchievements: Achievement[]
   isNewBest: boolean
+  xpGained: number
+  leveledUp: boolean
+  newLevel: number
 }
 
 // セット（3問など)完了のたびに、履歴記録・新規実績の判定・自己ベスト更新の
@@ -47,16 +55,35 @@ export function useSetCompletionRecorder({
 }: UseSetCompletionRecorderOptions): SetCompletionRecorderResult {
   const [newAchievements, setNewAchievements] = useState<Achievement[]>([])
   const [isNewBest, setIsNewBest] = useState(false)
+  const [xpGained, setXpGained] = useState(0)
+  const [leveledUp, setLeveledUp] = useState(false)
+  const [newLevel, setNewLevel] = useState(1)
 
   useEffect(() => {
     if (!trigger) return
     const before = loadHistory()
     const previousBest = getBestSetAccuracy(before, mode, level, gameType)
+    const completionsBefore = loadMissionCompletions()
+    const language = loadSettings().language
+    const xpBefore = computeTotalXp(before, completionsBefore.length)
+
     appendHistoryEntry({ mode, gameType, level, correct: correctCount, total })
     syncPushState()
     const after = loadHistory()
     const newly = getNewlyUnlockedAchievements(before, after)
     setNewAchievements(newly)
+
+    // 今日のミッションがこのセット完了により初めて達成されたかを判定し、
+    // 達成していればXP付与用のミッション完了ログに記録する
+    const newMissionCompletions = checkAndRecordMissionCompletion(after, language)
+    const completionsAfter = loadMissionCompletions()
+    const xpAfter = computeTotalXp(after, completionsAfter.length)
+    const gained = xpAfter - xpBefore
+    setXpGained(gained)
+    const levelBefore = getXpProgress(xpBefore).level
+    const levelAfter = getXpProgress(xpAfter).level
+    setLeveledUp(levelAfter > levelBefore)
+    setNewLevel(levelAfter)
 
     const accuracyPercent = total > 0 ? Math.round((correctCount / total) * 100) : 0
     setIsNewBest(previousBest !== null && accuracyPercent > previousBest)
@@ -67,11 +94,14 @@ export function useSetCompletionRecorder({
         else playIncorrectSound()
       }
       if (newly.length > 0) playAchievementUnlock()
+      if (newMissionCompletions > 0) playAchievementUnlock()
       const suggestedLevel = getSuggestedLevel(level, accuracyPercent)
-      if (suggestedLevel && suggestedLevel > level) playLevelUp()
+      if ((suggestedLevel && suggestedLevel > level) || levelAfter > levelBefore) {
+        playLevelUp()
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [trigger, mode, level, gameType, correctCount, total, playAccuracySound])
 
-  return { newAchievements, isNewBest }
+  return { newAchievements, isNewBest, xpGained, leveledUp, newLevel }
 }

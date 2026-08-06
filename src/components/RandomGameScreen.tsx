@@ -249,7 +249,7 @@ export function RandomGameScreen({
 
   useEnterKey(phase === 'result' && !finished, handleNext)
 
-  const { newAchievements, isNewBest } = useSetCompletionRecorder({
+  const { newAchievements, isNewBest, xpGained, leveledUp, newLevel } = useSetCompletionRecorder({
     trigger: finished,
     mode: 'random',
     level,
@@ -293,6 +293,9 @@ export function RandomGameScreen({
         onChangeLevel={onExit}
         newAchievements={newAchievements}
         isNewBest={isNewBest}
+        xpGained={xpGained}
+        leveledUp={leveledUp}
+        newLevel={newLevel}
         suggestion={
           suggestedLevel
             ? {

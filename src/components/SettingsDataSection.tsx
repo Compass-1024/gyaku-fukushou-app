@@ -1,6 +1,7 @@
 import { useRef, useState, type ChangeEvent } from 'react'
 import { loadSettings, saveSettings } from '../lib/settings'
 import { clearHistory, loadHistory, replaceHistory } from '../lib/history'
+import { loadMissionCompletions, replaceMissionCompletions } from '../lib/missions'
 import {
   backupFileName,
   createBackup,
@@ -32,7 +33,11 @@ export function SettingsDataSection({ onImported }: SettingsDataSectionProps) {
   }
 
   function handleExport() {
-    const backup = createBackup(loadHistory(), loadSettings())
+    const backup = createBackup(
+      loadHistory(),
+      loadSettings(),
+      loadMissionCompletions(),
+    )
     const blob = new Blob([serializeBackup(backup)], {
       type: 'application/json',
     })
@@ -71,6 +76,7 @@ export function SettingsDataSection({ onImported }: SettingsDataSectionProps) {
     }
 
     replaceHistory(result.data.history)
+    replaceMissionCompletions(result.data.missionCompletions)
     saveSettings(result.data.settings)
     onImported(result.data.settings)
     setHistoryCleared(false)

@@ -25,6 +25,9 @@ interface SetSummaryProps {
   suggestion?: LevelSuggestion
   newAchievements?: Achievement[]
   isNewBest?: boolean
+  xpGained?: number
+  leveledUp?: boolean
+  newLevel?: number
 }
 
 export function SetSummary({
@@ -34,6 +37,9 @@ export function SetSummary({
   suggestion,
   newAchievements,
   isNewBest,
+  xpGained,
+  leveledUp,
+  newLevel,
 }: SetSummaryProps) {
   const t = useTranslation()
   const correctCount = items.filter((item) => item.correct).length
@@ -95,6 +101,11 @@ export function SetSummary({
         <p className="mt-1 text-4xl font-bold text-gray-900 dark:text-gray-100">
           {t.setSummary.scoreLabel(correctCount, items.length)}
         </p>
+        {!!xpGained && (
+          <p className="mt-1 text-sm font-semibold text-indigo-500 dark:text-indigo-300">
+            {t.setSummary.xpGained(xpGained)}
+          </p>
+        )}
         <button
           type="button"
           onClick={handleShare}
@@ -118,6 +129,14 @@ export function SetSummary({
         <div className="animate-pop rounded-lg border border-fuchsia-300 bg-fuchsia-50 px-4 py-3 text-center dark:border-fuchsia-700 dark:bg-fuchsia-900/30">
           <p className="text-sm font-semibold text-fuchsia-700 dark:text-fuchsia-300">
             {t.setSummary.luckyBonus}
+          </p>
+        </div>
+      )}
+
+      {leveledUp && (
+        <div className="animate-pop rounded-lg border border-indigo-300 bg-indigo-50 px-4 py-3 text-center dark:border-indigo-700 dark:bg-indigo-900/30">
+          <p className="text-sm font-semibold text-indigo-700 dark:text-indigo-300">
+            {t.setSummary.levelUp(newLevel ?? 1)}
           </p>
         </div>
       )}

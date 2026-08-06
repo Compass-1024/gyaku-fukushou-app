@@ -1,22 +1,28 @@
 import { DEFAULT_SETTINGS } from './settings'
+import type { MissionCompletion } from './missions'
 import type { AppSettings, DigitGameType, HistoryEntry, Level, Mode } from '../types'
 
-const BACKUP_VERSION = 1
+const BACKUP_VERSION = 2
 
 export interface BackupData {
   version: number
   exportedAt: string
   history: HistoryEntry[]
   settings: AppSettings
+  // v1のバックアップには存在しないため、復元時は空配列として扱う
+  missionCompletions: MissionCompletion[]
 }
 
 const VALID_MODES: readonly Mode[] = [
   'word',
   'digit',
+  'sequence',
   'nback',
+  'dual-nback',
   'spatial',
   'pattern',
   'tone',
+  'random',
 ]
 const VALID_GAME_TYPES: readonly DigitGameType[] = ['reverse', 'sum']
 const VALID_LEVELS: readonly Level[] = [1, 2, 3]
@@ -39,15 +45,23 @@ function isValidHistoryEntry(value: unknown): value is HistoryEntry {
   return true
 }
 
+function isValidMissionCompletion(value: unknown): value is MissionCompletion {
+  if (typeof value !== 'object' || value === null) return false
+  const c = value as Record<string, unknown>
+  return typeof c.dateKey === 'string' && typeof c.missionId === 'string'
+}
+
 export function createBackup(
   history: HistoryEntry[],
   settings: AppSettings,
+  missionCompletions: MissionCompletion[],
 ): BackupData {
   return {
     version: BACKUP_VERSION,
     exportedAt: new Date().toISOString(),
     history,
     settings,
+    missionCompletions,
   }
 }
 
@@ -99,6 +113,14 @@ export function parseBackupJson(raw: string): ParseBackupResult {
     ...(obj.settings as Partial<AppSettings>),
   }
 
+  // v1のバックアップにはmissionCompletionsが存在しないため、無い/不正な場合は
+  // 空配列として扱う（バックアップ全体を拒否しない）
+  const missionCompletions =
+    Array.isArray(obj.missionCompletions) &&
+    obj.missionCompletions.every(isValidMissionCompletion)
+      ? obj.missionCompletions
+      : []
+
   return {
     ok: true,
     data: {
@@ -109,6 +131,7 @@ export function parseBackupJson(raw: string): ParseBackupResult {
           : new Date().toISOString(),
       history: obj.history,
       settings,
+      missionCompletions,
     },
   }
 }

@@ -115,6 +115,8 @@ export const en: Translations = {
     cardTitle: "🎯 Today's Mission",
     completedBadge: '✅ Completed!',
     xpReward: (xp) => `+${xp} XP on completion`,
+    playCountLabel: (areaLabel, count) => `Play ${areaLabel} ${count} times`,
+    accuracyLabel: (percent) => `Reach ${percent}%+ accuracy`,
   },
   share: {
     resultLine: (correct, total) =>

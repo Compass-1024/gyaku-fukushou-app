@@ -149,7 +149,7 @@ export function SequenceGameScreen({
   }
 
   // 3問セットが完了するたびに結果を記録し、新規実績の解除やレベルアップを演出する
-  const { newAchievements, isNewBest } = useSetCompletionRecorder({
+  const { newAchievements, isNewBest, xpGained, leveledUp, newLevel } = useSetCompletionRecorder({
     trigger: finished,
     mode: 'sequence',
     level,
@@ -193,6 +193,9 @@ export function SequenceGameScreen({
         onChangeLevel={onExit}
         newAchievements={newAchievements}
         isNewBest={isNewBest}
+        xpGained={xpGained}
+        leveledUp={leveledUp}
+        newLevel={newLevel}
         suggestion={
           suggestedLevel
             ? {

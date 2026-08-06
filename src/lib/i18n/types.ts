@@ -102,6 +102,8 @@ export interface Translations {
     cardTitle: string
     completedBadge: string
     xpReward: (xp: number) => string
+    playCountLabel: (areaLabel: string, count: number) => string
+    accuracyLabel: (percent: number) => string
   }
   settings: {
     heading: string

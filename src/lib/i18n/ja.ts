@@ -114,6 +114,8 @@ export const ja: Translations = {
     cardTitle: '🎯 今日のミッション',
     completedBadge: '✅ 達成しました！',
     xpReward: (xp) => `達成で +${xp}XP`,
+    playCountLabel: (areaLabel, count) => `${areaLabel}を${count}回プレイ`,
+    accuracyLabel: (percent) => `正答率${percent}%以上を達成`,
   },
   share: JA_SHARE_TEMPLATES,
   setSummary: {
