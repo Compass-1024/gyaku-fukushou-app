@@ -23,6 +23,25 @@ test('設定画面: テーマ切替とプライバシーポリシーへの遷移
   await expect(page.getByRole('heading', { name: '設定' })).toBeVisible()
 })
 
+test('設定画面: BGMと効果音の音量スライダーが独立して切り替えられる', async ({
+  page,
+}) => {
+  await page.goto('/')
+  await page.getByRole('button', { name: '設定' }).click()
+
+  await expect(page.getByText('効果音の音量')).toBeVisible()
+  await expect(page.getByText('BGMの音量')).toBeVisible()
+
+  const bgmSection = page.locator('section', { has: page.getByText('BGM', { exact: true }) })
+  await expect(bgmSection.getByText('オフ')).toBeVisible()
+  await bgmSection.getByRole('button', { name: 'オフ' }).click()
+  await expect(bgmSection.getByText('オン')).toBeVisible()
+
+  // 効果音セクションの状態には影響しない
+  const soundSection = page.locator('section', { has: page.getByText('効果音', { exact: true }) })
+  await expect(soundSection.getByText('オン')).toBeVisible()
+})
+
 test('設定画面: リマインド通知セクションが表示される', async ({ page }) => {
   await page.goto('/')
   await page.getByRole('button', { name: '設定' }).click()
@@ -35,9 +54,10 @@ test('設定画面: リマインド通知セクションが表示される', asy
       exact: false,
     }),
   ).toBeVisible()
-  await expect(
-    page.getByRole('button', { name: 'オフ' }),
-  ).toBeVisible()
+  const notificationSection = page.locator('section', {
+    has: page.getByText('リマインド通知', { exact: true }),
+  })
+  await expect(notificationSection.getByRole('button', { name: 'オフ' })).toBeVisible()
 })
 
 test('統計画面: 記録がない場合の案内が表示される', async ({ page }) => {

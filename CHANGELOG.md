@@ -8,6 +8,7 @@
 
 - `public/privacy.html`（静的なプライバシーポリシーページ、ストア審査等でJS起動なしに直接開ける用）の英語版`public/privacy-en.html`を追加。アプリ内`PrivacyScreen.tsx`の「プライバシーポリシー全文」リンクは、現在の言語設定に応じて`/privacy.html`または`/privacy-en.html`を出し分ける
 - プッシュ通知のリマインドメッセージ（`buildReminderMessage`）を購読者のUI言語設定（日本語/英語）に応じて出し分けるように変更。購読時・セット完了ごとの同期時の両方でクライアントから言語を送信し`StoredSubscription.language`として保存する（`src/lib/reminder.ts`/`api/_lib/reminder.ts`、`api/_lib/subscription.ts`、`api/push/subscribe.ts`/`sync.ts`、`api/cron/reminder.ts`）
+- BGMを追加。効果音と同じくWeb Audio APIによる完全プログラム生成のアンビエントパッド（4コードを8秒ずつクロスフェードしながら巡回、音声ファイル不使用）で、設定画面に効果音とは独立したON/OFFトグル・音量スライダー（既定OFF・50）を追加した（`src/lib/bgm.ts`、`AppSettings.bgmEnabled`/`bgmVolume`）。効果音とBGMで共有するAudioContextを`src/lib/audioContext.ts`に集約し、自動再生ポリシー対策（最初のユーザー操作での`resume()`）もここに実装。`themeMode`と同じread-modify-writeパターンでApp.tsxがBGM設定を保持し画面遷移をまたいで再生を継続する（`src/hooks/useBackgroundMusic.ts`）
 
 ### Fixed
 

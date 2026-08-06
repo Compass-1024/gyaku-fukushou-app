@@ -1,6 +1,6 @@
 import { loadSettings } from './settings'
+import { getSharedAudioContext } from './audioContext'
 
-let audioContext: AudioContext | null = null
 let reverbNode: ConvolverNode | null = null
 
 // 設定画面の効果音音量スライダー(0〜100)を0〜1の係数に変換する
@@ -9,13 +9,7 @@ function getVolumeMultiplier(): number {
 }
 
 function getAudioContext(): AudioContext | null {
-  if (typeof window === 'undefined') return null
-  const Ctor = window.AudioContext ?? window.webkitAudioContext
-  if (!Ctor) return null
-  if (!audioContext) {
-    audioContext = new Ctor()
-  }
-  return audioContext
+  return getSharedAudioContext()
 }
 
 // 短い減衰ノイズからインパルスレスポンスを作り、軽い残響（部屋鳴り）を加える。

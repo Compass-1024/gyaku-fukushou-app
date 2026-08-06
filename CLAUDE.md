@@ -341,7 +341,16 @@ Web Audio APIによる完全プログラム生成のシンセサイザー方式�
   - レベルアップ音: C5-E5-G5-C6の4音アルペジオ
   - 実績解除音: G5/B5/D6の和音＋高音アクセント
   - Dual N-Backモード用トーン: C4〜C5を8分割した音番号ごとの単音（`playDualNBackTone`）
-- 設定画面のON/OFFトグルで全音を一括制御。あわせて0〜100の音量スライダー（`AppSettings.sfxVolume`、既定80）があり、`createVoiceBus`内の共通dry gainノードの値を`sfxVolume/100`でスケーリングする一点実装で全効果音に一括適用する（個々の`playXxx`関数は変更不要）。アプリには元々BGMが存在しないため、音量調整の対象は効果音（SFX）のみ。
+- 設定画面のON/OFFトグルで全音を一括制御。あわせて0〜100の音量スライダー（`AppSettings.sfxVolume`、既定80）があり、`createVoiceBus`内の共通dry gainノードの値を`sfxVolume/100`でスケーリングする一点実装で全効果音に一括適用する（個々の`playXxx`関数は変更不要）。
+
+### BGM（`src/lib/bgm.ts`, `src/lib/audioContext.ts`, `src/hooks/useBackgroundMusic.ts`）
+
+効果音と同じくWeb Audio APIによる完全プログラム生成方式（音声ファイル不使用）。C3 major→A2 minor→F2 major→G2 majorの4コードを8秒ずつ、3秒のクロスフェードを挟みながら巡回させるだけの単純なアンビエントパッドで、集中を妨げない持続的な背景音を意図している。
+
+- **AudioContextの共有**: `src/lib/audioContext.ts`の`getSharedAudioContext()`が、効果音（`sound.ts`）とBGM（`bgm.ts`）の両方で使う単一のAudioContextインスタンスを管理する（同一オリジンで複数のAudioContextを作らないため）。ブラウザの自動再生ポリシー対策として、最初のポインタ操作/キー操作で自動的に`resume()`する処理もここに集約している。
+- **スケジューリング**: `bgm.ts`の`startBgm()`は`setTimeout`ベースの先読みスケジューラで、常に`SCHEDULE_AHEAD_S`（1秒）先までのコードを`AudioContext`のタイムラインに予約し続ける（Web Audio APIのタイミング精度を活かす標準的なlook-aheadスケジューリングパターン）。`stopBgm()`でスケジューラを止め、マスターゲインを切断する。
+- **状態管理**: `src/hooks/useBackgroundMusic.ts`が`themeMode`（`useThemeMode`）と同じread-modify-writeパターンで`AppSettings.bgmEnabled`/`bgmVolume`をApp.tsxのトップレベルで保持し、`SettingsScreen`へ`themeMode`/`onChangeTheme`と同型のprops（`bgmEnabled`/`onChangeBgmEnabled`/`bgmVolume`/`onChangeBgmVolume`）として渡す。画面遷移をまたいでApp.tsxが1回だけこのフックを使うことで、Settings画面を離れても再生を継続する。
+- 設定画面にSFXとは独立したON/OFFトグルと0〜100の音量スライダー（既定はOFF・50）がある（`SettingsBgmSection.tsx`）。既定でオフなのは、ワーキングメモリ課題への集中を妨げない配慮と、ブラウザの自動再生ポリシー上どのみち最初のユーザー操作までは鳴らないため。
 
 ### 統計・履歴画面（`src/components/StatsScreen.tsx`, `src/lib/history.ts`, `src/lib/phraseStats.ts`, `src/lib/benchmarks.ts`）
 
@@ -354,11 +363,12 @@ Web Audio APIによる完全プログラム生成のシンセサイザー方式�
 
 ### 設定画面（`src/components/SettingsScreen.tsx`＋セクションごとの`src/components/Settings*Section.tsx`, `src/lib/settings.ts`）
 
-`SettingsScreen.tsx`は設定state（`AppSettings`）の保持と各セクションへのprops受け渡しのみを担い、実際のUIと操作ロジックはテーマ／音声／目標セット数／効果音／通知／データの6セクションコンポーネントに分割している（`SettingsThemeSection`, `SettingsVoiceSection`, `SettingsDailyGoalSection`, `SettingsSoundSection`, `SettingsNotificationSection`, `SettingsDataSection`）。通知・データの各セクションは購読状態やインポート/エクスポートのローカルUI状態を自身で保持する。
+`SettingsScreen.tsx`は設定state（`AppSettings`）の保持と各セクションへのprops受け渡しのみを担い、実際のUIと操作ロジックはテーマ／音声／目標セット数／効果音／BGM／通知／データの7セクションコンポーネントに分割している（`SettingsThemeSection`, `SettingsVoiceSection`, `SettingsDailyGoalSection`, `SettingsSoundSection`, `SettingsBgmSection`, `SettingsNotificationSection`, `SettingsDataSection`）。通知・データの各セクションは購読状態やインポート/エクスポートのローカルUI状態を自身で保持する。`themeMode`と同様、`bgmEnabled`/`bgmVolume`もApp.tsx側（`useBackgroundMusic`）が保持しSettingsScreenへpropsとして渡す（画面遷移をまたいでBGM再生を継続するため）。
 
 - テーマ（システム／ライト／ダーク）
 - 音声合成の声・速度
 - 効果音ON/OFF・音量（0〜100）
+- BGM ON/OFF・音量（0〜100、既定OFF）
 - 1日の目標セット数
 - リマインド通知（後述）
 
@@ -434,12 +444,14 @@ interface AppSettings {
   voiceURI: string | null
   soundEnabled: boolean
   sfxVolume: number // 0-100
+  bgmEnabled: boolean
+  bgmVolume: number // 0-100
   dailyGoal: number
   notificationsEnabled: boolean
 }
 ```
 
-デフォルト設定: `{ themeMode: 'system', language: 'ja', speechRate: 0.95, voiceURI: null, soundEnabled: true, sfxVolume: 80, dailyGoal: 3, notificationsEnabled: false }`
+デフォルト設定: `{ themeMode: 'system', language: 'ja', speechRate: 0.95, voiceURI: null, soundEnabled: true, sfxVolume: 80, bgmEnabled: false, bgmVolume: 50, dailyGoal: 3, notificationsEnabled: false }`
 
 読み込み・保存とも`try/catch`でlocalStorage利用不可（プライベートモード等）を許容し、失敗時はデフォルト値やno-opにフォールバックする。
 

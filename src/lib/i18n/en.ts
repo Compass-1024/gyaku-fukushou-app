@@ -162,6 +162,8 @@ export const en: Translations = {
     on: 'On',
     off: 'Off',
     sfxVolumeTitle: 'Sound effects volume',
+    bgmTitle: 'Background music',
+    bgmVolumeTitle: 'Background music volume',
     notifications: {
       title: 'Reminder notifications',
       unsupported:

@@ -82,6 +82,8 @@ export interface AppSettings {
   voiceURI: string | null
   soundEnabled: boolean
   sfxVolume: number
+  bgmEnabled: boolean
+  bgmVolume: number
   dailyGoal: number
   notificationsEnabled: boolean
 }

@@ -15,6 +15,7 @@ import { StatsScreen } from './components/StatsScreen'
 import { PrivacyScreen } from './components/PrivacyScreen'
 import { useSpeechRecognition } from './hooks/useSpeechRecognition'
 import { useThemeMode } from './hooks/useThemeMode'
+import { useBackgroundMusic } from './hooks/useBackgroundMusic'
 import { useLanguage, useTranslation } from './contexts/LanguageContext'
 import { loadHistory } from './lib/history'
 import { loadSettings } from './lib/settings'
@@ -126,6 +127,7 @@ function getShortcutView(): View | null {
 
 function App() {
   const { themeMode, setThemeMode } = useThemeMode()
+  const { bgmEnabled, bgmVolume, setBgmEnabled, setBgmVolume } = useBackgroundMusic()
   const { language } = useLanguage()
   const t = useTranslation()
   const { supported: recognitionSupported } = useSpeechRecognition()
@@ -429,6 +431,10 @@ function App() {
         <SettingsScreen
           themeMode={themeMode}
           onChangeTheme={setThemeMode}
+          bgmEnabled={bgmEnabled}
+          onChangeBgmEnabled={setBgmEnabled}
+          bgmVolume={bgmVolume}
+          onChangeBgmVolume={setBgmVolume}
           onBack={() => goTo({ screen: 'top' })}
           onOpenPrivacy={() => goTo({ screen: 'privacy' })}
         />

@@ -155,6 +155,8 @@ export const ja: Translations = {
     on: 'オン',
     off: 'オフ',
     sfxVolumeTitle: '効果音の音量',
+    bgmTitle: 'BGM',
+    bgmVolumeTitle: 'BGMの音量',
     notifications: {
       title: 'リマインド通知',
       unsupported:

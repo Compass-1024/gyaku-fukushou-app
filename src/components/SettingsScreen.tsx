@@ -5,6 +5,7 @@ import { SettingsLanguageSection } from './SettingsLanguageSection'
 import { SettingsVoiceSection } from './SettingsVoiceSection'
 import { SettingsDailyGoalSection } from './SettingsDailyGoalSection'
 import { SettingsSoundSection } from './SettingsSoundSection'
+import { SettingsBgmSection } from './SettingsBgmSection'
 import { SettingsNotificationSection } from './SettingsNotificationSection'
 import { SettingsDataSection } from './SettingsDataSection'
 import { useLanguage, useTranslation } from '../contexts/LanguageContext'
@@ -13,6 +14,10 @@ import type { AppSettings, ThemeMode } from '../types'
 interface SettingsScreenProps {
   themeMode: ThemeMode
   onChangeTheme: (mode: ThemeMode) => void
+  bgmEnabled: boolean
+  onChangeBgmEnabled: (enabled: boolean) => void
+  bgmVolume: number
+  onChangeBgmVolume: (volume: number) => void
   onBack: () => void
   onOpenPrivacy: () => void
 }
@@ -20,6 +25,10 @@ interface SettingsScreenProps {
 export function SettingsScreen({
   themeMode,
   onChangeTheme,
+  bgmEnabled,
+  onChangeBgmEnabled,
+  bgmVolume,
+  onChangeBgmVolume,
   onBack,
   onOpenPrivacy,
 }: SettingsScreenProps) {
@@ -27,13 +36,18 @@ export function SettingsScreen({
   const { language, setLanguage } = useLanguage()
   const [settings, setSettings] = useState<AppSettings>(() => loadSettings())
 
-  // themeMode は App 側（useThemeMode）が別途 saveSettings しているため、
-  // ここでのローカル state が古いままにならないよう常に同期しておく
+  // themeMode/bgmEnabled/bgmVolume は App 側（useThemeMode/useBackgroundMusic）が
+  // 別途 saveSettings しているため、ここでのローカル state が古いままに
+  // ならないよう常に同期しておく
   useEffect(() => {
     setSettings((prev) =>
-      prev.themeMode === themeMode ? prev : { ...prev, themeMode },
+      prev.themeMode === themeMode &&
+      prev.bgmEnabled === bgmEnabled &&
+      prev.bgmVolume === bgmVolume
+        ? prev
+        : { ...prev, themeMode, bgmEnabled, bgmVolume },
     )
-  }, [themeMode])
+  }, [themeMode, bgmEnabled, bgmVolume])
 
   function updateSettings(partial: Partial<AppSettings>) {
     // 保存直前に最新の設定を読み直してからマージする。ローカル state だけを
@@ -83,6 +97,13 @@ export function SettingsScreen({
         onChangeVolume={(sfxVolume) => updateSettings({ sfxVolume })}
       />
 
+      <SettingsBgmSection
+        bgmEnabled={bgmEnabled}
+        onToggle={() => onChangeBgmEnabled(!bgmEnabled)}
+        bgmVolume={bgmVolume}
+        onChangeVolume={onChangeBgmVolume}
+      />
+
       <SettingsNotificationSection
         notificationsEnabled={settings.notificationsEnabled}
         onChange={(notificationsEnabled) =>
@@ -94,6 +115,8 @@ export function SettingsScreen({
         onImported={(imported) => {
           setSettings(imported)
           onChangeTheme(imported.themeMode)
+          onChangeBgmEnabled(imported.bgmEnabled)
+          onChangeBgmVolume(imported.bgmVolume)
         }}
       />
 

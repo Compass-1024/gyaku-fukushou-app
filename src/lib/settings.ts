@@ -9,6 +9,8 @@ export const DEFAULT_SETTINGS: AppSettings = {
   voiceURI: null,
   soundEnabled: true,
   sfxVolume: 80,
+  bgmEnabled: false,
+  bgmVolume: 50,
   dailyGoal: 3,
   notificationsEnabled: false,
 }

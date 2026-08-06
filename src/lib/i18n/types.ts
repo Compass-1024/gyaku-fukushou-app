@@ -123,6 +123,8 @@ export interface Translations {
     on: string
     off: string
     sfxVolumeTitle: string
+    bgmTitle: string
+    bgmVolumeTitle: string
     notifications: {
       title: string
       unsupported: string
