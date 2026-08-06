@@ -8,6 +8,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   speechRate: 0.95,
   voiceURI: null,
   soundEnabled: true,
+  sfxVolume: 80,
   dailyGoal: 3,
   notificationsEnabled: false,
 }

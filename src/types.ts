@@ -81,6 +81,7 @@ export interface AppSettings {
   speechRate: number
   voiceURI: string | null
   soundEnabled: boolean
+  sfxVolume: number
   dailyGoal: number
   notificationsEnabled: boolean
 }

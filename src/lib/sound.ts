@@ -1,5 +1,12 @@
+import { loadSettings } from './settings'
+
 let audioContext: AudioContext | null = null
 let reverbNode: ConvolverNode | null = null
+
+// 設定画面の効果音音量スライダー(0〜100)を0〜1の係数に変換する
+function getVolumeMultiplier(): number {
+  return Math.max(0, Math.min(100, loadSettings().sfxVolume)) / 100
+}
 
 function getAudioContext(): AudioContext | null {
   if (typeof window === 'undefined') return null
@@ -37,7 +44,7 @@ function getReverb(ctx: AudioContext): ConvolverNode {
 // dry（直接音）と reverb センドをまとめたゲインノードを作る
 function createVoiceBus(ctx: AudioContext, reverbSend: number): GainNode {
   const dry = ctx.createGain()
-  dry.gain.value = 1
+  dry.gain.value = getVolumeMultiplier()
   dry.connect(ctx.destination)
   if (reverbSend > 0) {
     const send = ctx.createGain()

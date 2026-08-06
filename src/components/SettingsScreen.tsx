@@ -79,6 +79,8 @@ export function SettingsScreen({
       <SettingsSoundSection
         soundEnabled={settings.soundEnabled}
         onToggle={() => updateSettings({ soundEnabled: !settings.soundEnabled })}
+        sfxVolume={settings.sfxVolume}
+        onChangeVolume={(sfxVolume) => updateSettings({ sfxVolume })}
       />
 
       <SettingsNotificationSection
