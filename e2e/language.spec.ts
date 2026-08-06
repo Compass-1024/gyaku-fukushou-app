@@ -27,7 +27,10 @@ test.describe('英語UI（language: en）', () => {
       page.getByRole('button', { name: /Digit Mode/ }),
     ).toBeVisible()
     await expect(
-      page.getByRole('button', { name: /N-Back Mode/ }),
+      page.getByRole('button', { name: /^N-Back Mode/ }),
+    ).toBeVisible()
+    await expect(
+      page.getByRole('button', { name: /Dual N-Back Mode/ }),
     ).toBeVisible()
     await expect(
       page.getByRole('button', { name: /Spatial Mode/ }),
@@ -37,6 +40,12 @@ test.describe('英語UI（language: en）', () => {
     ).toBeVisible()
     await expect(
       page.getByRole('button', { name: /Tone & Color Mode/ }),
+    ).toBeVisible()
+    await expect(
+      page.getByRole('button', { name: /Sequence Mode/ }),
+    ).toBeVisible()
+    await expect(
+      page.getByRole('button', { name: /Random Mode/ }),
     ).toBeVisible()
   })
 
