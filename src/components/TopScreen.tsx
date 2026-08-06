@@ -36,6 +36,83 @@ export function TopScreen({
   const t = useTranslation()
   const { language } = useLanguage()
 
+  // ホーム画面の3×3グリッドに表示するモードカードのメタデータ。
+  // ことばモードのみ英語版では選択できないため対象外にする
+  const allModeCards: Array<{
+    mode: Mode
+    icon: string
+    gradient: string
+    title: string
+    description: string
+  }> = [
+    {
+      mode: 'word',
+      icon: '🗣️',
+      gradient: 'from-emerald-500 to-teal-500',
+      title: t.top.modes.word.title,
+      description: t.top.modes.word.description,
+    },
+    {
+      mode: 'digit',
+      icon: '🔢',
+      gradient: 'from-indigo-500 to-fuchsia-500',
+      title: t.top.modes.digit.title,
+      description: t.top.modes.digit.description,
+    },
+    {
+      mode: 'sequence',
+      icon: '📝',
+      gradient: 'from-teal-500 to-sky-500',
+      title: t.top.modes.sequence.title,
+      description: t.top.modes.sequence.description,
+    },
+    {
+      mode: 'nback',
+      icon: '🧠',
+      gradient: 'from-rose-500 to-orange-500',
+      title: t.top.modes.nback.title,
+      description: t.top.modes.nback.description,
+    },
+    {
+      mode: 'dual-nback',
+      icon: '🧠🧠',
+      gradient: 'from-purple-500 to-rose-500',
+      title: t.top.modes.dualNback.title,
+      description: t.top.modes.dualNback.description,
+    },
+    {
+      mode: 'spatial',
+      icon: '🧩',
+      gradient: 'from-cyan-500 to-blue-500',
+      title: t.top.modes.spatial.title,
+      description: t.top.modes.spatial.description,
+    },
+    {
+      mode: 'pattern',
+      icon: '👀',
+      gradient: 'from-amber-500 to-yellow-500',
+      title: t.top.modes.pattern.title,
+      description: t.top.modes.pattern.description,
+    },
+    {
+      mode: 'tone',
+      icon: '🎵',
+      gradient: 'from-violet-500 to-pink-500',
+      title: t.top.modes.tone.title,
+      description: t.top.modes.tone.description,
+    },
+    {
+      mode: 'random',
+      icon: '🎲',
+      gradient: 'from-fuchsia-500 to-orange-400',
+      title: t.top.modes.random.title,
+      description: t.top.modes.random.description,
+    },
+  ]
+  const modeCards = allModeCards.filter(
+    (card) => card.mode !== 'word' || language === 'ja',
+  )
+
   function areaLabel(area: AreaStats): string {
     const key = area.gameType ? `${area.mode}-${area.gameType}` : area.mode
     const label = t.common.areaLabels[key as keyof typeof t.common.areaLabels]
@@ -236,142 +313,27 @@ export function TopScreen({
         </button>
       )}
 
-      <div className="flex flex-col gap-5">
-        {language === 'ja' && (
+      <div className="grid grid-cols-3 gap-2 sm:gap-3">
+        {modeCards.map((card) => (
           <button
+            key={card.mode}
             type="button"
             onClick={() => {
               if (loadSettings().soundEnabled) playButtonTap()
-              onSelect('word')
+              onSelect(card.mode)
             }}
-            className="touch-manipulation rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-500 px-6 py-6 text-left text-white shadow-lg shadow-emerald-500/20 transition hover:scale-[1.02] hover:shadow-xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-500"
+            aria-label={`${card.title}: ${card.description}`}
+            className={`touch-manipulation flex flex-col items-center justify-center gap-1 rounded-2xl bg-gradient-to-br ${card.gradient} p-2 text-center text-white shadow-md transition hover:scale-[1.03] hover:shadow-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white`}
           >
-            <span className="text-4xl">🗣️</span>
-            <p className="mt-2 text-xl font-bold">{t.top.modes.word.title}</p>
-            <p className="mt-1 text-sm opacity-90">
-              {t.top.modes.word.description}
-            </p>
+            <span className="text-2xl" aria-hidden="true">
+              {card.icon}
+            </span>
+            <span className="text-xs leading-tight font-bold">{card.title}</span>
+            <span className="line-clamp-2 text-[10px] leading-snug opacity-90">
+              {card.description}
+            </span>
           </button>
-        )}
-
-        <button
-          type="button"
-          onClick={() => {
-            if (loadSettings().soundEnabled) playButtonTap()
-            onSelect('digit')
-          }}
-          className="touch-manipulation rounded-2xl bg-gradient-to-br from-indigo-500 to-fuchsia-500 px-6 py-6 text-left text-white shadow-lg shadow-indigo-500/20 transition hover:scale-[1.02] hover:shadow-xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500"
-        >
-          <span className="text-4xl">🔢</span>
-          <p className="mt-2 text-xl font-bold">{t.top.modes.digit.title}</p>
-          <p className="mt-1 text-sm opacity-90">
-            {t.top.modes.digit.description}
-          </p>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => {
-            if (loadSettings().soundEnabled) playButtonTap()
-            onSelect('sequence')
-          }}
-          className="touch-manipulation rounded-2xl bg-gradient-to-br from-teal-500 to-sky-500 px-6 py-6 text-left text-white shadow-lg shadow-teal-500/20 transition hover:scale-[1.02] hover:shadow-xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-500"
-        >
-          <span className="text-4xl">📝</span>
-          <p className="mt-2 text-xl font-bold">{t.top.modes.sequence.title}</p>
-          <p className="mt-1 text-sm opacity-90">
-            {t.top.modes.sequence.description}
-          </p>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => {
-            if (loadSettings().soundEnabled) playButtonTap()
-            onSelect('nback')
-          }}
-          className="touch-manipulation rounded-2xl bg-gradient-to-br from-rose-500 to-orange-500 px-6 py-6 text-left text-white shadow-lg shadow-rose-500/20 transition hover:scale-[1.02] hover:shadow-xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-500"
-        >
-          <span className="text-4xl">🧠</span>
-          <p className="mt-2 text-xl font-bold">{t.top.modes.nback.title}</p>
-          <p className="mt-1 text-sm opacity-90">
-            {t.top.modes.nback.description}
-          </p>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => {
-            if (loadSettings().soundEnabled) playButtonTap()
-            onSelect('dual-nback')
-          }}
-          className="touch-manipulation rounded-2xl bg-gradient-to-br from-purple-500 to-rose-500 px-6 py-6 text-left text-white shadow-lg shadow-purple-500/20 transition hover:scale-[1.02] hover:shadow-xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-purple-500"
-        >
-          <span className="text-4xl">🧠🧠</span>
-          <p className="mt-2 text-xl font-bold">{t.top.modes.dualNback.title}</p>
-          <p className="mt-1 text-sm opacity-90">
-            {t.top.modes.dualNback.description}
-          </p>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => {
-            if (loadSettings().soundEnabled) playButtonTap()
-            onSelect('spatial')
-          }}
-          className="touch-manipulation rounded-2xl bg-gradient-to-br from-cyan-500 to-blue-500 px-6 py-6 text-left text-white shadow-lg shadow-cyan-500/20 transition hover:scale-[1.02] hover:shadow-xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-500"
-        >
-          <span className="text-4xl">🧩</span>
-          <p className="mt-2 text-xl font-bold">{t.top.modes.spatial.title}</p>
-          <p className="mt-1 text-sm opacity-90">
-            {t.top.modes.spatial.description}
-          </p>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => {
-            if (loadSettings().soundEnabled) playButtonTap()
-            onSelect('pattern')
-          }}
-          className="touch-manipulation rounded-2xl bg-gradient-to-br from-amber-500 to-yellow-500 px-6 py-6 text-left text-white shadow-lg shadow-amber-500/20 transition hover:scale-[1.02] hover:shadow-xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500"
-        >
-          <span className="text-4xl">👀</span>
-          <p className="mt-2 text-xl font-bold">{t.top.modes.pattern.title}</p>
-          <p className="mt-1 text-sm opacity-90">
-            {t.top.modes.pattern.description}
-          </p>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => {
-            if (loadSettings().soundEnabled) playButtonTap()
-            onSelect('tone')
-          }}
-          className="touch-manipulation rounded-2xl bg-gradient-to-br from-violet-500 to-pink-500 px-6 py-6 text-left text-white shadow-lg shadow-violet-500/20 transition hover:scale-[1.02] hover:shadow-xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-500"
-        >
-          <span className="text-4xl">🎵</span>
-          <p className="mt-2 text-xl font-bold">{t.top.modes.tone.title}</p>
-          <p className="mt-1 text-sm opacity-90">
-            {t.top.modes.tone.description}
-          </p>
-        </button>
-        <button
-          type="button"
-          onClick={() => {
-            if (loadSettings().soundEnabled) playButtonTap()
-            onSelect('random')
-          }}
-          className="touch-manipulation rounded-2xl bg-gradient-to-br from-fuchsia-500 to-orange-400 px-6 py-6 text-left text-white shadow-lg shadow-fuchsia-500/20 transition hover:scale-[1.02] hover:shadow-xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-fuchsia-500"
-        >
-          <span className="text-4xl">🎲</span>
-          <p className="mt-2 text-xl font-bold">{t.top.modes.random.title}</p>
-          <p className="mt-1 text-sm opacity-90">
-            {t.top.modes.random.description}
-          </p>
-        </button>
+        ))}
       </div>
     </div>
   )

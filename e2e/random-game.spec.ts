@@ -1,6 +1,9 @@
 import { test, expect } from '@playwright/test'
 
 test('ランダムモード: 5ラウンド完了までの一連の流れ', async ({ page }) => {
+  // 5ラウンド分のready→showing→answering(タイムアウト)を待つため、
+  // デフォルトのテストタイムアウトでは足りない
+  test.setTimeout(120_000)
   await page.goto('/')
   await page.getByRole('button', { name: /ランダムモード/ }).click()
   await page.getByRole('button', { name: /レベル1/ }).click()
