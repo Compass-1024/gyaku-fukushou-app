@@ -5,6 +5,7 @@ import { DigitTypeSelect } from './components/DigitTypeSelect'
 import { DigitLevelSelect } from './components/DigitLevelSelect'
 import { SequenceLevelSelect } from './components/SequenceLevelSelect'
 import { NBackLevelSelect } from './components/NBackLevelSelect'
+import { DualNBackLevelSelect } from './components/DualNBackLevelSelect'
 import { SpatialLevelSelect } from './components/SpatialLevelSelect'
 import { PatternLevelSelect } from './components/PatternLevelSelect'
 import { ToneLevelSelect } from './components/ToneLevelSelect'
@@ -39,6 +40,11 @@ const NBackGameScreen = lazy(() =>
     default: m.NBackGameScreen,
   })),
 )
+const DualNBackGameScreen = lazy(() =>
+  import('./components/DualNBackGameScreen').then((m) => ({
+    default: m.DualNBackGameScreen,
+  })),
+)
 const SpatialGameScreen = lazy(() =>
   import('./components/SpatialGameScreen').then((m) => ({
     default: m.SpatialGameScreen,
@@ -66,6 +72,8 @@ type View =
   | { screen: 'sequence-game'; level: Level }
   | { screen: 'nback-level' }
   | { screen: 'nback-game'; level: Level }
+  | { screen: 'dual-nback-level' }
+  | { screen: 'dual-nback-game'; level: Level }
   | { screen: 'spatial-level' }
   | { screen: 'spatial-game'; level: Level }
   | { screen: 'pattern-level' }
@@ -93,6 +101,8 @@ function getShortcutView(): View | null {
       return { screen: 'sequence-level' }
     case 'nback':
       return { screen: 'nback-level' }
+    case 'dual-nback':
+      return { screen: 'dual-nback-level' }
     case 'spatial':
       return { screen: 'spatial-level' }
     case 'pattern':
@@ -158,6 +168,7 @@ function App() {
       next.screen === 'digit-level' ||
       next.screen === 'sequence-level' ||
       next.screen === 'nback-level' ||
+      next.screen === 'dual-nback-level' ||
       next.screen === 'spatial-level' ||
       next.screen === 'pattern-level' ||
       next.screen === 'tone-level' ||
@@ -180,6 +191,7 @@ function App() {
             else if (mode === 'digit') goTo({ screen: 'digit-type' })
             else if (mode === 'sequence') goTo({ screen: 'sequence-level' })
             else if (mode === 'nback') goTo({ screen: 'nback-level' })
+            else if (mode === 'dual-nback') goTo({ screen: 'dual-nback-level' })
             else if (mode === 'spatial') goTo({ screen: 'spatial-level' })
             else if (mode === 'pattern') goTo({ screen: 'pattern-level' })
             else if (mode === 'tone') goTo({ screen: 'tone-level' })
@@ -199,6 +211,8 @@ function App() {
               goTo({ screen: 'sequence-game', level: area.level })
             } else if (area.mode === 'nback') {
               goTo({ screen: 'nback-game', level: area.level })
+            } else if (area.mode === 'dual-nback') {
+              goTo({ screen: 'dual-nback-game', level: area.level })
             } else if (area.mode === 'spatial') {
               goTo({ screen: 'spatial-game', level: area.level })
             } else if (area.mode === 'pattern') {
@@ -300,6 +314,25 @@ function App() {
           level={view.level}
           onExit={() => goTo({ screen: 'nback-level' })}
           onSelectLevel={(level) => goTo({ screen: 'nback-game', level })}
+        />
+      )
+      break
+    case 'dual-nback-level':
+      content = (
+        <DualNBackLevelSelect
+          history={history}
+          onSelect={(level) => goTo({ screen: 'dual-nback-game', level })}
+          onBack={() => goTo({ screen: 'top' })}
+        />
+      )
+      break
+    case 'dual-nback-game':
+      content = (
+        <DualNBackGameScreen
+          key={view.level}
+          level={view.level}
+          onExit={() => goTo({ screen: 'dual-nback-level' })}
+          onSelectLevel={(level) => goTo({ screen: 'dual-nback-game', level })}
         />
       )
       break

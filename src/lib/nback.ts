@@ -43,24 +43,37 @@ export interface NBackScore {
   accuracy: number
 }
 
-// pressed[i] は各試行でユーザーが「一致」ボタンを押したかどうか
-export function scoreNBackTrials(
-  trials: NBackTrial[],
+// シグナル検出理論(SDT)に基づくスコアリング。isMatch[i]が実際に一致する
+// 試行かどうか、pressed[i]がユーザーが「一致」ボタンを押したかどうかを表す。
+// Nバック・Dual N-Back（位置/音の各チャンネル）で共通に使う
+export function scoreMatchTrials(
+  isMatch: boolean[],
   pressed: boolean[],
 ): NBackScore {
   let hits = 0
   let misses = 0
   let falseAlarms = 0
   let correctRejections = 0
-  trials.forEach((trial, i) => {
+  isMatch.forEach((match, i) => {
     const didPress = pressed[i] ?? false
-    if (trial.isMatch && didPress) hits += 1
-    else if (trial.isMatch && !didPress) misses += 1
-    else if (!trial.isMatch && didPress) falseAlarms += 1
+    if (match && didPress) hits += 1
+    else if (match && !didPress) misses += 1
+    else if (!match && didPress) falseAlarms += 1
     else correctRejections += 1
   })
-  const total = trials.length
+  const total = isMatch.length
   const accuracy =
     total > 0 ? Math.round(((hits + correctRejections) / total) * 100) : 0
   return { hits, misses, falseAlarms, correctRejections, accuracy }
+}
+
+// pressed[i] は各試行でユーザーが「一致」ボタンを押したかどうか
+export function scoreNBackTrials(
+  trials: NBackTrial[],
+  pressed: boolean[],
+): NBackScore {
+  return scoreMatchTrials(
+    trials.map((t) => t.isMatch),
+    pressed,
+  )
 }

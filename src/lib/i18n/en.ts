@@ -394,8 +394,8 @@ export const en: Translations = {
     positionMatchButtonPressed: '✓ Position Match',
     soundMatchButton: 'Sound Match',
     soundMatchButtonPressed: '✓ Sound Match',
-    resultLabel: (positionAccuracy, soundAccuracy) =>
-      `Position: ${positionAccuracy}% / Sound: ${soundAccuracy}%`,
+    resultLabel: (channel, isMatch) =>
+      `${channel === 'position' ? 'Position' : 'Sound'}${isMatch ? ' (match)' : ''}`,
   },
   spatial: {
     title: 'Spatial Mode',

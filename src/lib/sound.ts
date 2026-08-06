@@ -238,6 +238,29 @@ export function playPadTone(padIndex: number): void {
   })
 }
 
+// Dual N-Backモードの8種類の音に割り当てる音高（1オクターブをペンタトニック寄りに
+// 8分割し、隣り合う音同士も聞き分けやすいようにしている）
+const DUAL_NBACK_FREQUENCIES = [
+  261.63, 293.66, 329.63, 349.23, 392.0, 440.0, 493.88, 523.25,
+] // C4〜C5
+
+// Dual N-Backモード: 音番号ごとに異なる高さのベル風の単音を鳴らす
+export function playDualNBackTone(soundIndex: number): void {
+  const ctx = getAudioContext()
+  if (!ctx) return
+  const bus = createVoiceBus(ctx, 0.25)
+  const frequency = DUAL_NBACK_FREQUENCIES[soundIndex] ?? DUAL_NBACK_FREQUENCIES[0]
+  playHarmonicTone(ctx, bus, {
+    frequency,
+    startTime: ctx.currentTime,
+    duration: 0.35,
+    gain: 0.22,
+    type: 'sine',
+    harmonics: [1, 0.5, 0.25, 0.12],
+    attack: 0.008,
+  })
+}
+
 // 実績解除: きらびやかな和音+高音のアクセント
 export function playAchievementUnlock(): void {
   const ctx = getAudioContext()

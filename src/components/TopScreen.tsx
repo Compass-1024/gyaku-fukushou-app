@@ -239,6 +239,21 @@ export function TopScreen({
           type="button"
           onClick={() => {
             if (loadSettings().soundEnabled) playButtonTap()
+            onSelect('dual-nback')
+          }}
+          className="touch-manipulation rounded-2xl bg-gradient-to-br from-purple-500 to-rose-500 px-6 py-6 text-left text-white shadow-lg shadow-purple-500/20 transition hover:scale-[1.02] hover:shadow-xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-purple-500"
+        >
+          <span className="text-4xl">🧠🧠</span>
+          <p className="mt-2 text-xl font-bold">{t.top.modes.dualNback.title}</p>
+          <p className="mt-1 text-sm opacity-90">
+            {t.top.modes.dualNback.description}
+          </p>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => {
+            if (loadSettings().soundEnabled) playButtonTap()
             onSelect('spatial')
           }}
           className="touch-manipulation rounded-2xl bg-gradient-to-br from-cyan-500 to-blue-500 px-6 py-6 text-left text-white shadow-lg shadow-cyan-500/20 transition hover:scale-[1.02] hover:shadow-xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-500"

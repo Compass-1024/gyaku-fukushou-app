@@ -360,8 +360,8 @@ export const ja: Translations = {
     positionMatchButtonPressed: '✓ 位置一致',
     soundMatchButton: '音一致',
     soundMatchButtonPressed: '✓ 音一致',
-    resultLabel: (positionAccuracy, soundAccuracy) =>
-      `位置: ${positionAccuracy}% / 音: ${soundAccuracy}%`,
+    resultLabel: (channel, isMatch) =>
+      `${channel === 'position' ? '位置' : '音'}${isMatch ? '（一致）' : ''}`,
   },
   spatial: {
     title: '空間モード',

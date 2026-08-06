@@ -235,7 +235,7 @@ export interface Translations {
     positionMatchButtonPressed: string
     soundMatchButton: string
     soundMatchButtonPressed: string
-    resultLabel: (positionAccuracy: number, soundAccuracy: number) => string
+    resultLabel: (channel: 'position' | 'sound', isMatch: boolean) => string
   }
   spatial: {
     title: string
