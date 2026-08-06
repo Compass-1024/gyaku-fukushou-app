@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Overview
 
-**逆復唱トレーニング**（`gyaku-fukushou-app`）は、ワーキングメモリ（作業記憶）を鍛えるトレーニングアプリ。「ことば」「すうじ」「Nバック」「空間」「変化検出」「音・色」の6モードを提供する。UIは日本語/英語の2言語に対応（設定画面でいつでも切り替え可能、詳細は「多言語化（i18n）」セクションを参照）。トレーニング機能自体はバックエンドを持たないSPAで、全データはブラウザの`localStorage`に保存する。**例外として、オプトインの「リマインド通知」機能のみ、Vercel Serverless Functions + Redisストレージを使う最小限のバックエンドを持つ**（詳細は「プッシュ通知リマインダー」セクションを参照）。PWA対応でホーム画面に追加してネイティブアプリ風に利用可能。デプロイ先: https://gyaku-fukushou-app.vercel.app/
+**逆復唱トレーニング**（`gyaku-fukushou-app`）は、ワーキングメモリ（作業記憶）を鍛えるトレーニングアプリ。「ことば」「すうじ」「順唱」「Nバック」「Dual N-Back」「空間」「変化検出」「音・色」「ランダム」の9モードを提供する。UIは日本語/英語の2言語に対応（設定画面でいつでも切り替え可能、詳細は「多言語化（i18n）」セクションを参照）。トレーニング機能自体はバックエンドを持たないSPAで、全データはブラウザの`localStorage`に保存する。**例外として、オプトインの「リマインド通知」機能のみ、Vercel Serverless Functions + Redisストレージを使う最小限のバックエンドを持つ**（詳細は「プッシュ通知リマインダー」セクションを参照）。全モード共通で経験値・プレイヤーレベル・今日のミッションといったゲーミフィケーション要素を持つ（詳細は「経験値・プレイヤーレベルシステム」「今日のミッション」セクションを参照）。PWA対応でホーム画面に追加してネイティブアプリ風に利用可能。デプロイ先: https://gyaku-fukushou-app.vercel.app/
 
 ## 応答言語
 
@@ -51,9 +51,17 @@ flowchart TD
     digitGame["digit-game（ゲーム画面）"]
     digitResult["結果表示"]
 
+    sequenceLevel["sequence-level（レベル選択）"]
+    sequenceGame["sequence-game（ゲーム画面）"]
+    sequenceResult["結果表示"]
+
     nbackLevel["nback-level（レベル選択）"]
     nbackGame["nback-game（ゲーム画面）"]
     nbackResult["結果表示"]
+
+    dualNbackLevel["dual-nback-level（レベル選択）"]
+    dualNbackGame["dual-nback-game（ゲーム画面）"]
+    dualNbackResult["結果表示"]
 
     top -->|📊 統計| stats
     top -->|⚙️ 設定| settings
@@ -65,9 +73,17 @@ flowchart TD
     digitResult -->|同条件で再挑戦| digitGame
     digitResult -->|戻る| digitLevel
 
+    top -->|順唱モード| sequenceLevel --> sequenceGame --> sequenceResult
+    sequenceResult -->|同レベルで再挑戦| sequenceGame
+    sequenceResult -->|戻る| sequenceLevel
+
     top -->|Nバックモード| nbackLevel --> nbackGame --> nbackResult
     nbackResult -->|同レベルで再挑戦| nbackGame
     nbackResult -->|戻る| nbackLevel
+
+    top -->|Dual N-Backモード| dualNbackLevel --> dualNbackGame --> dualNbackResult
+    dualNbackResult -->|同レベルで再挑戦| dualNbackGame
+    dualNbackResult -->|戻る| dualNbackLevel
 
     spatialLevel["spatial-level（レベル選択）"]
     spatialGame["spatial-game（ゲーム画面）"]
@@ -92,11 +108,19 @@ flowchart TD
     top -->|音・色モード| toneLevel --> toneGame --> toneResult
     toneResult -->|同レベルで再挑戦| toneGame
     toneResult -->|戻る| toneLevel
+
+    randomLevel["random-level（レベル選択）"]
+    randomGame["random-game（ゲーム画面）"]
+    randomResult["結果表示"]
+
+    top -->|ランダムモード| randomLevel --> randomGame --> randomResult
+    randomResult -->|同レベルで再挑戦| randomGame
+    randomResult -->|戻る| randomLevel
 ```
 
 - 各レベル選択・ゲーム画面には「← 戻る」ボタンがある。
 - 回答途中で離脱しようとすると`confirmExit`（`window.confirm`）で「回答中のセットが破棄されます。よろしいですか？」の確認ダイアログを表示する。
-- 履歴を表示する画面（top / word-level / digit-level / nback-level / spatial-level / pattern-level / tone-level / stats）に遷移するたびにlocalStorageの履歴を再読み込みする。
+- 履歴を表示する画面（top / word-level / digit-level / sequence-level / nback-level / dual-nback-level / spatial-level / pattern-level / tone-level / random-level / stats）に遷移するたびにlocalStorageの履歴を再読み込みする。
 
 ## Feature requirements
 
@@ -139,6 +163,20 @@ flowchart TD
   - reverse: 数字配列を逆順に文字列化したものと比較（先頭0埋めの差異は同一視、例: 「325」と「0325」）
   - sum: 数字の合計値の文字列と一致するか
 
+### 順唱モード（`src/lib/sequence.ts`）
+
+Forward Digit Span（順唱スパン）課題。表示された数字を見た順番のまま入力する単純スパン課題で、すうじモード（逆から入力）と対をなす。実装はすうじモードのロジック・UI（`NumpadInput`等）をほぼそのまま流用し、逆順化のみ行わない。0埋め比較ロジックは`src/lib/digitAnswer.ts`に共通化し、`digits.ts`/`sequence.ts`双方から利用する。
+
+- **出題方式**: すうじモードと同じ桁数テーブルでランダムな数字列を3問生成。
+- **レベル定義**:
+  | レベル | 桁数 |
+  |---|---|
+  | 1 | 3桁 |
+  | 2 | 5桁 |
+  | 3 | 7桁 |
+- **1問の流れ**（`ready → showing → answering → result`）: すうじモードと同一（数字を1つずつ表示→テンキーで回答→時間切れで自動採点）。
+- **正誤判定**: 数字を見た順そのままに文字列化したものと比較（先頭0埋めの差異は同一視）。
+
 ### Nバックモード（`src/lib/nback.ts`）
 
 - **出題方式**: レベルに応じたN値（1back/2back/3back）で、15問の数字系列を生成。N個前と一致する確率は35%で意図的に混入。
@@ -150,6 +188,18 @@ flowchart TD
 - **正誤判定**: シグナル検出理論に基づくスコアリング
   - hits（一致で押した）／misses（一致なのに押さなかった）／falseAlarms（不一致なのに押した）／correctRejections（不一致で押さなかった）
   - 正答率 = (hits + correctRejections) / 総試行数 × 100（四捨五入）
+
+### Dual N-Backモード（`src/lib/dualNback.ts`）
+
+位置（3×3グリッド）と音（8種類の合成トーン）を同時提示し、それぞれ独立に「N個前と一致するか」を判定する高難度モード。SDT（シグナル検出理論）のスコアリング関数`scoreMatchTrials`は`nback.ts`から抽出して共通化しており、Nバックモードと本モードの双方から利用する。
+
+- **出題方式**: レベルに応じたN値（1back/2back/3back、Nバックと同じ）で、20試行の位置・音の系列を独立に生成。それぞれ一致する確率は30%で意図的に混入。
+- **レベル定義**: レベル1=1つ前と比較、レベル2=2つ前と比較、レベル3=3つ前と比較
+- **1試行の流れ**（`ready → showing → result`）:
+  - `ready`: 1000ms
+  - `showing`: 位置と音を同時に2000ms表示＋400ms空白。表示中に「位置一致」「音一致」ボタン（またはA/Lキー・矢印キー）を独立に押してその試行を記録
+  - 全20試行終了後`result`へ
+- **正誤判定**: 位置・音それぞれ独立にSDTスコアリング。`HistoryEntry`には型変更なしで`correct`＝位置＋音のhit+correctRejection合計、`total`＝試行数×2として記録する（既存スキーマにそのまま収まる）。
 
 ### 空間モード（`src/lib/spatial.ts`）
 
@@ -171,9 +221,9 @@ flowchart TD
 
 ### 変化検出モード（`src/lib/pattern.ts`）
 
-視覚パターン記憶（Luck & Vogel 1997の変化検出課題を参考）を鍛えるモード。一瞬表示される模様を覚え、再表示時に変化しているかを判定する。
+視覚ワーキングメモリの再生課題（Luck & Vogel 1997の変化検出課題を参考にした再生版）を鍛えるモード。一瞬表示される模様を覚え、白紙に戻った状態から元々塗りつぶされていたマスを選び直す。
 
-- **出題方式**: レベルごとのグリッドサイズ・塗りつぶしマス数でランダムな模様を生成。50%の確率で、塗りつぶしマスのうち1つを別の空きマスへ移動させた「変化あり」の比較用模様を生成する。3問1セットで出題。
+- **出題方式**: レベルごとのグリッドサイズ・塗りつぶしマス数でランダムな模様を生成。3問1セットで出題。
 - **レベル定義**:
   | レベル | グリッド | 塗りつぶしマス数 |
   |---|---|---|
@@ -182,10 +232,10 @@ flowchart TD
   | 3 | 5×5 | 8 |
 - **1問の流れ**（`ready → showing → answering → result`）:
   1. `ready`: 1000ms待機
-  2. `showing`: 模様を3000ms表示→500ms空白
-  3. `answering`: 比較用の模様を表示し続けながら「変化あり」「変化なし」の2択で回答（Y/N・矢印キーにも対応）。タイムアウトはベース4000ms＋塗りつぶしマス数×400ms、時間切れは「変化なし」として自動採点
-  4. `result`: 正誤判定
-- **正誤判定**: 回答（変化あり/なし）が実際の`hasChange`と一致するか。
+  2. `showing`: 模様を3000ms表示→500ms空白（全マス白に戻る）
+  3. `answering`: 全マス白の状態からタップでマスをトグル選択し、「回答する」ボタンで明示的に確定。タイムアウトはベース4000ms＋塗りつぶしマス数×400ms、時間切れは現在の選択状態で自動採点
+  4. `result`: 正誤判定。不正解時は正解のマス（緑）・誤選択（赤）・選び漏れ（黄）を色分け表示
+- **正誤判定**: `isPatternSelectionCorrect`。選択したマス集合が元の塗りつぶしマス集合と完全一致（順不同）の場合のみ正解。1つでも過不足があれば不正解。
 
 ### 音・色モード（`src/lib/tone.ts`）
 
@@ -205,6 +255,15 @@ flowchart TD
   4. `result`: 正誤判定
 - **正誤判定**: タップした順序が出題系列と完全一致するか。
 
+### ランダムモード（`src/lib/random.ts`）
+
+すうじ・順唱・空間・変化検出・音/色の5モード（いずれも「単発質問→回答」型の構造を持つ）から1問ずつ集め、シャッフルした順で5ラウンドを出題するミックス練習モード。Nバック系（連続試行方式）とことばモード（音声入出力）は構造が大きく異なるため対象外。
+
+- **出題方式**: `buildRandomRounds(level)`が上記5モードそれぞれの`pick*QuestionSet(level)[0]`を1問ずつ集め、Fisher-Yatesでシャッフルする。5モードちょうど5問のため、重複（同じモードが2回出る）は構造上発生しない。
+- **1ラウンドの流れ**: 各ラウンドの出題生成・正誤判定ロジックは対応する`lib/*.ts`をそのまま呼び出す（重複実装なし）。表示・入力UIのみラウンド種別ごとに`RandomGameScreen.tsx`内で切り替える。
+- **正誤判定**: 各ラウンドは元モードの判定関数（`isDigitAnswerCorrect`/`isSequenceAnswerCorrect`/`isSpatialAnswerCorrect`/`isPatternSelectionCorrect`/`isToneAnswerCorrect`）をそのまま使う。
+- `HistoryEntry`は`mode: 'random'`、`correct`＝5問中の正解数、`total`＝5として記録する。`src/lib/history.ts`の`ALL_AREAS`には**含めない**（単一スキル指標ではないため、苦手分野判定・ベンチマークの対象外）。累計セット数・実績等、履歴全体を見る集計には自動的にカウントされる。
+
 ### 共通: レベル推奨ロジック（`src/lib/difficulty.ts`）
 
 - 正答率100%以上 → レベルアップ提案（レベル3未満の場合）
@@ -213,7 +272,7 @@ flowchart TD
 
 ### 実績（アチーブメント）システム（`src/lib/achievements.ts`）
 
-14種類。判定はすべて履歴データから都度動的に計算する（永続化された「解除済みフラグ」は存在しない）。
+17種類。判定はすべて履歴データから都度動的に計算する（永続化された「解除済みフラグ」は存在しない）。
 
 | アイコン | ラベル | 解除条件 |
 |---|---|---|
@@ -228,13 +287,32 @@ flowchart TD
 | 🧩 | 空間記憶上級者 | 空間モードのレベル3に挑戦履歴あり |
 | 👀 | 観察力上級者 | 変化検出モードのレベル3に挑戦履歴あり |
 | 🎵 | 音感上級者 | 音・色モードのレベル3に挑戦履歴あり |
+| 📝 | 順唱上級者 | 順唱モードのレベル3に挑戦履歴あり |
+| 🧠🧠 | Dual N-Back上級者 | Dual N-Backモードのレベル3に挑戦履歴あり |
 | 📈 | 継続力 | 累計セット数 ≥ 10 |
 | 🏆 | 継続力（上級） | 累計セット数 ≥ 50 |
 | 🌟 | オールラウンダー | word/digit/nback（従来3モード）に挑戦履歴あり（後方互換のため対象は変更していない） |
-| 🌈 | 全モード制覇 | 全6モードに挑戦履歴あり |
+| 🌈 | 全モード制覇 | ことば・すうじ・Nバック・空間・変化検出・音の従来6モードに挑戦履歴あり（後方互換のため対象は変更していない） |
+| 🌠 | コンプリート | 順唱・Dual N-Back・ランダムを含む全9モードに挑戦履歴あり |
 
 - セット完了直前・直後の履歴を比較し、新規解除された実績を検出する（`getNewlyUnlockedAchievements`）。検出時は効果音＋結果画面に「🎉 新しい実績を獲得しました！」バッジを表示。
 - 統計画面では全実績を常時グリッド表示し、未解除は半透明表示。
+
+### 経験値・プレイヤーレベルシステム（`src/lib/xp.ts`）
+
+全モード共通の経験値付与ルール。実績・自己ベストと同じ「履歴から動的計算」の哲学に倣い、XP専用の可変ストアは持たず`computeTotalXp(history, missionCompletionCount)`で都度計算する。
+
+- **XP付与ルール**: 正解1問につき+10XP、1セット全問正解につきさらに+50XP、今日のミッション達成につき+100XP（達成回数は後述の`missionCompletions`ログから取得）。
+- **レベル**: プレイヤーはLv1から開始し、`xpNeededToLevelUp(L) = 100 + (L-1)*50`（Lv1→2は100XP、Lv2→3は150XP、Lv3→4は200XP…と徐々に増加）の累積しきい値でレベルアップする。`getXpProgress(totalXp)`が`{level, currentLevelXp, xpToNextLevel}`を返す。
+- **UI**: `useSetCompletionRecorder`がセット完了ごとに`xpGained`/`leveledUp`/`newLevel`を計算し、`SetSummary`に「獲得XP」表示とレベルアップ時の演出（既存の`playLevelUp()`効果音を流用）を追加する。`TopScreen`にプレイヤーLv・XPバー・次のレベルまでの残りXPを常時表示する。既存の各モードの「難易度レベル(Lv1〜3)」とは別概念のため、UI文言では「プレイヤーLv」として区別している。
+
+### 今日のミッション（`src/lib/missions.ts`）
+
+継続利用率向上のための日替わりミニタスク。日付キー（`localDateKey`）からハッシュで決定的に1件選ぶため、選択結果自体は永続化不要（同じ日は常に同じミッションになる）。
+
+- **ミッション定義**: 「(モード)を2回プレイ」×9モード分（ことばは日本語版のみ対象）＋「正答率80%以上を達成」の計10種類。プレイ回数系は`Mode`と閾値回数を持つ`{kind:'playCount', mode, count}`、正答率系は`{kind:'accuracy', percent}`という判別可能ユニオンで表現する。
+- **達成判定**: `isTodayMissionComplete(history, language)`が今日の履歴に対して判定する。`checkAndRecordMissionCompletion`はセット完了時に呼ばれ、今日初めて達成した場合のみ`gyaku-fukushou:missionCompletions`（達成ログ、`{dateKey, missionId}[]`）に記録してXPボーナスを1回だけ付与する（同日内の再判定は二重付与しない）。
+- **UI**: `TopScreen`に「🎯 今日のミッション」カードを表示し、達成済みかどうかで見た目を変える。
 
 ### 週間振り返りカード（`src/lib/recap.ts`）
 
@@ -262,14 +340,15 @@ Web Audio APIによる完全プログラム生成のシンセサイザー方式�
   - ボタンタップ音: 3000Hz付近のバンドパスノイズの短い（30ms）タップ音
   - レベルアップ音: C5-E5-G5-C6の4音アルペジオ
   - 実績解除音: G5/B5/D6の和音＋高音アクセント
-- 設定画面のON/OFFトグルで全音を一括制御。
+  - Dual N-Backモード用トーン: C4〜C5を8分割した音番号ごとの単音（`playDualNBackTone`）
+- 設定画面のON/OFFトグルで全音を一括制御。あわせて0〜100の音量スライダー（`AppSettings.sfxVolume`、既定80）があり、`createVoiceBus`内の共通dry gainノードの値を`sfxVolume/100`でスケーリングする一点実装で全効果音に一括適用する（個々の`playXxx`関数は変更不要）。アプリには元々BGMが存在しないため、音量調整の対象は効果音（SFX）のみ。
 
 ### 統計・履歴画面（`src/components/StatsScreen.tsx`, `src/lib/history.ts`, `src/lib/phraseStats.ts`, `src/lib/benchmarks.ts`）
 
-- 7エリア（ことば／すうじ・逆から入力／すうじ・合計／Nバック／空間／変化検出／音・色）×3レベルの正答率
+- 9エリア（ことば／すうじ・逆から入力／すうじ・合計／順唱／Nバック／Dual N-Back／空間／変化検出／音・色）×3レベルの正答率（`src/lib/history.ts`の`ALL_AREAS`。ランダムモードは単一スキル指標ではないため対象外）
 - 苦手分野（正答率最下位＋間隔反復スコア上位、`getWeakestAreas`）の抽出表示
 - ことばモード限定で「苦手なフレーズ」上位5件を表示（`getWeakestPhrases`）。最低2回以上挑戦済みかつ1回以上誤答したフレーズのみが対象（1回だけのまぐれ誤答や既に習得済み＝全問正解のフレーズは表示しない）
-- **ワーキングメモリの目安**（`src/lib/benchmarks.ts`）: すうじ（逆から入力）／空間／Nバック／変化検出の4モードについて、各モードが対応する心理学の課題（逆唱スパン・視空間スパン・N-back・視覚ワーキングメモリ容量）で一般的に知られている大まかな目安レンジと比較し、「目安より低め／目安の範囲内／目安より高め」の3段階で表示する。すうじ・空間は「挑戦回数2回以上かつ正答率70%以上」で到達したとみなせる最高レベルの桁数/マス数を、Nバックは十分な挑戦回数がある最高N値での正答率を、変化検出はCowanの公式`K = 表示マス数 × (2 × 正答率 − 1)`で算出した容量を用いる。データが不十分なモードは表示しない。ことばモード・音/色モードは対応する標準化された課題が無いため対象外。**医学的な診断や公式な認知機能評価ではない旨の免責文言を常時表示する**（過度に精密な数値や統合スコア化は意図的に避けている）
+- **ワーキングメモリの目安**（`src/lib/benchmarks.ts`）: すうじ（逆から入力）／順唱／空間／Nバック／変化検出の5モードについて、各モードが対応する心理学の課題（逆唱スパン・順唱スパン・視空間スパン・N-back・視覚ワーキングメモリ容量）で一般的に知られている大まかな目安レンジと比較し、「目安より低め／目安の範囲内／目安より高め」の3段階で表示する。すうじ・順唱・空間・変化検出は「挑戦回数2回以上かつ正答率70%以上」で到達したとみなせる最高レベルの桁数/マス数（変化検出は塗りつぶしマス数）を、Nバックは十分な挑戦回数がある最高N値での正答率を用いる。データが不十分なモードは表示しない。ことばモード・音/色モード・Dual N-Backモード・ランダムモードは対応する標準化された課題が無いため対象外。**医学的な診断や公式な認知機能評価ではない旨の免責文言を常時表示する**（過度に精密な数値や統合スコア化は意図的に避けている）
 - 直近N日間の日別正答率推移（未挑戦日はnull扱い）
 - 実績一覧グリッド表示
 
@@ -279,7 +358,7 @@ Web Audio APIによる完全プログラム生成のシンセサイザー方式�
 
 - テーマ（システム／ライト／ダーク）
 - 音声合成の声・速度
-- 効果音ON/OFF
+- 効果音ON/OFF・音量（0〜100）
 - 1日の目標セット数
 - リマインド通知（後述）
 
@@ -311,7 +390,7 @@ Web Audio APIによる完全プログラム生成のシンセサイザー方式�
 - **状態管理**: `src/contexts/LanguageContext.tsx`の`LanguageProvider`（`main.tsx`で`<App />`をラップ）。`useTranslation()`で現在の言語の辞書を、`useLanguage()`で`{ language, setLanguage }`を取得する。`language`は`AppSettings.language`として`localStorage`に永続化される（`useThemeMode`と同じread-modify-writeパターン）。翻訳文字列はほぼ全コンポーネントが必要とするため、`themeMode`のようなprops drillingではなくContextを使っている（この機能に限った例外）。
 - **ことばモードの扱い**: ことばモード（かな文字列の逆復唱）は日本語の音韻に強く依存するため、**英語版では選択できない**。`TopScreen.tsx`でモードボタンを`language === 'ja'`でガードし、`App.tsx`側でも`?shortcut=word`や`popstate`での復元に対するガードを入れている（多重防御）。ことばモード専用の画面（`GameScreen.tsx`, `LevelSelect.tsx`）と関連lib（`reverse.ts`/`phrases.ts`/`kana.ts`）は英語版では到達不能なため翻訳対象外（既存の日本語ハードコードのまま）。実績のうち`level-3-word`/`all-modes`/`all-six-modes`の3件も`Achievement.requiresWordMode`フラグで英語版の実績グリッドから除外している。
 - **対象外（既知の制約）**: PWAマニフェスト（`vite.config.ts`の`manifest.name`/`description`/`shortcuts`）と`index.html`のmeta description/OGP/Twitter Cardはビルド時に固定される静的アセットのため、訪問者ごとの動的切り替えができず日本語のまま。`public/privacy.html`（静的な法的文書ページ）も英語版は用意していない（アプリ内`PrivacyScreen.tsx`のみ言語設定に連動）。
-- **新しい文言を追加する場合**: `src/lib/i18n/types.ts`にキーを追加 → `ja.ts`・`en.ts`の両方に実装 → コンポーネントで`useTranslation()`経由で参照、の順で行う。モード横断で使う文言（「結果を見る」「← レベル選択」「正しい答え:」等）は`common`に集約し、モード固有の文言のみ各モードのセクション（`digit`/`nback`/`spatial`/`pattern`/`tone`）に置く。
+- **新しい文言を追加する場合**: `src/lib/i18n/types.ts`にキーを追加 → `ja.ts`・`en.ts`の両方に実装 → コンポーネントで`useTranslation()`経由で参照、の順で行う。モード横断で使う文言（「結果を見る」「← レベル選択」「正しい答え:」等）は`common`に集約し、モード固有の文言のみ各モードのセクション（`digit`/`sequence`/`nback`/`dualNback`/`spatial`/`pattern`/`tone`/`random`）に置く。順唱・Dual N-Back・ランダムは英語版でも提供する（ことばモードのみが英語版で非提供）。
 
 ## Data model (localStorage)
 
@@ -323,10 +402,22 @@ Web Audio APIによる完全プログラム生成のシンセサイザー方式�
 | `gyaku-fukushou:settings` | アプリ設定 | `AppSettings`のJSONオブジェクト |
 | `gyaku-fukushou:lastRecapWeekKey` | 週間振り返りカードの表示済み週（[週間振り返りカード](#週間振り返りカードsrclibrecapts)参照。読み書きは`src/lib/recap.ts`が単独で担い、上記2ファイルには集約していない） | 週の月曜日を表す日付キー文字列 |
 | `gyaku-fukushou:phraseStats` | ことばモードのフレーズ単位の正誤履歴（[ことばモード](#ことばモードsrclibreversets-srclibkanats-srclibphrasests-srclibphrasestatsts)参照。読み書きは`src/lib/phraseStats.ts`が単独で担う） | `Record<phraseId, { correct: number; total: number }>`のJSONオブジェクト |
+| `gyaku-fukushou:missionCompletions` | 今日のミッションの達成ログ（[今日のミッション](#今日のミッションsrclibmissionsts)参照。読み書きは`src/lib/missions.ts`が単独で担う。プレイヤーXP計算にも使う） | `{ dateKey: string; missionId: string }[]`のJSON配列（最大200件） |
+
+プレイヤーのレベル・経験値は上記のどのキーにも直接保存しない。`src/lib/xp.ts`の`computeTotalXp(history, missionCompletions.length)`で履歴＋ミッション達成ログから都度計算する（実績と同じ「派生できるものは保存しない」哲学）。
 
 ```ts
 interface HistoryEntry {
-  mode: 'word' | 'digit' | 'nback' | 'spatial' | 'pattern' | 'tone'
+  mode:
+    | 'word'
+    | 'digit'
+    | 'sequence'
+    | 'nback'
+    | 'dual-nback'
+    | 'spatial'
+    | 'pattern'
+    | 'tone'
+    | 'random'
   gameType?: 'reverse' | 'sum'
   level: 1 | 2 | 3
   correct: number
@@ -340,16 +431,19 @@ interface AppSettings {
   speechRate: number
   voiceURI: string | null
   soundEnabled: boolean
+  sfxVolume: number // 0-100
   dailyGoal: number
   notificationsEnabled: boolean
 }
 ```
 
-デフォルト設定: `{ themeMode: 'system', language: 'ja', speechRate: 0.95, voiceURI: null, soundEnabled: true, dailyGoal: 3, notificationsEnabled: false }`
+デフォルト設定: `{ themeMode: 'system', language: 'ja', speechRate: 0.95, voiceURI: null, soundEnabled: true, sfxVolume: 80, dailyGoal: 3, notificationsEnabled: false }`
 
 読み込み・保存とも`try/catch`でlocalStorage利用不可（プライベートモード等）を許容し、失敗時はデフォルト値やno-opにフォールバックする。
 
 `notificationsEnabled`はローカル設定であり、実際のプッシュ購読状態はサーバー側（Redisストレージ）が真実の情報源。両者がズレた場合（例: 別端末で解除した等）、次回`syncPushState()`やトグル操作時に自然に収束する設計だが、厳密な整合性は保証していない。
+
+`src/lib/backup.ts`のエクスポート/インポート対象は`history`・`settings`・`missionCompletions`（`BACKUP_VERSION: 2`）。`missionCompletions`が無いv1形式のバックアップも読み込め、その場合は空配列として扱う（後方互換）。`recap.ts`の表示済み週キー・`phraseStats.ts`のフレーズ統計はバックアップ対象外（キャッシュ的な性質のため）。
 
 ## Non-functional requirements
 
@@ -371,7 +465,7 @@ interface AppSettings {
 ## Testing
 
 - **ユニットテスト（Vitest）**: `src/lib/`配下にロジック層のテストを併置している（UIコンポーネントの単体テストはなし）:
-  `reverse.test.ts` / `digits.test.ts` / `kana.test.ts` / `difficulty.test.ts` / `theme.test.ts` / `history.test.ts` / `nback.test.ts` / `achievements.test.ts` / `logger.test.ts` / `backup.test.ts` / `spatial.test.ts` / `pattern.test.ts` / `tone.test.ts` / `reminder.test.ts`
+  `reverse.test.ts` / `digits.test.ts` / `digitAnswer.ts`（`digits.test.ts`/`sequence.test.ts`経由でカバー） / `sequence.test.ts` / `kana.test.ts` / `difficulty.test.ts` / `theme.test.ts` / `history.test.ts` / `nback.test.ts` / `dualNback.test.ts` / `achievements.test.ts` / `logger.test.ts` / `backup.test.ts` / `spatial.test.ts` / `pattern.test.ts` / `tone.test.ts` / `random.test.ts` / `benchmarks.test.ts` / `xp.test.ts` / `missions.test.ts` / `reminder.test.ts`
 
   加えて`api/_lib/reminder.ts`（`src/lib/reminder.ts`の複製）にも同期確認用の軽量テスト`api/_lib/reminder.test.ts`がある。
   新しいロジックを`src/lib/`に追加する場合は、同ディレクトリに`*.test.ts`を併置してVitestでカバーすること。`vitest.config.ts`で`e2e/`ディレクトリは除外している。
