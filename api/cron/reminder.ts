@@ -49,7 +49,6 @@ export default async function handler(
   const keys = await kv.scanKeys(SUBSCRIPTION_KEY_PREFIX)
   const nowUtc = new Date()
   const todayKey = getJstDateKey(nowUtc)
-  const message = buildReminderMessage()
 
   let sent = 0
   let deleted = 0
@@ -67,6 +66,7 @@ export default async function handler(
     if (!send) continue
 
     try {
+      const message = buildReminderMessage(record.language ?? 'ja')
       await sendNotification(record.subscription, JSON.stringify(message))
       sent += 1
       await kv.set(key, {

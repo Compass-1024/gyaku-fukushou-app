@@ -31,4 +31,9 @@ describe('api/_lib/reminder (src/lib/reminder.ts との同期確認)', () => {
     expect(message.title.length).toBeGreaterThan(0)
     expect(message.body.length).toBeGreaterThan(0)
   })
+
+  it('buildReminderMessage supports the "en" language', () => {
+    const message = buildReminderMessage('en')
+    expect(message.title).toBe('Working Memory Training')
+  })
 })

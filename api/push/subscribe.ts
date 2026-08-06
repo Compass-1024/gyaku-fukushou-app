@@ -6,6 +6,7 @@ import { readJsonBody, sendEmpty } from '../_lib/http.js'
 
 interface SubscribeBody {
   subscription: PushSubscriptionJSON
+  language?: 'ja' | 'en'
 }
 
 function isValidSubscribeBody(value: unknown): value is SubscribeBody {
@@ -17,6 +18,9 @@ function isValidSubscribeBody(value: unknown): value is SubscribeBody {
   const keys = sub.keys as Record<string, unknown> | undefined
   if (typeof keys !== 'object' || keys === null) return false
   if (typeof keys.p256dh !== 'string' || typeof keys.auth !== 'string') return false
+  if (v.language !== undefined && v.language !== 'ja' && v.language !== 'en') {
+    return false
+  }
   return true
 }
 
@@ -38,6 +42,7 @@ export default async function handler(
     subscription: body.subscription,
     lastPracticedDateKey: null,
     lastReminderSentDateKey: null,
+    language: body.language ?? 'ja',
     updatedAt: new Date().toISOString(),
   }
   await getKV().set(subscriptionKey(body.subscription.endpoint), record)

@@ -236,7 +236,7 @@ export const en: Translations = {
       'Most of this app has no backend server — your training history and settings are stored only in your browser (localStorage) on this device. No data is sent to any third party, including us, unless you turn on Reminder Notifications (see below).',
     notificationsTitle: 'About reminder notifications',
     notificationsBody:
-      "Reminder Notifications in Settings is an opt-in feature that's off by default. When enabled, whether you practiced that day, your preferred notification time, and your push subscription info are sent to this app's server (Vercel Serverless Functions). The content of your training history is never sent. Turning it back off deletes the server-side data too.",
+      "Reminder Notifications in Settings is an opt-in feature that's off by default. When enabled, whether you practiced that day, your UI language setting (used only to pick the notification's language), and your push subscription info are sent to this app's server (Vercel Serverless Functions). The content of your training history is never sent. Turning it back off deletes the server-side data too.",
     micTitle: 'About microphone (voice) use',
     micBody:
       "Word Mode uses your browser's speech recognition (the Web Speech API) to check your spoken answers. This app itself never collects or stores voice data, but depending on your browser, voice data may be processed on the browser vendor's servers — this is a property of the browser, not something this app controls.",

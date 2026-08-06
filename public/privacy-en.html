@@ -123,7 +123,7 @@
             <td>Push subscription info (only if Reminder Notifications is on)</td>
             <td>
               Push subscription details (endpoint, etc.), whether you played that day, and
-              preferred notification time
+              your UI language setting (used only to pick the notification's language)
             </td>
             <td>This App's server (Redis storage via Vercel Serverless Functions)</td>
           </tr>
@@ -138,7 +138,7 @@
       <p>
         "Reminder Notifications" in Settings is an <strong>opt-in feature that's off by
         default</strong>. When enabled, if you haven't played at all that day, we send a
-        reminder push notification at the configured time.
+        reminder push notification around 9 PM JST each day (the exact time may vary).
       </p>
       <ul>
         <li>
@@ -152,9 +152,11 @@
         <li>
           Turning it on sends the minimum information needed for delivery (the push
           subscription info issued by your browser — i.e. an endpoint — the date you last
-          played, and your preferred notification time) to this App's server (Vercel
-          Serverless Functions), stored in Redis via Vercel. The contents of your training
-          history (correct counts, question content, etc.) are never sent to the server.
+          played, and your UI language setting) to this App's server (Vercel Serverless
+          Functions), stored in Redis via Vercel. The UI language setting is used only to
+          pick the notification message's language (Japanese/English). The contents of your
+          training history (correct counts, question content, etc.) are never sent to the
+          server.
         </li>
         <li>
           Delivery itself goes through your browser vendor's push service as required by the

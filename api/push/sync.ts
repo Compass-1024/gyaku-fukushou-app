@@ -7,14 +7,19 @@ import { readJsonBody, sendEmpty } from '../_lib/http.js'
 interface SyncBody {
   endpoint: string
   lastPracticedDateKey: string
+  language?: 'ja' | 'en'
 }
 
 function isValidSyncBody(value: unknown): value is SyncBody {
   if (typeof value !== 'object' || value === null) return false
   const v = value as Record<string, unknown>
-  return (
-    typeof v.endpoint === 'string' && typeof v.lastPracticedDateKey === 'string'
-  )
+  if (typeof v.endpoint !== 'string' || typeof v.lastPracticedDateKey !== 'string') {
+    return false
+  }
+  if (v.language !== undefined && v.language !== 'ja' && v.language !== 'en') {
+    return false
+  }
+  return true
 }
 
 export default async function handler(
@@ -39,6 +44,7 @@ export default async function handler(
   const updated: StoredSubscription = {
     ...existing,
     lastPracticedDateKey: body.lastPracticedDateKey,
+    language: body.language ?? existing.language,
     updatedAt: new Date().toISOString(),
   }
   await kv.set(key, updated)

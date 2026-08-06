@@ -1,4 +1,5 @@
 import { getJstDateKey } from './reminder'
+import { loadSettings } from './settings'
 
 const VAPID_PUBLIC_KEY = import.meta.env.VITE_VAPID_PUBLIC_KEY as
   | string
@@ -65,6 +66,7 @@ export async function subscribeToPush(): Promise<SubscribeResult> {
 
     const response = await postJson('/api/push/subscribe', {
       subscription: subscription.toJSON(),
+      language: loadSettings().language,
     })
     if (!response.ok) {
       console.error(
@@ -109,6 +111,7 @@ export async function syncPushState(): Promise<void> {
     await postJson('/api/push/sync', {
       endpoint: subscription.endpoint,
       lastPracticedDateKey: getJstDateKey(new Date()),
+      language: loadSettings().language,
     })
   } catch {
     /* ベストエフォート */

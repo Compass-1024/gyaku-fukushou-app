@@ -7,6 +7,11 @@
 ### Added
 
 - `public/privacy.html`（静的なプライバシーポリシーページ、ストア審査等でJS起動なしに直接開ける用）の英語版`public/privacy-en.html`を追加。アプリ内`PrivacyScreen.tsx`の「プライバシーポリシー全文」リンクは、現在の言語設定に応じて`/privacy.html`または`/privacy-en.html`を出し分ける
+- プッシュ通知のリマインドメッセージ（`buildReminderMessage`）を購読者のUI言語設定（日本語/英語）に応じて出し分けるように変更。購読時・セット完了ごとの同期時の両方でクライアントから言語を送信し`StoredSubscription.language`として保存する（`src/lib/reminder.ts`/`api/_lib/reminder.ts`、`api/_lib/subscription.ts`、`api/push/subscribe.ts`/`sync.ts`、`api/cron/reminder.ts`）
+
+### Fixed
+
+- 「通知希望時刻」という、ユーザーごとの送信時刻選択機能を撤回済み（全ユーザー共通の固定時刻方式へ変更済み、v0.2.0参照）にもかかわらずPRIVACY.md・`public/privacy.html`・`public/privacy-en.html`・i18n辞書（`privacy.notificationsBody`）に残っていた記載漏れを修正
 
 ## [0.3.0] - 2026-08-06
 

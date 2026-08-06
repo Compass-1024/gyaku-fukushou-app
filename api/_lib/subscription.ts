@@ -12,6 +12,8 @@ export interface StoredSubscription {
   subscription: PushSubscriptionJSON
   lastPracticedDateKey: string | null
   lastReminderSentDateKey: string | null
+  // v1のレコードには存在しないため、読み取り側は ?? 'ja' でフォールバックすること
+  language?: 'ja' | 'en'
   updatedAt: string
 }
 

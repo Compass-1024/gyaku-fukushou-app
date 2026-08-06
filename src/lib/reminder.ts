@@ -2,6 +2,7 @@
 // api/_lib/reminder.ts に複製を保持している（Vercel Functionsのビルドを
 // src/ 側のtsconfig/DOM libから独立させるため）。片方を変更したらもう一方も
 // 更新すること。
+import type { Language } from '../types'
 
 const JST_OFFSET_MS = 9 * 60 * 60 * 1000
 
@@ -38,9 +39,17 @@ export interface ReminderMessage {
   body: string
 }
 
-export function buildReminderMessage(): ReminderMessage {
-  return {
+const REMINDER_MESSAGES: Record<Language, ReminderMessage> = {
+  ja: {
     title: '逆復唱トレーニング',
     body: '今日のトレーニングをまだ済ませていません。1セットだけでも挑戦しましょう！',
-  }
+  },
+  en: {
+    title: 'Working Memory Training',
+    body: "You haven't trained today yet. Try just one set!",
+  },
+}
+
+export function buildReminderMessage(language: Language = 'ja'): ReminderMessage {
+  return REMINDER_MESSAGES[language] ?? REMINDER_MESSAGES.ja
 }

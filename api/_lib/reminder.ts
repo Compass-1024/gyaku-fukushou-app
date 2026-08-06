@@ -37,9 +37,21 @@ export interface ReminderMessage {
   body: string
 }
 
-export function buildReminderMessage(): ReminderMessage {
-  return {
+export type ReminderLanguage = 'ja' | 'en'
+
+const REMINDER_MESSAGES: Record<ReminderLanguage, ReminderMessage> = {
+  ja: {
     title: '逆復唱トレーニング',
     body: '今日のトレーニングをまだ済ませていません。1セットだけでも挑戦しましょう！',
-  }
+  },
+  en: {
+    title: 'Working Memory Training',
+    body: "You haven't trained today yet. Try just one set!",
+  },
+}
+
+export function buildReminderMessage(
+  language: ReminderLanguage = 'ja',
+): ReminderMessage {
+  return REMINDER_MESSAGES[language] ?? REMINDER_MESSAGES.ja
 }

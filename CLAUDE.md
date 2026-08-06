@@ -369,16 +369,17 @@ Web Audio APIによる完全プログラム生成のシンセサイザー方式�
 - 送信時刻はVercel Cron（Hobbyプランは1日1回までしか実行できない制約）により**全ユーザー共通の固定時刻**（`vercel.json`で設定、実行は指定時刻から最大59分前後する）。ユーザーごとに時刻を選べる設計ではない
 - **クライアント側** (`src/lib/push.ts`):
   - `isPushSupported()`: `PushManager`/`Notification`/`VITE_VAPID_PUBLIC_KEY`の有無に加え、iOSは`display-mode: standalone`（ホーム画面追加済み）でない場合は非対応として扱う
-  - `subscribeToPush()`: 通知許可ダイアログ→`pushManager.subscribe`→`POST /api/push/subscribe`
+  - `subscribeToPush()`: 通知許可ダイアログ→`pushManager.subscribe`→`POST /api/push/subscribe`（購読情報とあわせて現在の`AppSettings.language`も送信する）
   - `unsubscribeFromPush()`: `POST /api/push/unsubscribe`
-  - `syncPushState()`: 各モードのGameScreenが1セット完了時（`appendHistoryEntry`直後）に呼び、購読中であれば「今日プレイした」ことを`POST /api/push/sync`でサーバーへ同期する
+  - `syncPushState()`: 各モードのGameScreenが1セット完了時（`appendHistoryEntry`直後）に呼び、購読中であれば「今日プレイした」ことと現在の言語設定を`POST /api/push/sync`でサーバーへ同期する（言語切り替え後も次回セット完了時に自然に反映される）
 - **Service Worker** (`src/sw.ts`): `vite-plugin-pwa`を`generateSW`から`injectManifest`戦略に切替え、`push`/`notificationclick`イベントを独自ハンドリング（型チェックはDOM libと衝突するため`tsconfig.sw.json`を独立させている）
 - **サーバー側** (`api/`配下、Node.js Serverless Functions、`tsconfig.api.json`で型チェック):
   - `api/_lib/kv.ts`: ストレージ抽象化（内部で`@upstash/redis`を使用。プロバイダ変更時はこの1ファイルのみ差し替える）
-  - `api/_lib/reminder.ts`: `src/lib/reminder.ts`の複製（判定・メッセージ生成ロジック。ビルド設定を独立させるため意図的に複製している。**変更時は両方を更新すること**）
-  - `api/push/subscribe.ts` / `sync.ts` / `unsubscribe.ts`: 購読の作成・同期・削除
-  - `api/cron/reminder.ts`: `vercel.json`のVercel Cron（1日1回）から呼ばれ、`CRON_SECRET`で認証。各購読者について「今日未プレイ」かつ「今日未送信」なら送信し、期限切れ購読（404/410）は削除する
+  - `api/_lib/reminder.ts`: `src/lib/reminder.ts`の複製（判定・メッセージ生成ロジック。ビルド設定を独立させるため意図的に複製している。**変更時は両方を更新すること**）。`buildReminderMessage(language)`は`'ja'|'en'`の言語別メッセージ辞書を持ち、未指定時は`'ja'`にフォールバックする
+  - `api/push/subscribe.ts` / `sync.ts` / `unsubscribe.ts`: 購読の作成・同期・削除。`subscribe`/`sync`は`language`（`'ja'|'en'`、省略時`'ja'`）も受け取り`StoredSubscription.language`に保存する（`api/_lib/subscription.ts`。v1レコードにはフィールドが無いため読み取り側は`?? 'ja'`でフォールバックする）
+  - `api/cron/reminder.ts`: `vercel.json`のVercel Cron（1日1回）から呼ばれ、`CRON_SECRET`で認証。各購読者について「今日未プレイ」かつ「今日未送信」なら`buildReminderMessage(record.language ?? 'ja')`で購読者ごとの言語のメッセージを送信し、期限切れ購読（404/410）は削除する
 - **送信条件**: 今日1回もプレイしていない場合にのみ送信（目標セット数への到達有無は問わない）。二重送信防止のため送信済み日付も記録する
+- **通知メッセージの多言語化**: 送信するリマインドメッセージ（タイトル・本文）は購読者のUI言語設定（日本語/英語）に応じて出し分ける。言語は購読時（`subscribeToPush()`）とセット完了ごとの同期時（`syncPushState()`）の両方でクライアントから送信されるため、購読後に言語設定を変更した場合も次回セット完了時に自然に反映される
 - **必要な環境変数**: `VITE_VAPID_PUBLIC_KEY`（クライアント、ビルド時埋め込み）、`VAPID_PUBLIC_KEY`／`VAPID_PRIVATE_KEY`／`VAPID_SUBJECT`（サーバー、`web-push`用）、`CRON_SECRET`（Cron認証）、Redis接続用の環境変数（Vercel連携時に自動付与）。セットアップ手順は[DEPLOYMENT.md](DEPLOYMENT.md)を参照
 - VAPID公開鍵が未設定（ビルド時に`VITE_VAPID_PUBLIC_KEY`が空）の場合、`isPushSupported()`が`false`を返し設定画面には非対応メッセージが表示される（機能自体は壊れない）
 
