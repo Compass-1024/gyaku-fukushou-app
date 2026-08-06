@@ -12,7 +12,7 @@ const ALL_LEVELS: readonly Level[] = [1, 2, 3]
 export type BenchmarkBand = 'below' | 'average' | 'above'
 
 export interface Benchmark {
-  mode: 'digit' | 'spatial' | 'nback' | 'pattern'
+  mode: 'digit' | 'sequence' | 'spatial' | 'nback' | 'pattern'
   value: number
   band: BenchmarkBand
   referenceMin: number
@@ -66,6 +66,24 @@ export function getDigitSpanBenchmark(history: HistoryEntry[]): Benchmark | null
   }
 }
 
+const SEQUENCE_SPAN: Record<Level, number> = { 1: 3, 2: 5, 3: 7 }
+// 順唱スパンは逆唱スパンより一般的に1〜2桁長いことが知られている（Wechsler系検査の目安）
+const SEQUENCE_SPAN_REFERENCE = { min: 5, max: 9 }
+
+// 順唱モード＝順唱スパン課題の到達桁数を、一般的な目安と比較する
+export function getSequenceSpanBenchmark(history: HistoryEntry[]): Benchmark | null {
+  const level = getHighestMasteredLevel(history, 'sequence')
+  if (level === null) return null
+  const value = SEQUENCE_SPAN[level]
+  return {
+    mode: 'sequence',
+    value,
+    band: bandFor(value, SEQUENCE_SPAN_REFERENCE.min, SEQUENCE_SPAN_REFERENCE.max),
+    referenceMin: SEQUENCE_SPAN_REFERENCE.min,
+    referenceMax: SEQUENCE_SPAN_REFERENCE.max,
+  }
+}
+
 const SPATIAL_SPAN: Record<Level, number> = { 1: 3, 2: 4, 3: 5 }
 const SPATIAL_SPAN_REFERENCE = { min: 4, max: 5 }
 
@@ -114,26 +132,18 @@ export function getNBackBenchmark(history: HistoryEntry[]): Benchmark | null {
 }
 
 const PATTERN_FILLED_COUNT: Record<Level, number> = { 1: 4, 2: 6, 3: 8 }
+// 視覚ワーキングメモリ容量の一般的な目安（Cowanの「マジックナンバー」に基づく大まかな範囲）
 const PATTERN_CAPACITY_REFERENCE = { min: 3, max: 4 }
 
-// 変化検出モード＝Cowanの視覚ワーキングメモリ容量の公式 K = N × (2p − 1) で
-// 容量（K値）を推定する（変化あり/なしが等確率のため、正答率pのみから
-// ヒット率・棄却率を仮定せずに算出できる）。十分な挑戦回数がある各レベルで
-// 算出し、最も高いK値を採用する
+// 変化検出モード＝一瞬見せたマス配置を、白紙に戻した状態から選び直す再生課題。
+// 十分な挑戦回数かつ正答率70%以上（完全一致のみ正解）で到達したとみなせる
+// 最も高いレベルの塗りつぶしマス数を、視覚ワーキングメモリ容量の一般的な目安と比較する
 export function getPatternCapacityBenchmark(
   history: HistoryEntry[],
 ): Benchmark | null {
-  let best: number | null = null
-  for (const level of ALL_LEVELS) {
-    const stats = getLevelStats(history, level, 'pattern')
-    if (stats.attempts < MIN_ATTEMPTS || stats.accuracy === null) continue
-    const n = PATTERN_FILLED_COUNT[level]
-    const p = stats.accuracy / 100
-    const k = n * (2 * p - 1)
-    if (best === null || k > best) best = k
-  }
-  if (best === null) return null
-  const value = Math.round(best * 10) / 10
+  const level = getHighestMasteredLevel(history, 'pattern')
+  if (level === null) return null
+  const value = PATTERN_FILLED_COUNT[level]
   return {
     mode: 'pattern',
     value,
@@ -146,6 +156,7 @@ export function getPatternCapacityBenchmark(
 export function getAllBenchmarks(history: HistoryEntry[]): Benchmark[] {
   return [
     getDigitSpanBenchmark(history),
+    getSequenceSpanBenchmark(history),
     getSpatialSpanBenchmark(history),
     getNBackBenchmark(history),
     getPatternCapacityBenchmark(history),

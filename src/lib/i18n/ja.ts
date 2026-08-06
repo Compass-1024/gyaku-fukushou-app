@@ -31,10 +31,13 @@ export const ja: Translations = {
       word: 'ことば',
       'digit-reverse': 'すうじ（逆から）',
       'digit-sum': 'すうじ（合計）',
+      sequence: '順唱',
       nback: 'Nバック',
+      'dual-nback': 'Dual N-Back',
       spatial: '空間',
       pattern: '変化検出',
       tone: '音・色の順番',
+      random: 'ランダム',
     },
   },
   top: {
@@ -88,7 +91,29 @@ export const ja: Translations = {
         description:
           '色のパッドが音とともに光る順番を覚えて、同じ順にタップして再現する非言語性のワーキングメモリトレーニングです。',
       },
+      sequence: {
+        title: '順唱モード',
+        description:
+          '表示された数字を見た順番のまま入力するワーキングメモリトレーニングです。',
+      },
+      dualNback: {
+        title: 'Dual N-Backモード',
+        description:
+          'マスの位置と音を同時に覚え、それぞれN個前と一致するかを別々に判定する高難度トレーニングです。',
+      },
+      random: {
+        title: 'ランダムモード',
+        description:
+          'すうじ・順唱・空間・変化検出・音/色の中からランダムに5問出題される、ミックス練習モードです。',
+      },
     },
+    playerLevel: (level) => `プレイヤーLv.${level}`,
+    xpToNextLevel: (xp) => `次のレベルまで あと${xp}XP`,
+  },
+  missions: {
+    cardTitle: '🎯 今日のミッション',
+    completedBadge: '✅ 達成しました！',
+    xpReward: (xp) => `達成で +${xp}XP`,
   },
   share: JA_SHARE_TEMPLATES,
   setSummary: {
@@ -107,6 +132,8 @@ export const ja: Translations = {
     dailyGoalReached: '🎉 今日の目標セット数を達成しました！',
     retry: '同じレベルでもう一度',
     changeLevel: 'レベル選択に戻る',
+    xpGained: (xp) => `獲得XP: +${xp}`,
+    levelUp: (level) => `🎉 Level Up! プレイヤーLv.${level}`,
   },
   settings: {
     heading: '設定',
@@ -125,6 +152,7 @@ export const ja: Translations = {
     soundTitle: '効果音',
     on: 'オン',
     off: 'オフ',
+    sfxVolumeTitle: '効果音の音量',
     notifications: {
       title: 'リマインド通知',
       unsupported:
@@ -245,12 +273,24 @@ export const ja: Translations = {
       label: '音感上級者',
       description: '音・色モードのレベル3に挑戦した',
     },
+    'level-3-sequence': {
+      label: '順唱上級者',
+      description: '順唱モードのレベル3に挑戦した',
+    },
+    'level-3-dual-nback': {
+      label: 'Dual N-Back上級者',
+      description: 'Dual N-Backモードのレベル3に挑戦した',
+    },
     'total-10': { label: '継続力', description: '累計10セットを完了した' },
     'total-50': { label: '継続力（上級）', description: '累計50セットを完了した' },
     'all-modes': { label: 'オールラウンダー', description: '全モードに挑戦した' },
     'all-six-modes': {
       label: '全モード制覇',
       description: 'ことば・すうじ・Nバック・空間・変化検出・音の全6モードに挑戦した',
+    },
+    'all-nine-modes': {
+      label: 'コンプリート',
+      description: '順唱・Dual N-Back・ランダムを含む全9モードに挑戦した',
     },
   },
   digit: {
@@ -277,6 +317,15 @@ export const ja: Translations = {
     noInput: '（未入力）',
     questionLabel: '出題: ',
   },
+  sequence: {
+    title: '順唱モード',
+    subtitle: '表示された数字を、見た順番のまま入力するワーキングメモリトレーニングです。',
+    levelLabel: (level) =>
+      ({ 1: 'レベル1（3桁）', 2: 'レベル2（5桁）', 3: 'レベル3（7桁）' })[level],
+    answerPrompt: '見た順番のまま入力してください',
+    noInput: '（未入力）',
+    questionLabel: '出題: ',
+  },
   nback: {
     title: 'Nバックモード',
     subtitle:
@@ -293,6 +342,26 @@ export const ja: Translations = {
     matchButton: '一致',
     matchButtonPressed: '✓ 一致',
     resultLabel: (digit, isMatch) => (isMatch ? `${digit}（一致）` : `${digit}`),
+  },
+  dualNback: {
+    title: 'Dual N-Backモード',
+    subtitle:
+      'マスの位置と音が同時に提示されます。N個前と位置が同じなら「位置一致」、音が同じなら「音一致」を押すワーキングメモリトレーニングです。',
+    levelLabel: (level) =>
+      (
+        {
+          1: 'レベル1（1つ前と比較）',
+          2: 'レベル2（2つ前と比較）',
+          3: 'レベル3（3つ前と比較）',
+        } as const
+      )[level],
+    matchPrompt: (n) => `${n}個前と同じなら該当ボタンを押してください`,
+    positionMatchButton: '位置一致',
+    positionMatchButtonPressed: '✓ 位置一致',
+    soundMatchButton: '音一致',
+    soundMatchButtonPressed: '✓ 音一致',
+    resultLabel: (positionAccuracy, soundAccuracy) =>
+      `位置: ${positionAccuracy}% / 音: ${soundAccuracy}%`,
   },
   spatial: {
     title: '空間モード',
@@ -324,9 +393,19 @@ export const ja: Translations = {
           3: 'レベル3（5×5・8マス）',
         } as const
       )[level],
-    answerPrompt: 'さっきと模様は変わっていますか？',
-    changed: '変化あり',
-    unchanged: '変化なし',
+    selectPrompt: 'さっき青色だったマスをすべて選んでください',
+    submitButton: '回答する',
+    cellAriaLabel: (index, selected) =>
+      `マス${index}${selected ? '（選択中）' : ''}`,
+  },
+  random: {
+    title: 'ランダムモード',
+    subtitle:
+      'すうじ・順唱・空間・変化検出・音/色の中から1問ずつ、合計5問がランダムな順番で出題されます。',
+    levelLabel: (level) =>
+      ({ 1: 'レベル1', 2: 'レベル2', 3: 'レベル3' })[level],
+    roundProgress: (current, total) => `問題 ${current} / ${total}`,
+    resultLabel: (correct, total) => `${correct} / ${total} 問正解`,
   },
   tone: {
     title: '音・色モード',
@@ -353,6 +432,11 @@ export const ja: Translations = {
       valueLabel: (digits) => `${digits}桁`,
       referenceLabel: (min, max) => `一般的な目安: ${min}〜${max}桁`,
     },
+    sequence: {
+      label: '順唱スパン（順唱モード）',
+      valueLabel: (digits) => `${digits}桁`,
+      referenceLabel: (min, max) => `一般的な目安: ${min}〜${max}桁`,
+    },
     spatial: {
       label: '視空間スパン（空間モード）',
       valueLabel: (cells) => `${cells}マス`,
@@ -365,8 +449,8 @@ export const ja: Translations = {
     },
     pattern: {
       label: '視覚ワーキングメモリ容量（変化検出モード）',
-      valueLabel: (k) => `K ≈ ${k}`,
-      referenceLabel: (min, max) => `一般的な目安: K ≈ ${min}〜${max}`,
+      valueLabel: (k) => `${k}マス`,
+      referenceLabel: (min, max) => `一般的な目安: ${min}〜${max}マス`,
     },
   },
 }

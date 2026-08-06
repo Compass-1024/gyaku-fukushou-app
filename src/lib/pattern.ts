@@ -4,7 +4,6 @@ const GRID_SIZE: Record<Level, number> = { 1: 4, 2: 4, 3: 5 }
 const FILLED_COUNT: Record<Level, number> = { 1: 4, 2: 6, 3: 8 }
 
 const QUESTIONS_PER_SET = 3
-const CHANGE_PROBABILITY = 0.5
 
 function pickRandomCells(totalCells: number, count: number): number[] {
   const cells = Array.from({ length: totalCells }, (_, i) => i)
@@ -17,51 +16,30 @@ function pickRandomCells(totalCells: number, count: number): number[] {
   return picked
 }
 
-// 変化ありの場合、塗りつぶしマスを1つだけ別の空きマスへ移動させる
-// （Luck & Vogel (1997) の変化検出課題に倣い、追加/削除ではなく1箇所の位置変化にする）
-function buildComparisonCells(
-  filledCells: number[],
-  totalCells: number,
-  hasChange: boolean,
-): number[] {
-  if (!hasChange) return filledCells.slice()
-  const emptyCells = Array.from({ length: totalCells }, (_, i) => i).filter(
-    (c) => !filledCells.includes(c),
-  )
-  if (emptyCells.length === 0) return filledCells.slice()
-  const swapOutIdx = Math.floor(Math.random() * filledCells.length)
-  const swapInIdx = Math.floor(Math.random() * emptyCells.length)
-  const next = filledCells.slice()
-  next[swapOutIdx] = emptyCells[swapInIdx]
-  return next
-}
-
 export function pickPatternQuestionSet(level: Level): PatternQuestion[] {
   const gridSize = GRID_SIZE[level]
   const totalCells = gridSize * gridSize
   const count = FILLED_COUNT[level]
   const now = Date.now()
-  return Array.from({ length: QUESTIONS_PER_SET }, (_, i) => {
-    const filledCells = pickRandomCells(totalCells, count)
-    const hasChange = Math.random() < CHANGE_PROBABILITY
-    return {
-      id: `${level}-${now}-${i}`,
-      gridSize,
-      filledCells,
-      comparisonCells: buildComparisonCells(filledCells, totalCells, hasChange),
-      hasChange,
-    }
-  })
+  return Array.from({ length: QUESTIONS_PER_SET }, (_, i) => ({
+    id: `${level}-${now}-${i}`,
+    gridSize,
+    filledCells: pickRandomCells(totalCells, count),
+  }))
 }
 
-export function isPatternAnswerCorrect(
-  answeredChanged: boolean,
-  hasChange: boolean,
+// 白紙に戻った状態から選び直したマスが、元の塗りつぶしマスと完全一致（順不同）
+// する場合のみ正解とする
+export function isPatternSelectionCorrect(
+  selected: number[],
+  filledCells: number[],
 ): boolean {
-  return answeredChanged === hasChange
+  if (selected.length !== filledCells.length) return false
+  const expected = new Set(filledCells)
+  return selected.every((c) => expected.has(c))
 }
 
-// 模様の表示時間、表示と比較の間に挟む空白時間
+// 模様の表示時間、表示と回答の間に挟む空白時間
 export const PATTERN_SHOWN_MS = 3000
 export const PATTERN_BLANK_MS = 500
 

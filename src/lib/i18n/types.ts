@@ -41,10 +41,13 @@ export interface Translations {
       word: string
       'digit-reverse': string
       'digit-sum': string
+      sequence: string
       nback: string
+      'dual-nback': string
       spatial: string
       pattern: string
       tone: string
+      random: string
     }
   }
   share: ShareTemplates
@@ -63,6 +66,8 @@ export interface Translations {
     dailyGoalReached: string
     retry: string
     changeLevel: string
+    xpGained: (xp: number) => string
+    levelUp: (level: number) => string
   }
   top: {
     heading: string
@@ -82,11 +87,21 @@ export interface Translations {
     modes: {
       word: ModeCopy
       digit: ModeCopy
+      sequence: ModeCopy
       nback: ModeCopy
+      dualNback: ModeCopy
       spatial: ModeCopy
       pattern: ModeCopy
       tone: ModeCopy
+      random: ModeCopy
     }
+    playerLevel: (level: number) => string
+    xpToNextLevel: (xp: number) => string
+  }
+  missions: {
+    cardTitle: string
+    completedBadge: string
+    xpReward: (xp: number) => string
   }
   settings: {
     heading: string
@@ -105,6 +120,7 @@ export interface Translations {
     soundTitle: string
     on: string
     off: string
+    sfxVolumeTitle: string
     notifications: {
       title: string
       unsupported: string
@@ -193,6 +209,14 @@ export interface Translations {
     noInput: string
     questionLabel: string
   }
+  sequence: {
+    title: string
+    subtitle: string
+    levelLabel: (level: 1 | 2 | 3) => string
+    answerPrompt: string
+    noInput: string
+    questionLabel: string
+  }
   nback: {
     title: string
     subtitle: string
@@ -201,6 +225,17 @@ export interface Translations {
     matchButton: string
     matchButtonPressed: string
     resultLabel: (digit: number, isMatch: boolean) => string
+  }
+  dualNback: {
+    title: string
+    subtitle: string
+    levelLabel: (level: 1 | 2 | 3) => string
+    matchPrompt: (n: number) => string
+    positionMatchButton: string
+    positionMatchButtonPressed: string
+    soundMatchButton: string
+    soundMatchButtonPressed: string
+    resultLabel: (positionAccuracy: number, soundAccuracy: number) => string
   }
   spatial: {
     title: string
@@ -215,9 +250,16 @@ export interface Translations {
     title: string
     subtitle: string
     levelLabel: (level: 1 | 2 | 3) => string
-    answerPrompt: string
-    changed: string
-    unchanged: string
+    selectPrompt: string
+    submitButton: string
+    cellAriaLabel: (index: number, selected: boolean) => string
+  }
+  random: {
+    title: string
+    subtitle: string
+    levelLabel: (level: 1 | 2 | 3) => string
+    roundProgress: (current: number, total: number) => string
+    resultLabel: (correct: number, total: number) => string
   }
   tone: {
     title: string
@@ -233,6 +275,11 @@ export interface Translations {
     disclaimer: string
     bandLabels: Record<BenchmarkBand, string>
     digit: {
+      label: string
+      valueLabel: (digits: number) => string
+      referenceLabel: (min: number, max: number) => string
+    }
+    sequence: {
       label: string
       valueLabel: (digits: number) => string
       referenceLabel: (min: number, max: number) => string

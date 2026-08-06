@@ -3,6 +3,7 @@ import {
   bandFor,
   getHighestMasteredLevel,
   getDigitSpanBenchmark,
+  getSequenceSpanBenchmark,
   getSpatialSpanBenchmark,
   getNBackBenchmark,
   getPatternCapacityBenchmark,
@@ -95,6 +96,23 @@ describe('getDigitSpanBenchmark', () => {
   })
 })
 
+describe('getSequenceSpanBenchmark', () => {
+  it('データ不足ならnull', () => {
+    expect(getSequenceSpanBenchmark([])).toBeNull()
+  })
+
+  it('レベル3到達（7桁）はaverage（順唱スパンの目安は5〜9桁）', () => {
+    const history = entries('sequence', 3, 2, 3, 3)
+    expect(getSequenceSpanBenchmark(history)).toEqual({
+      mode: 'sequence',
+      value: 7,
+      band: 'average',
+      referenceMin: 5,
+      referenceMax: 9,
+    })
+  })
+})
+
 describe('getSpatialSpanBenchmark', () => {
   it('レベル3到達（5マス）はaverage（上限と同値）', () => {
     const history = entries('spatial', 3, 2, 3, 3)
@@ -136,26 +154,26 @@ describe('getPatternCapacityBenchmark', () => {
     expect(getPatternCapacityBenchmark([])).toBeNull()
   })
 
-  it('Cowanの公式でK値を算出する（N=4, 正答率100% → K=4）', () => {
+  it('レベル1到達（4マス）はaverage', () => {
     const history = entries('pattern', 1, 2, 3, 3)
     const result = getPatternCapacityBenchmark(history)
     expect(result?.value).toBe(4)
     expect(result?.band).toBe('average')
   })
 
-  it('正答率50%（チャンスレベル）はK=0でbelow', () => {
-    const history = entries('pattern', 1, 2, 2, 4) // correct=2/total=4=50%
-    const result = getPatternCapacityBenchmark(history)
-    expect(result?.value).toBe(0)
-    expect(result?.band).toBe('below')
+  it('正答率不足（70%未満）は未到達扱いでnull', () => {
+    const history = entries('pattern', 1, 2, 2, 4) // 50%
+    expect(getPatternCapacityBenchmark(history)).toBeNull()
   })
 
-  it('複数レベルに記録がある場合は最も高いK値を採用する', () => {
+  it('複数レベルに記録がある場合は最も高いマスタリー済みレベルの塗りつぶし数を採用する', () => {
     const history = [
-      ...entries('pattern', 1, 2, 2, 4), // K = 4*(2*0.5-1) = 0
-      ...entries('pattern', 2, 2, 6, 6), // K = 6*(2*1-1) = 6
+      ...entries('pattern', 1, 2, 4, 4),
+      ...entries('pattern', 2, 2, 6, 6),
     ]
-    expect(getPatternCapacityBenchmark(history)?.value).toBe(6)
+    const result = getPatternCapacityBenchmark(history)
+    expect(result?.value).toBe(6)
+    expect(result?.band).toBe('above')
   })
 })
 

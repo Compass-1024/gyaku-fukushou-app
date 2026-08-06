@@ -31,10 +31,13 @@ export const en: Translations = {
       word: 'Word',
       'digit-reverse': 'Digits (reverse)',
       'digit-sum': 'Digits (sum)',
+      sequence: 'Sequence',
       nback: 'N-Back',
+      'dual-nback': 'Dual N-Back',
       spatial: 'Spatial',
       pattern: 'Change Detection',
       tone: 'Tone & Color',
+      random: 'Random',
     },
   },
   top: {
@@ -89,7 +92,29 @@ export const en: Translations = {
         description:
           'Remember the order in which colored pads light up with sound, then tap them back in the same order — a non-verbal working memory challenge.',
       },
+      sequence: {
+        title: 'Sequence Mode',
+        description:
+          'Enter the digits you saw in the same order you saw them — a working memory challenge.',
+      },
+      dualNback: {
+        title: 'Dual N-Back Mode',
+        description:
+          'Remember a position and a sound at the same time, and judge each independently against N steps back — a demanding working memory challenge.',
+      },
+      random: {
+        title: 'Random Mode',
+        description:
+          'A mixed workout drawing one question each from Digit, Sequence, Spatial, Change Detection, and Tone & Color.',
+      },
     },
+    playerLevel: (level) => `Player Lv.${level}`,
+    xpToNextLevel: (xp) => `${xp} XP to next level`,
+  },
+  missions: {
+    cardTitle: "🎯 Today's Mission",
+    completedBadge: '✅ Completed!',
+    xpReward: (xp) => `+${xp} XP on completion`,
   },
   share: {
     resultLine: (correct, total) =>
@@ -114,6 +139,8 @@ export const en: Translations = {
     dailyGoalReached: "🎉 You've reached today's goal!",
     retry: 'Try again at this level',
     changeLevel: 'Back to level select',
+    xpGained: (xp) => `XP gained: +${xp}`,
+    levelUp: (level) => `🎉 Level Up! Player Lv.${level}`,
   },
   settings: {
     heading: 'Settings',
@@ -132,6 +159,7 @@ export const en: Translations = {
     soundTitle: 'Sound effects',
     on: 'On',
     off: 'Off',
+    sfxVolumeTitle: 'Sound effects volume',
     notifications: {
       title: 'Reminder notifications',
       unsupported:
@@ -259,6 +287,14 @@ export const en: Translations = {
       label: 'Golden Ear',
       description: 'Reached Level 3 in Tone & Color Mode',
     },
+    'level-3-sequence': {
+      label: 'Sequence Expert',
+      description: 'Reached Level 3 in Sequence Mode',
+    },
+    'level-3-dual-nback': {
+      label: 'Dual N-Back Expert',
+      description: 'Reached Level 3 in Dual N-Back Mode',
+    },
     'total-10': { label: 'Building a Habit', description: 'Completed 10 sets total' },
     'total-50': {
       label: 'Building a Habit (Advanced)',
@@ -272,6 +308,11 @@ export const en: Translations = {
       label: 'Full House',
       description:
         'Tried all six modes: Word, Digit, N-Back, Spatial, Change Detection, and Tone',
+    },
+    'all-nine-modes': {
+      label: 'Completionist',
+      description:
+        'Tried all nine modes, including Sequence, Dual N-Back, and Random',
     },
   },
   digit: {
@@ -304,6 +345,21 @@ export const en: Translations = {
     noInput: '(no input)',
     questionLabel: 'Shown: ',
   },
+  sequence: {
+    title: 'Sequence Mode',
+    subtitle: 'Enter the digits you saw in the same order — a working memory challenge.',
+    levelLabel: (level) =>
+      (
+        {
+          1: 'Level 1 (3 digits)',
+          2: 'Level 2 (5 digits)',
+          3: 'Level 3 (7 digits)',
+        } as const
+      )[level],
+    answerPrompt: 'Enter it in the same order you saw it',
+    noInput: '(no input)',
+    questionLabel: 'Shown: ',
+  },
   nback: {
     title: 'N-Back Mode',
     subtitle:
@@ -320,6 +376,26 @@ export const en: Translations = {
     matchButton: 'Match',
     matchButtonPressed: '✓ Match',
     resultLabel: (digit, isMatch) => (isMatch ? `${digit} (match)` : `${digit}`),
+  },
+  dualNback: {
+    title: 'Dual N-Back Mode',
+    subtitle:
+      'A position and a sound are shown at the same time. Press "Position Match" if the position matches N steps back, and "Sound Match" if the sound does.',
+    levelLabel: (level) =>
+      (
+        {
+          1: 'Level 1 (compare to 1 back)',
+          2: 'Level 2 (compare to 2 back)',
+          3: 'Level 3 (compare to 3 back)',
+        } as const
+      )[level],
+    matchPrompt: (n) => `Press the matching button if it's the same as ${n} step${n === 1 ? '' : 's'} back`,
+    positionMatchButton: 'Position Match',
+    positionMatchButtonPressed: '✓ Position Match',
+    soundMatchButton: 'Sound Match',
+    soundMatchButtonPressed: '✓ Sound Match',
+    resultLabel: (positionAccuracy, soundAccuracy) =>
+      `Position: ${positionAccuracy}% / Sound: ${soundAccuracy}%`,
   },
   spatial: {
     title: 'Spatial Mode',
@@ -351,9 +427,19 @@ export const en: Translations = {
           3: 'Level 3 (5×5, 8 squares)',
         } as const
       )[level],
-    answerPrompt: 'Has the pattern changed since before?',
-    changed: 'Changed',
-    unchanged: 'Unchanged',
+    selectPrompt: 'Select every square that was blue before',
+    submitButton: 'Submit',
+    cellAriaLabel: (index, selected) =>
+      `Square ${index}${selected ? ' (selected)' : ''}`,
+  },
+  random: {
+    title: 'Random Mode',
+    subtitle:
+      'One question each from Digit, Sequence, Spatial, Change Detection, and Tone & Color — 5 rounds in a random order.',
+    levelLabel: (level) =>
+      ({ 1: 'Level 1', 2: 'Level 2', 3: 'Level 3' })[level],
+    roundProgress: (current, total) => `Round ${current} / ${total}`,
+    resultLabel: (correct, total) => `${correct} / ${total} correct`,
   },
   tone: {
     title: 'Tone & Color Mode',
@@ -382,6 +468,11 @@ export const en: Translations = {
       valueLabel: (digits) => `${digits} digits`,
       referenceLabel: (min, max) => `Typical range: ${min}–${max} digits`,
     },
+    sequence: {
+      label: 'Forward digit span (Sequence Mode)',
+      valueLabel: (digits) => `${digits} digits`,
+      referenceLabel: (min, max) => `Typical range: ${min}–${max} digits`,
+    },
     spatial: {
       label: 'Visuospatial span (Spatial Mode)',
       valueLabel: (cells) => `${cells} squares`,
@@ -394,8 +485,8 @@ export const en: Translations = {
     },
     pattern: {
       label: 'Visual working memory capacity (Change Detection Mode)',
-      valueLabel: (k) => `K ≈ ${k}`,
-      referenceLabel: (min, max) => `Typical range: K ≈ ${min}–${max}`,
+      valueLabel: (k) => `${k} squares`,
+      referenceLabel: (min, max) => `Typical range: ${min}–${max} squares`,
     },
   },
 }

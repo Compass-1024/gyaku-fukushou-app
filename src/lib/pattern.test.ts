@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   pickPatternQuestionSet,
-  isPatternAnswerCorrect,
+  isPatternSelectionCorrect,
   getAnswerTimeoutMs,
 } from './pattern'
 
@@ -28,43 +28,27 @@ describe('pickPatternQuestionSet', () => {
       expect(new Set(q.filledCells).size).toBe(q.filledCells.length)
     }
   })
-
-  it('keeps comparisonCells identical to filledCells when hasChange is false', () => {
-    for (let i = 0; i < 50; i++) {
-      const q = pickPatternQuestionSet(2)[0]
-      if (!q.hasChange) {
-        expect([...q.comparisonCells].sort()).toEqual(
-          [...q.filledCells].sort(),
-        )
-      }
-    }
-  })
-
-  it('changes exactly one cell when hasChange is true', () => {
-    for (let i = 0; i < 50; i++) {
-      const q = pickPatternQuestionSet(2)[0]
-      if (q.hasChange) {
-        const before = new Set(q.filledCells)
-        const after = new Set(q.comparisonCells)
-        const onlyBefore = [...before].filter((c) => !after.has(c))
-        const onlyAfter = [...after].filter((c) => !before.has(c))
-        expect(onlyBefore).toHaveLength(1)
-        expect(onlyAfter).toHaveLength(1)
-        expect(after.size).toBe(before.size)
-      }
-    }
-  })
 })
 
-describe('isPatternAnswerCorrect', () => {
-  it('is correct when the answer matches whether a change occurred', () => {
-    expect(isPatternAnswerCorrect(true, true)).toBe(true)
-    expect(isPatternAnswerCorrect(false, false)).toBe(true)
+describe('isPatternSelectionCorrect', () => {
+  it('is correct when the selection exactly matches the filled cells (order-independent)', () => {
+    expect(isPatternSelectionCorrect([1, 2, 3], [3, 2, 1])).toBe(true)
   })
 
-  it('is incorrect when the answer does not match', () => {
-    expect(isPatternAnswerCorrect(true, false)).toBe(false)
-    expect(isPatternAnswerCorrect(false, true)).toBe(false)
+  it('is incorrect when the selection is missing a cell', () => {
+    expect(isPatternSelectionCorrect([1, 2], [1, 2, 3])).toBe(false)
+  })
+
+  it('is incorrect when the selection has an extra cell', () => {
+    expect(isPatternSelectionCorrect([1, 2, 3, 4], [1, 2, 3])).toBe(false)
+  })
+
+  it('is incorrect when the selection has the same size but a different cell', () => {
+    expect(isPatternSelectionCorrect([1, 2, 9], [1, 2, 3])).toBe(false)
+  })
+
+  it('is correct for an empty selection matching an empty pattern', () => {
+    expect(isPatternSelectionCorrect([], [])).toBe(true)
   })
 })
 

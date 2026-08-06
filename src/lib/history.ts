@@ -135,11 +135,15 @@ export interface AreaStats {
   stats: LevelStats
 }
 
+// 'random'（全モード横断のミックス練習）は単一スキル指標ではないため、
+// 苦手分野判定・ベンチマークの対象外として意図的に含めない
 const ALL_AREAS: ReadonlyArray<{ mode: Mode; gameType?: DigitGameType }> = [
   { mode: 'word' },
   { mode: 'digit', gameType: 'reverse' },
   { mode: 'digit', gameType: 'sum' },
+  { mode: 'sequence' },
   { mode: 'nback' },
+  { mode: 'dual-nback' },
   { mode: 'spatial' },
   { mode: 'pattern' },
   { mode: 'tone' },

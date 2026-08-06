@@ -1,10 +1,10 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useEnterKey } from '../hooks/useEnterKey'
 import { useCountdown } from '../hooks/useCountdown'
 import { useSetCompletionRecorder } from '../hooks/useSetCompletionRecorder'
 import {
   pickPatternQuestionSet,
-  isPatternAnswerCorrect,
+  isPatternSelectionCorrect,
   PATTERN_SHOWN_MS,
   PATTERN_BLANK_MS,
   READY_MS,
@@ -40,6 +40,11 @@ export function PatternGameScreen({
   const [phase, setPhase] = useState<PatternQuestionPhase>('ready')
   // 0=模様を表示、1=空白（showingフェーズ内の2ステップ）
   const [step, setStep] = useState(0)
+  const [selected, setSelected] = useState<number[]>([])
+  // タイムアウト時に最新の選択値を読むための参照(setStateのアップデータ内で
+  // 副作用を呼ぶのを避けるため)
+  const selectedRef = useRef(selected)
+  selectedRef.current = selected
   const [currentResult, setCurrentResult] =
     useState<PatternQuestionResult | null>(null)
   const [results, setResults] = useState<PatternQuestionResult[]>([])
@@ -52,6 +57,7 @@ export function PatternGameScreen({
   useEffect(() => {
     setPhase('ready')
     setStep(0)
+    setSelected([])
     setCurrentResult(null)
   }, [currentQuestion])
 
@@ -61,7 +67,7 @@ export function PatternGameScreen({
     return () => clearTimeout(timeout)
   }, [phase, currentQuestion])
 
-  // 模様を表示→空白の順に進め、空白が終わったら比較フェーズへ
+  // 模様を表示→空白の順に進め、空白が終わったら回答フェーズへ
   useEffect(() => {
     if (phase !== 'showing') return
     if (step >= 2) {
@@ -73,11 +79,11 @@ export function PatternGameScreen({
     return () => clearTimeout(timeout)
   }, [phase, step, currentQuestion])
 
-  // 回答フェーズ: 残り時間をカウントダウンし、時間切れなら「変化なし」として自動採点する
+  // 回答フェーズ: 残り時間をカウントダウンし、時間切れなら現在の選択で自動採点する
   const answerRemaining = useCountdown(
     phase === 'answering',
     getAnswerTimeoutMs(currentQuestion.filledCells.length),
-    () => finalizeAnswer(false),
+    () => finalizeAnswer(selectedRef.current),
   )
 
   // 結果表示中はEnterキーでも次の問題へ進めるようにする。finished後もこれが
@@ -85,39 +91,29 @@ export function PatternGameScreen({
   // されてしまうため、finished中は無効化する
   useEnterKey(phase === 'result' && !finished, handleNext)
 
-  function finalizeAnswer(answeredChanged: boolean) {
-    const correct = isPatternAnswerCorrect(
-      answeredChanged,
-      currentQuestion.hasChange,
+  function toggleCell(cell: number) {
+    if (phase !== 'answering') return
+    if (loadSettings().soundEnabled) playButtonTap()
+    setSelected((prev) =>
+      prev.includes(cell) ? prev.filter((c) => c !== cell) : [...prev, cell],
     )
+  }
+
+  function finalizeAnswer(value: number[]) {
+    const correct = isPatternSelectionCorrect(value, currentQuestion.filledCells)
     if (loadSettings().soundEnabled) {
       if (correct) playCorrectSound()
       else playIncorrectSound()
     }
-    setCurrentResult({ question: currentQuestion, answeredChanged, correct })
+    setCurrentResult({ question: currentQuestion, selectedCells: value, correct })
     setPhase('result')
   }
 
-  function handleAnswer(answeredChanged: boolean) {
+  function handleSubmit() {
     if (phase !== 'answering') return
     if (loadSettings().soundEnabled) playButtonTap()
-    finalizeAnswer(answeredChanged)
+    finalizeAnswer(selected)
   }
-
-  // 回答フェーズ中は物理キーボードでも操作できるようにする（Y/N、矢印キー）
-  useEffect(() => {
-    if (phase !== 'answering') return
-    function handleKeyDown(e: KeyboardEvent) {
-      if (e.key === 'y' || e.key === 'Y' || e.key === 'ArrowLeft') {
-        handleAnswer(true)
-      } else if (e.key === 'n' || e.key === 'N' || e.key === 'ArrowRight') {
-        handleAnswer(false)
-      }
-    }
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [phase, currentQuestion])
 
   // 3問セットが完了するたびに結果を記録し、新規実績の解除やレベルアップを演出する
   const { newAchievements, isNewBest } = useSetCompletionRecorder({
@@ -157,7 +153,7 @@ export function PatternGameScreen({
       <SetSummary
         items={results.map((r) => ({
           key: r.question.id,
-          label: r.question.hasChange ? t.pattern.changed : t.pattern.unchanged,
+          label: t.pattern.levelLabel(level),
           correct: r.correct,
         }))}
         onRetry={handleRetry}
@@ -181,12 +177,8 @@ export function PatternGameScreen({
     )
   }
 
-  const displayedCells =
-    phase === 'showing' && step === 0
-      ? currentQuestion.filledCells
-      : phase === 'answering'
-        ? currentQuestion.comparisonCells
-        : []
+  // showing(表示中)のみ元の塗りつぶしマスを見せる。答え合わせ前(answering)は全マス白
+  const shownCells = phase === 'showing' && step === 0 ? currentQuestion.filledCells : []
 
   return (
     <div className="mx-auto flex w-full max-w-md flex-col gap-6 px-4 py-8 sm:gap-8 sm:px-6 sm:py-12">
@@ -208,12 +200,7 @@ export function PatternGameScreen({
         aria-atomic="true"
         className="flex min-h-56 flex-col items-center justify-center gap-4 rounded-2xl border border-gray-200 bg-white px-4 py-8 text-center shadow-sm sm:min-h-64 sm:px-6 sm:py-10 dark:border-gray-700 dark:bg-gray-800"
       >
-        {phase === 'ready' && (
-          <p className="text-lg font-medium text-gray-800 dark:text-gray-100">
-            {t.common.rememberPrompt}
-          </p>
-        )}
-        {phase === 'showing' && step === 0 && (
+        {(phase === 'ready' || (phase === 'showing' && step === 0)) && (
           <p className="text-lg font-medium text-gray-800 dark:text-gray-100">
             {t.common.rememberPrompt}
           </p>
@@ -226,7 +213,7 @@ export function PatternGameScreen({
         {phase === 'answering' && (
           <>
             <p className="text-lg font-medium text-gray-800 dark:text-gray-100">
-              {t.pattern.answerPrompt}
+              {t.pattern.selectPrompt}
             </p>
             <p aria-hidden="true" className="text-2xl font-bold text-rose-500">
               {answerRemaining}
@@ -234,7 +221,7 @@ export function PatternGameScreen({
           </>
         )}
 
-        {phase !== 'result' && phase !== 'ready' && (
+        {phase !== 'result' && (
           <div
             className="grid gap-2"
             style={{
@@ -242,56 +229,62 @@ export function PatternGameScreen({
               width: currentQuestion.gridSize * 48,
               maxWidth: '100%',
             }}
-            aria-hidden="true"
           >
-            {Array.from({ length: cellCount }, (_, cell) => (
-              <div
-                key={cell}
-                className={`aspect-square rounded-lg ${
-                  displayedCells.includes(cell)
-                    ? 'bg-indigo-500'
-                    : 'bg-gray-100 dark:bg-gray-700'
-                }`}
-              />
-            ))}
+            {Array.from({ length: cellCount }, (_, cell) => {
+              const isShown = shownCells.includes(cell)
+              const isSelected = selected.includes(cell)
+              return (
+                <button
+                  key={cell}
+                  type="button"
+                  disabled={phase !== 'answering'}
+                  onClick={() => toggleCell(cell)}
+                  aria-pressed={phase === 'answering' ? isSelected : undefined}
+                  aria-label={t.pattern.cellAriaLabel(cell + 1, isSelected)}
+                  className={`aspect-square touch-manipulation rounded-lg transition disabled:cursor-not-allowed ${
+                    isShown || isSelected
+                      ? 'bg-indigo-500'
+                      : 'bg-gray-100 hover:enabled:bg-gray-200 dark:bg-gray-700 dark:hover:enabled:bg-gray-600'
+                  }`}
+                />
+              )
+            })}
           </div>
         )}
 
         {phase === 'answering' && (
-          <div className="flex gap-3">
-            <button
-              type="button"
-              onClick={() => handleAnswer(true)}
-              className="touch-manipulation rounded-full bg-rose-500 px-6 py-3 font-bold text-white shadow-sm transition hover:bg-rose-400"
-            >
-              {t.pattern.changed}
-            </button>
-            <button
-              type="button"
-              onClick={() => handleAnswer(false)}
-              className="touch-manipulation rounded-full bg-indigo-500 px-6 py-3 font-bold text-white shadow-sm transition hover:bg-indigo-400"
-            >
-              {t.pattern.unchanged}
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={handleSubmit}
+            className="touch-manipulation rounded-full bg-indigo-500 px-6 py-3 font-bold text-white shadow-sm transition hover:bg-indigo-400"
+          >
+            {t.pattern.submitButton}
+          </button>
         )}
 
         {phase === 'result' && currentResult && (
           <>
             <ResultBadge correct={currentResult.correct} />
-            <div className="mt-2 flex flex-col gap-1 text-sm text-gray-500 dark:text-gray-400">
-              <p>
-                {t.common.correctAnswerLabel}
-                {currentResult.question.hasChange
-                  ? t.pattern.changed
-                  : t.pattern.unchanged}
-              </p>
-              <p>
-                {t.common.yourAnswerLabel}
-                {currentResult.answeredChanged
-                  ? t.pattern.changed
-                  : t.pattern.unchanged}
-              </p>
+            <div
+              className="grid gap-2"
+              style={{
+                gridTemplateColumns: `repeat(${currentQuestion.gridSize}, minmax(0, 1fr))`,
+                width: currentQuestion.gridSize * 48,
+                maxWidth: '100%',
+              }}
+              aria-hidden="true"
+            >
+              {Array.from({ length: cellCount }, (_, cell) => {
+                const wasFilled = currentQuestion.filledCells.includes(cell)
+                const wasSelected = currentResult.selectedCells.includes(cell)
+                let colorClass = 'bg-gray-100 dark:bg-gray-700'
+                if (wasFilled && wasSelected) colorClass = 'bg-emerald-500'
+                else if (wasSelected && !wasFilled) colorClass = 'bg-rose-500'
+                else if (wasFilled && !wasSelected) colorClass = 'bg-amber-400'
+                return (
+                  <div key={cell} className={`aspect-square rounded-lg ${colorClass}`} />
+                )
+              })}
             </div>
             <button
               type="button"

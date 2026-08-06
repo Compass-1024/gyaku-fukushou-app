@@ -9,7 +9,16 @@ export interface BaseGameScreenProps {
   onSelectLevel: (level: Level) => void
 }
 
-export type Mode = 'word' | 'digit' | 'nback' | 'spatial' | 'pattern' | 'tone'
+export type Mode =
+  | 'word'
+  | 'digit'
+  | 'sequence'
+  | 'nback'
+  | 'dual-nback'
+  | 'spatial'
+  | 'pattern'
+  | 'tone'
+  | 'random'
 export type DigitGameType = 'reverse' | 'sum'
 export type ThemeMode = 'system' | 'light' | 'dark'
 export type Language = 'ja' | 'en'
@@ -43,6 +52,20 @@ export interface DigitQuestionResult {
   correct: boolean
 }
 
+export interface SequenceQuestion {
+  id: string
+  digits: number[]
+}
+
+export type SequenceQuestionPhase = 'ready' | 'showing' | 'answering' | 'result'
+
+export interface SequenceQuestionResult {
+  question: SequenceQuestion
+  expectedAnswer: string
+  typed: string
+  correct: boolean
+}
+
 export interface HistoryEntry {
   mode: Mode
   gameType?: DigitGameType
@@ -69,6 +92,15 @@ export interface NBackTrial {
 
 export type NBackPhase = 'ready' | 'showing' | 'result'
 
+export interface DualNBackTrial {
+  position: number
+  sound: number
+  positionMatch: boolean
+  soundMatch: boolean
+}
+
+export type DualNBackPhase = 'ready' | 'showing' | 'result'
+
 export interface SpatialQuestion {
   id: string
   gridSize: number
@@ -88,15 +120,13 @@ export interface PatternQuestion {
   id: string
   gridSize: number
   filledCells: number[]
-  comparisonCells: number[]
-  hasChange: boolean
 }
 
 export type PatternQuestionPhase = 'ready' | 'showing' | 'answering' | 'result'
 
 export interface PatternQuestionResult {
   question: PatternQuestion
-  answeredChanged: boolean
+  selectedCells: number[]
   correct: boolean
 }
 
@@ -112,3 +142,14 @@ export interface ToneQuestionResult {
   tapped: number[]
   correct: boolean
 }
+
+// ランダムモード: 単発質問→回答型の5モード(すうじ・順唱・空間・変化検出・音/色)から
+// 1問ずつ集めて出題する。各ラウンドは元モードのQuestion型をそのまま内包する
+export type RandomRound =
+  | { mode: 'digit'; question: DigitQuestion }
+  | { mode: 'sequence'; question: SequenceQuestion }
+  | { mode: 'spatial'; question: SpatialQuestion }
+  | { mode: 'pattern'; question: PatternQuestion }
+  | { mode: 'tone'; question: ToneQuestion }
+
+export type RandomQuestionPhase = 'ready' | 'showing' | 'answering' | 'result'
