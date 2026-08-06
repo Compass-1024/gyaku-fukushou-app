@@ -49,3 +49,30 @@ test('統計画面: 記録がない場合の案内が表示される', async ({ 
     page.getByText('まだ記録がありません。プレイすると統計が表示されます。'),
   ).toBeVisible()
 })
+
+test('統計画面: 十分な記録があると「ワーキングメモリの目安」が表示される', async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    const now = Date.now()
+    const history = Array.from({ length: 2 }, (_, i) => ({
+      mode: 'spatial',
+      level: 2,
+      correct: 3,
+      total: 3,
+      timestamp: new Date(now - i * 86400000).toISOString(),
+    }))
+    window.localStorage.setItem('gyaku-fukushou:history', JSON.stringify(history))
+  })
+  await page.goto('/')
+  await page.getByRole('button', { name: '統計' }).click()
+
+  await expect(
+    page.getByRole('heading', { name: 'ワーキングメモリの目安' }),
+  ).toBeVisible()
+  await expect(page.getByText('視空間スパン（空間モード）')).toBeVisible()
+  await expect(page.getByText('4マス', { exact: true })).toBeVisible()
+  await expect(
+    page.getByText('医学的な診断や公式な認知機能評価ではなく', { exact: false }),
+  ).toBeVisible()
+})

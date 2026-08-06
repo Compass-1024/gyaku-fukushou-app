@@ -8,9 +8,11 @@ import {
 import { ACHIEVEMENTS } from '../lib/achievements'
 import { loadPhraseStats, getWeakestPhrases } from '../lib/phraseStats'
 import { findPhraseById } from '../lib/phrases'
+import { getAllBenchmarks } from '../lib/benchmarks'
 import { useLanguage, useTranslation } from '../contexts/LanguageContext'
 import type { ActivityDay, DailyAccuracy } from '../lib/history'
 import type { Translations } from '../lib/i18n'
+import type { Benchmark } from '../lib/benchmarks'
 import type { DigitGameType, HistoryEntry, Mode } from '../types'
 
 interface StatsScreenProps {
@@ -107,6 +109,24 @@ function ActivityHeatmap({
 
 function areaKey(area: { mode: Mode; gameType?: DigitGameType }): string {
   return area.gameType ? `${area.mode}-${area.gameType}` : area.mode
+}
+
+function benchmarkCopy(t: Translations, benchmark: Benchmark) {
+  return t.benchmarks[benchmark.mode]
+}
+
+const BAND_CLASSES: Record<Benchmark['band'], string> = {
+  below: 'border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-800/50',
+  average:
+    'border-emerald-300 bg-emerald-50 dark:border-emerald-700 dark:bg-emerald-900/30',
+  above:
+    'border-indigo-300 bg-indigo-50 dark:border-indigo-700 dark:bg-indigo-900/30',
+}
+
+const BAND_TEXT_CLASSES: Record<Benchmark['band'], string> = {
+  below: 'text-gray-600 dark:text-gray-300',
+  average: 'text-emerald-700 dark:text-emerald-300',
+  above: 'text-indigo-700 dark:text-indigo-300',
 }
 
 function AccuracyTrendChart({
@@ -228,6 +248,7 @@ export function StatsScreen({ history, onBack }: StatsScreenProps) {
     [weakest],
   )
   const hasAnyAttempts = areas.some((a) => a.stats.attempts > 0)
+  const benchmarks = useMemo(() => getAllBenchmarks(history), [history])
   const trend = useMemo(() => getDailyAccuracyTrend(history, TREND_DAYS), [history])
   const weakPhrases = useMemo(
     () => (language === 'ja' ? getWeakestPhrases(loadPhraseStats(), 5) : []),
@@ -355,6 +376,48 @@ export function StatsScreen({ history, onBack }: StatsScreenProps) {
               })}
             </ul>
           </section>
+
+          {benchmarks.length > 0 && (
+            <section className="flex flex-col gap-2">
+              <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400">
+                {t.benchmarks.title}
+              </h2>
+              <ul className="flex flex-col gap-2">
+                {benchmarks.map((benchmark) => {
+                  const copy = benchmarkCopy(t, benchmark)
+                  return (
+                    <li
+                      key={benchmark.mode}
+                      className={`flex items-center justify-between rounded-lg border px-4 py-3 text-sm ${BAND_CLASSES[benchmark.band]}`}
+                    >
+                      <span className="text-gray-700 dark:text-gray-200">
+                        {copy.label}
+                        <span className="block text-xs text-gray-500 dark:text-gray-400">
+                          {copy.referenceLabel(
+                            benchmark.referenceMin,
+                            benchmark.referenceMax,
+                          )}
+                        </span>
+                      </span>
+                      <span className="text-right">
+                        <span className="block font-semibold text-gray-800 dark:text-gray-100">
+                          {copy.valueLabel(benchmark.value)}
+                        </span>
+                        <span
+                          className={`block text-xs font-medium ${BAND_TEXT_CLASSES[benchmark.band]}`}
+                        >
+                          {t.benchmarks.bandLabels[benchmark.band]}
+                        </span>
+                      </span>
+                    </li>
+                  )
+                })}
+              </ul>
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                {t.benchmarks.disclaimer}
+              </p>
+            </section>
+          )}
 
           {weakPhrases.length > 0 && (
             <section className="flex flex-col gap-2">

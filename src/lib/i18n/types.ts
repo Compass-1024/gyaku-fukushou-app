@@ -4,6 +4,7 @@
 import type { ShareTemplates } from '../share'
 import type { ParseBackupError } from '../backup'
 import type { AchievementId } from '../achievements'
+import type { BenchmarkBand } from '../benchmarks'
 
 export interface ModeCopy {
   title: string
@@ -226,5 +227,30 @@ export interface Translations {
     padColors: readonly [string, string, string, string]
     padAriaLabel: (color: string) => string
     resultLabel: (padCount: number) => string
+  }
+  benchmarks: {
+    title: string
+    disclaimer: string
+    bandLabels: Record<BenchmarkBand, string>
+    digit: {
+      label: string
+      valueLabel: (digits: number) => string
+      referenceLabel: (min: number, max: number) => string
+    }
+    spatial: {
+      label: string
+      valueLabel: (cells: number) => string
+      referenceLabel: (min: number, max: number) => string
+    }
+    nback: {
+      label: string
+      valueLabel: (accuracyPercent: number) => string
+      referenceLabel: (min: number, max: number) => string
+    }
+    pattern: {
+      label: string
+      valueLabel: (k: number) => string
+      referenceLabel: (min: number, max: number) => string
+    }
   }
 }

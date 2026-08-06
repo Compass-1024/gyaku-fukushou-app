@@ -368,4 +368,34 @@ export const en: Translations = {
     padAriaLabel: (color) => `${color} pad`,
     resultLabel: (padCount) => `${padCount} tone${padCount === 1 ? '' : 's'}`,
   },
+  benchmarks: {
+    title: 'Working Memory Reference',
+    disclaimer:
+      "These figures compare your results to rough, commonly reported ranges for the psychological tasks each mode is based on (backward digit span, visuospatial span, N-back, and visual working memory capacity). This is not a medical diagnosis or a formal cognitive assessment — individual variation and factors like fatigue matter a lot. Take it as a rough reference only.",
+    bandLabels: {
+      below: 'Below the typical range',
+      average: 'Within the typical range',
+      above: 'Above the typical range',
+    },
+    digit: {
+      label: 'Backward digit span (Digit Mode, reverse)',
+      valueLabel: (digits) => `${digits} digits`,
+      referenceLabel: (min, max) => `Typical range: ${min}–${max} digits`,
+    },
+    spatial: {
+      label: 'Visuospatial span (Spatial Mode)',
+      valueLabel: (cells) => `${cells} squares`,
+      referenceLabel: (min, max) => `Typical range: ${min}–${max} squares`,
+    },
+    nback: {
+      label: 'N-back accuracy',
+      valueLabel: (accuracyPercent) => `${accuracyPercent}%`,
+      referenceLabel: (min, max) => `Typical range: ${min}–${max}%`,
+    },
+    pattern: {
+      label: 'Visual working memory capacity (Change Detection Mode)',
+      valueLabel: (k) => `K ≈ ${k}`,
+      referenceLabel: (min, max) => `Typical range: K ≈ ${min}–${max}`,
+    },
+  },
 }

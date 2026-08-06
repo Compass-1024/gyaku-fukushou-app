@@ -339,4 +339,34 @@ export const ja: Translations = {
     padAriaLabel: (color) => `${color}のパッド`,
     resultLabel: (padCount) => `${padCount}音`,
   },
+  benchmarks: {
+    title: 'ワーキングメモリの目安',
+    disclaimer:
+      'この目安は、各モードに対応する心理学の課題（逆唱スパン・視空間スパン・Nバック・視覚ワーキングメモリ容量）について一般的に知られている大まかな範囲と比較したものです。医学的な診断や公式な認知機能評価ではなく、個人差や体調によっても変動します。参考程度にご覧ください。',
+    bandLabels: {
+      below: '目安より低め',
+      average: '目安の範囲内',
+      above: '目安より高め',
+    },
+    digit: {
+      label: '逆唱スパン（すうじモード・逆から入力）',
+      valueLabel: (digits) => `${digits}桁`,
+      referenceLabel: (min, max) => `一般的な目安: ${min}〜${max}桁`,
+    },
+    spatial: {
+      label: '視空間スパン（空間モード）',
+      valueLabel: (cells) => `${cells}マス`,
+      referenceLabel: (min, max) => `一般的な目安: ${min}〜${max}マス`,
+    },
+    nback: {
+      label: 'Nバック正答率',
+      valueLabel: (accuracyPercent) => `${accuracyPercent}%`,
+      referenceLabel: (min, max) => `一般的な目安: ${min}〜${max}%`,
+    },
+    pattern: {
+      label: '視覚ワーキングメモリ容量（変化検出モード）',
+      valueLabel: (k) => `K ≈ ${k}`,
+      referenceLabel: (min, max) => `一般的な目安: K ≈ ${min}〜${max}`,
+    },
+  },
 }
