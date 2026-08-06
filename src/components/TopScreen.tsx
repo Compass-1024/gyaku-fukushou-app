@@ -209,6 +209,21 @@ export function TopScreen({
           type="button"
           onClick={() => {
             if (loadSettings().soundEnabled) playButtonTap()
+            onSelect('sequence')
+          }}
+          className="touch-manipulation rounded-2xl bg-gradient-to-br from-teal-500 to-sky-500 px-6 py-6 text-left text-white shadow-lg shadow-teal-500/20 transition hover:scale-[1.02] hover:shadow-xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-500"
+        >
+          <span className="text-4xl">📝</span>
+          <p className="mt-2 text-xl font-bold">{t.top.modes.sequence.title}</p>
+          <p className="mt-1 text-sm opacity-90">
+            {t.top.modes.sequence.description}
+          </p>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => {
+            if (loadSettings().soundEnabled) playButtonTap()
             onSelect('nback')
           }}
           className="touch-manipulation rounded-2xl bg-gradient-to-br from-rose-500 to-orange-500 px-6 py-6 text-left text-white shadow-lg shadow-rose-500/20 transition hover:scale-[1.02] hover:shadow-xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-500"

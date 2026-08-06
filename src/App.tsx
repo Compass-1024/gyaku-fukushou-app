@@ -3,6 +3,7 @@ import { TopScreen } from './components/TopScreen'
 import { LevelSelect } from './components/LevelSelect'
 import { DigitTypeSelect } from './components/DigitTypeSelect'
 import { DigitLevelSelect } from './components/DigitLevelSelect'
+import { SequenceLevelSelect } from './components/SequenceLevelSelect'
 import { NBackLevelSelect } from './components/NBackLevelSelect'
 import { SpatialLevelSelect } from './components/SpatialLevelSelect'
 import { PatternLevelSelect } from './components/PatternLevelSelect'
@@ -26,6 +27,11 @@ const GameScreen = lazy(() =>
 const DigitGameScreen = lazy(() =>
   import('./components/DigitGameScreen').then((m) => ({
     default: m.DigitGameScreen,
+  })),
+)
+const SequenceGameScreen = lazy(() =>
+  import('./components/SequenceGameScreen').then((m) => ({
+    default: m.SequenceGameScreen,
   })),
 )
 const NBackGameScreen = lazy(() =>
@@ -56,6 +62,8 @@ type View =
   | { screen: 'digit-type' }
   | { screen: 'digit-level'; gameType: DigitGameType }
   | { screen: 'digit-game'; gameType: DigitGameType; level: Level }
+  | { screen: 'sequence-level' }
+  | { screen: 'sequence-game'; level: Level }
   | { screen: 'nback-level' }
   | { screen: 'nback-game'; level: Level }
   | { screen: 'spatial-level' }
@@ -81,6 +89,8 @@ function getShortcutView(): View | null {
       return loadSettings().language === 'en' ? null : { screen: 'word-level' }
     case 'digit':
       return { screen: 'digit-type' }
+    case 'sequence':
+      return { screen: 'sequence-level' }
     case 'nback':
       return { screen: 'nback-level' }
     case 'spatial':
@@ -146,6 +156,7 @@ function App() {
       next.screen === 'top' ||
       next.screen === 'word-level' ||
       next.screen === 'digit-level' ||
+      next.screen === 'sequence-level' ||
       next.screen === 'nback-level' ||
       next.screen === 'spatial-level' ||
       next.screen === 'pattern-level' ||
@@ -167,10 +178,11 @@ function App() {
           onSelect={(mode) => {
             if (mode === 'word') goTo({ screen: 'word-level' })
             else if (mode === 'digit') goTo({ screen: 'digit-type' })
+            else if (mode === 'sequence') goTo({ screen: 'sequence-level' })
             else if (mode === 'nback') goTo({ screen: 'nback-level' })
             else if (mode === 'spatial') goTo({ screen: 'spatial-level' })
             else if (mode === 'pattern') goTo({ screen: 'pattern-level' })
-            else goTo({ screen: 'tone-level' })
+            else if (mode === 'tone') goTo({ screen: 'tone-level' })
           }}
           onOpenSettings={() => goTo({ screen: 'settings' })}
           onOpenStats={() => goTo({ screen: 'stats' })}
@@ -183,6 +195,8 @@ function App() {
                 gameType: area.gameType ?? 'reverse',
                 level: area.level,
               })
+            } else if (area.mode === 'sequence') {
+              goTo({ screen: 'sequence-game', level: area.level })
             } else if (area.mode === 'nback') {
               goTo({ screen: 'nback-game', level: area.level })
             } else if (area.mode === 'spatial') {
@@ -248,6 +262,25 @@ function App() {
           onSelectLevel={(level) =>
             goTo({ screen: 'digit-game', gameType: view.gameType, level })
           }
+        />
+      )
+      break
+    case 'sequence-level':
+      content = (
+        <SequenceLevelSelect
+          history={history}
+          onSelect={(level) => goTo({ screen: 'sequence-game', level })}
+          onBack={() => goTo({ screen: 'top' })}
+        />
+      )
+      break
+    case 'sequence-game':
+      content = (
+        <SequenceGameScreen
+          key={view.level}
+          level={view.level}
+          onExit={() => goTo({ screen: 'sequence-level' })}
+          onSelectLevel={(level) => goTo({ screen: 'sequence-game', level })}
         />
       )
       break

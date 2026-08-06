@@ -1,6 +1,8 @@
-import type { DigitQuestion, Level } from '../types'
+import type { Level, SequenceQuestion } from '../types'
 import { isDigitStringMatch } from './digitAnswer'
 
+// すうじモード（逆から入力）と同じ桁数テーブルを使い、見た順そのままに
+// 入力させる順唱（Forward Digit Span）課題
 const DIGIT_LENGTH: Record<Level, number> = { 1: 3, 2: 5, 3: 7 }
 
 const QUESTIONS_PER_SET = 3
@@ -9,7 +11,7 @@ function generateDigits(length: number): number[] {
   return Array.from({ length }, () => Math.floor(Math.random() * 10))
 }
 
-export function pickDigitQuestionSet(level: Level): DigitQuestion[] {
+export function pickSequenceQuestionSet(level: Level): SequenceQuestion[] {
   const length = DIGIT_LENGTH[level]
   const now = Date.now()
   return Array.from({ length: QUESTIONS_PER_SET }, (_, i) => ({
@@ -18,18 +20,11 @@ export function pickDigitQuestionSet(level: Level): DigitQuestion[] {
   }))
 }
 
-export function reverseDigits(digits: number[]): string {
-  return digits.slice().reverse().join('')
+export function expectedSequenceAnswer(digits: number[]): string {
+  return digits.join('')
 }
 
-export function sumDigits(digits: number[]): string {
-  return digits.reduce((sum, d) => sum + d, 0).toString()
-}
-
-// 逆から入力モードでは元の数列の末尾が0だと逆順の先頭が0になり得るが、
-// 数字を入力する際に先頭の0を打たないのは自然な入力なので、比較時のみ
-// 0埋めして「325」と「0325」のような入力を正解として扱う
-export function isDigitAnswerCorrect(
+export function isSequenceAnswerCorrect(
   typed: string,
   expectedAnswer: string,
 ): boolean {
