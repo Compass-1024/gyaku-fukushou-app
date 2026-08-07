@@ -274,5 +274,9 @@ export interface Translations {
     spatial: { label: string }
     nback: { label: string }
     pattern: { label: string }
+    'dual-nback': { label: string }
+    random: { label: string }
+    word: { label: string }
+    tone: { label: string }
   }
 }

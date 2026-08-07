@@ -452,5 +452,9 @@ export const en: Translations = {
     spatial: { label: 'Spatial Mode' },
     nback: { label: 'N-Back Mode' },
     pattern: { label: 'Change Detection Mode' },
+    'dual-nback': { label: 'Dual N-Back Mode' },
+    random: { label: 'Random Mode' },
+    word: { label: 'Word Mode' },
+    tone: { label: 'Tone & Color Mode' },
   },
 }

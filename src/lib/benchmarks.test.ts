@@ -4,6 +4,10 @@ import {
   getSpatialSpanBenchmark,
   getNBackBenchmark,
   getPatternCapacityBenchmark,
+  getDualNBackBenchmark,
+  getRandomBenchmark,
+  getWordBenchmark,
+  getToneBenchmark,
   getAllBenchmarks,
 } from './benchmarks'
 import type { HistoryEntry, Level, Mode, DigitGameType } from '../types'
@@ -99,6 +103,41 @@ describe('getSpatialSpanBenchmark / getNBackBenchmark / getPatternCapacityBenchm
   })
 })
 
+describe('getDualNBackBenchmark / getRandomBenchmark / getWordBenchmark / getToneBenchmark', () => {
+  it('データ不足ならnull', () => {
+    expect(getDualNBackBenchmark([])).toBeNull()
+    expect(getRandomBenchmark([])).toBeNull()
+    expect(getWordBenchmark([])).toBeNull()
+    expect(getToneBenchmark([])).toBeNull()
+  })
+
+  it('十分なデータがあれば比較結果を返す', () => {
+    const dualNback = [
+      ...entriesAt('dual-nback', 1, 2, 20, 40, 20),
+      ...entriesAt('dual-nback', 1, 2, 30, 40, 5),
+    ]
+    expect(getDualNBackBenchmark(dualNback)?.band).toBe('above')
+
+    const random = [
+      ...entriesAt('random', 1, 2, 2, 5, 20),
+      ...entriesAt('random', 1, 2, 2, 5, 5),
+    ]
+    expect(getRandomBenchmark(random)?.band).toBe('average')
+
+    const word = [
+      ...entriesAt('word', 1, 2, 3, 3, 20),
+      ...entriesAt('word', 1, 2, 1, 3, 5),
+    ]
+    expect(getWordBenchmark(word)?.band).toBe('below')
+
+    const tone = [
+      ...entriesAt('tone', 1, 2, 2, 3, 20),
+      ...entriesAt('tone', 1, 2, 2, 3, 5),
+    ]
+    expect(getToneBenchmark(tone)?.band).toBe('average')
+  })
+})
+
 describe('getAllBenchmarks', () => {
   it('データが無ければ空配列を返す', () => {
     expect(getAllBenchmarks([])).toEqual([])
@@ -112,5 +151,23 @@ describe('getAllBenchmarks', () => {
     const result = getAllBenchmarks(history)
     expect(result).toHaveLength(1)
     expect(result[0].mode).toBe('spatial')
+  })
+
+  it('8モードすべてに十分なデータがあれば8件返す', () => {
+    const modes: [Mode, number, number][] = [
+      ['digit', 2, 3],
+      ['spatial', 2, 3],
+      ['nback', 10, 15],
+      ['pattern', 3, 4],
+      ['dual-nback', 20, 40],
+      ['random', 2, 5],
+      ['word', 2, 3],
+      ['tone', 2, 3],
+    ]
+    const history = modes.flatMap(([mode, correct, total]) => [
+      ...entriesAt(mode, 1, 2, correct, total, 20, mode === 'digit' ? 'reverse' : undefined),
+      ...entriesAt(mode, 1, 2, correct, total, 5, mode === 'digit' ? 'reverse' : undefined),
+    ])
+    expect(getAllBenchmarks(history)).toHaveLength(8)
   })
 })

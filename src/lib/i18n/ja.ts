@@ -422,5 +422,9 @@ export const ja: Translations = {
     spatial: { label: '空間モード' },
     nback: { label: 'Nバックモード' },
     pattern: { label: '変化検出モード' },
+    'dual-nback': { label: 'Dual N-Backモード' },
+    random: { label: 'ランダムモード' },
+    word: { label: 'ことばモード' },
+    tone: { label: '音・色モード' },
   },
 }

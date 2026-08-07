@@ -15,7 +15,7 @@ const CHANGE_THRESHOLD = 5
 export type BenchmarkBand = 'below' | 'average' | 'above'
 
 export interface Benchmark {
-  mode: 'digit' | 'spatial' | 'nback' | 'pattern'
+  mode: 'digit' | 'spatial' | 'nback' | 'pattern' | 'dual-nback' | 'random' | 'word' | 'tone'
   // 直近期間の正答率（%）
   value: number
   // それ以前の期間の正答率（%）。valueとの比較でbandが決まる
@@ -97,11 +97,39 @@ export function getPatternCapacityBenchmark(
   return buildSelfBenchmark(history, 'pattern', 'pattern')
 }
 
+// Dual N-Backモード: 過去の前半/後半で正答率を比較する。複合課題（位置＋音）の
+// ため単一の標準化された目安レンジは存在しないが、自己比較方式なら
+// 外部の目安レンジが不要なため対象に含められる
+export function getDualNBackBenchmark(history: HistoryEntry[]): Benchmark | null {
+  return buildSelfBenchmark(history, 'dual-nback', 'dual-nback')
+}
+
+// ランダムモード: 過去の前半/後半で正答率を比較する。単一スキル指標では
+// ないため苦手分野判定・他ベンチマークの参照元（ALL_AREAS）には含めないが、
+// 自己比較（ランダムモード自身の過去との比較）としてなら意味を持つ
+export function getRandomBenchmark(history: HistoryEntry[]): Benchmark | null {
+  return buildSelfBenchmark(history, 'random', 'random')
+}
+
+// ことばモード: 過去の前半/後半で正答率を比較する
+export function getWordBenchmark(history: HistoryEntry[]): Benchmark | null {
+  return buildSelfBenchmark(history, 'word', 'word')
+}
+
+// 音・色モード: 過去の前半/後半で正答率を比較する
+export function getToneBenchmark(history: HistoryEntry[]): Benchmark | null {
+  return buildSelfBenchmark(history, 'tone', 'tone')
+}
+
 export function getAllBenchmarks(history: HistoryEntry[]): Benchmark[] {
   return [
     getDigitSpanBenchmark(history),
     getSpatialSpanBenchmark(history),
     getNBackBenchmark(history),
     getPatternCapacityBenchmark(history),
+    getDualNBackBenchmark(history),
+    getRandomBenchmark(history),
+    getWordBenchmark(history),
+    getToneBenchmark(history),
   ].filter((b): b is Benchmark => b !== null)
 }
