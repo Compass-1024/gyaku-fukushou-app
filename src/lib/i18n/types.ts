@@ -96,6 +96,7 @@ export interface Translations {
     }
     playerLevel: (level: number) => string
     xpToNextLevel: (xp: number) => string
+    growingBadgeLabel: string
   }
   missions: {
     cardTitle: string

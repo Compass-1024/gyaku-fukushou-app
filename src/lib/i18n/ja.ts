@@ -108,6 +108,7 @@ export const ja: Translations = {
     },
     playerLevel: (level) => `プレイヤーLv.${level}`,
     xpToNextLevel: (xp) => `次のレベルまで あと${xp}XP`,
+    growingBadgeLabel: '正答率が向上中',
   },
   missions: {
     cardTitle: '🎯 今日のミッション',

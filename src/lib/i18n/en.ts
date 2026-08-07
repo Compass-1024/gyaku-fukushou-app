@@ -109,6 +109,7 @@ export const en: Translations = {
     },
     playerLevel: (level) => `Player Lv.${level}`,
     xpToNextLevel: (xp) => `${xp} XP to next level`,
+    growingBadgeLabel: 'Accuracy improving',
   },
   missions: {
     cardTitle: "🎯 Today's Mission",

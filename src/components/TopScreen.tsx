@@ -15,12 +15,28 @@ import {
   loadMissionCompletions,
 } from '../lib/missions'
 import { computeTotalXp, getXpProgress, XP_PER_MISSION } from '../lib/xp'
+import { getAllBenchmarks } from '../lib/benchmarks'
+import type { Benchmark } from '../lib/benchmarks'
 import { useLanguage, useTranslation } from '../contexts/LanguageContext'
 import type { HistoryEntry, Mode } from '../types'
 
 // ホームの3×3グリッド用の選択キー。すうじモードは「逆から入力」「合計を入力」を
 // 独立したカードとして扱うため、Mode型の'digit'ではなくこの拡張キーを使う
 export type TopModeSelection = Exclude<Mode, 'digit'> | 'digit-reverse' | 'digit-sum'
+
+// ベンチマークのモードキーとホームカードの選択キーの対応
+// （すうじの逆から入力のみキーが異なる: 'digit' → 'digit-reverse'）
+const BENCHMARK_MODE_TO_CARD_MODE: Record<Benchmark['mode'], TopModeSelection> = {
+  digit: 'digit-reverse',
+  'digit-sum': 'digit-sum',
+  spatial: 'spatial',
+  nback: 'nback',
+  pattern: 'pattern',
+  'dual-nback': 'dual-nback',
+  random: 'random',
+  word: 'word',
+  tone: 'tone',
+}
 
 interface TopScreenProps {
   history: HistoryEntry[]
@@ -115,6 +131,14 @@ export function TopScreen({
   ]
   const modeCards = allModeCards.filter(
     (card) => card.mode !== 'word' || language === 'ja',
+  )
+
+  // 「ワーキングメモリの伸び」で正答率が向上中（band: 'above'）のモードには、
+  // 統計画面を開かなくても気づけるようホームカードに🌱バッジを表示する
+  const growingCardModes = new Set(
+    getAllBenchmarks(history)
+      .filter((b) => b.band === 'above')
+      .map((b) => BENCHMARK_MODE_TO_CARD_MODE[b.mode]),
   )
 
   function areaLabel(area: AreaStats): string {
@@ -344,9 +368,22 @@ export function TopScreen({
               if (loadSettings().soundEnabled) playButtonTap()
               onSelect(card.mode)
             }}
-            aria-label={`${card.title}: ${card.description}`}
-            className={`touch-manipulation flex aspect-square flex-col items-center justify-center gap-1 rounded-2xl bg-gradient-to-br ${card.gradient} p-2 text-center text-white shadow-md ring-1 ring-white/10 transition hover:scale-[1.04] hover:shadow-lg active:scale-[0.98] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white sm:p-3`}
+            aria-label={
+              growingCardModes.has(card.mode)
+                ? `${card.title}: ${card.description} (${t.top.growingBadgeLabel})`
+                : `${card.title}: ${card.description}`
+            }
+            className={`relative touch-manipulation flex aspect-square flex-col items-center justify-center gap-1 rounded-2xl bg-gradient-to-br ${card.gradient} p-2 text-center text-white shadow-md ring-1 ring-white/10 transition hover:scale-[1.04] hover:shadow-lg active:scale-[0.98] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white sm:p-3`}
           >
+            {growingCardModes.has(card.mode) && (
+              <span
+                aria-hidden="true"
+                title={t.top.growingBadgeLabel}
+                className="absolute top-1 right-1 text-xs drop-shadow"
+              >
+                🌱
+              </span>
+            )}
             <span className="text-2xl sm:text-3xl" aria-hidden="true">
               {card.icon}
             </span>
