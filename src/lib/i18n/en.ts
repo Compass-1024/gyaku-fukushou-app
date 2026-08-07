@@ -299,6 +299,11 @@ export const en: Translations = {
       label: 'Building a Habit (Advanced)',
       description: 'Completed 50 sets total',
     },
+    'growing-strong': {
+      label: 'Growing Strong',
+      description:
+        'Accuracy is improving in 2 or more modes, per "Working Memory Progress"',
+    },
     'all-modes': {
       label: 'All-Rounder',
       description: 'Tried every mode',

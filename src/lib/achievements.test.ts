@@ -108,6 +108,42 @@ describe('achievements', () => {
     expect(total10.isUnlocked(nine)).toBe(false)
     expect(total10.isUnlocked([...nine, entry()])).toBe(true)
   })
+
+  it('growing-strong requires 2+ modes improving in "ワーキングメモリの伸び"', () => {
+    const growing = findAchievement('growing-strong')
+    const now = Date.now()
+    function improvingModeEntries(mode: HistoryEntry['mode']): HistoryEntry[] {
+      return [
+        // 古い方: 正答率33%
+        ...Array.from({ length: 2 }, (_, i) =>
+          entry({
+            mode,
+            correct: 1,
+            total: 3,
+            timestamp: new Date(now - (20 - i) * 3600_000).toISOString(),
+          }),
+        ),
+        // 新しい方: 正答率100%
+        ...Array.from({ length: 2 }, (_, i) =>
+          entry({
+            mode,
+            correct: 3,
+            total: 3,
+            timestamp: new Date(now - (5 - i) * 3600_000).toISOString(),
+          }),
+        ),
+      ]
+    }
+    // 1モードのみ向上中では解除されない
+    expect(growing.isUnlocked(improvingModeEntries('spatial'))).toBe(false)
+    // 2モード向上中なら解除される
+    expect(
+      growing.isUnlocked([
+        ...improvingModeEntries('spatial'),
+        ...improvingModeEntries('nback'),
+      ]),
+    ).toBe(true)
+  })
 })
 
 describe('getNewlyUnlockedAchievements', () => {

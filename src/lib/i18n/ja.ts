@@ -282,6 +282,10 @@ export const ja: Translations = {
     },
     'total-10': { label: '継続力', description: '累計10セットを完了した' },
     'total-50': { label: '継続力（上級）', description: '累計50セットを完了した' },
+    'growing-strong': {
+      label: '成長中',
+      description: '「ワーキングメモリの伸び」で2つ以上のモードが向上中と判定された',
+    },
     'all-modes': { label: 'オールラウンダー', description: '全モードに挑戦した' },
     'all-six-modes': {
       label: '全モード制覇',

@@ -1,5 +1,10 @@
 import { getStreakDays } from './history'
+import { getAllBenchmarks } from './benchmarks'
 import type { HistoryEntry, Mode } from '../types'
+
+// 「成長中」実績の判定に使う、正答率が向上中(band: 'above')と判定される
+// モード数のしきい値
+const GROWTH_ACHIEVEMENT_MODE_THRESHOLD = 2
 
 export type AchievementId =
   | 'first-session'
@@ -16,6 +21,7 @@ export type AchievementId =
   | 'level-3-dual-nback'
   | 'total-10'
   | 'total-50'
+  | 'growing-strong'
   | 'all-modes'
   | 'all-six-modes'
   | 'all-eight-modes'
@@ -104,6 +110,16 @@ export const ACHIEVEMENTS: Achievement[] = [
     id: 'total-50',
     icon: '🏆',
     isUnlocked: (h) => h.length >= 50,
+  },
+  {
+    id: 'growing-strong',
+    icon: '🌱',
+    // 「ワーキングメモリの伸び」（自己比較ベンチマーク）で、正答率が向上中の
+    // モードが2つ以上あれば解除する。実績・自己ベストと同じく履歴から都度
+    // 動的計算し、専用の可変ストアは持たない
+    isUnlocked: (h) =>
+      getAllBenchmarks(h).filter((b) => b.band === 'above').length >=
+      GROWTH_ACHIEVEMENT_MODE_THRESHOLD,
   },
   {
     id: 'all-modes',
