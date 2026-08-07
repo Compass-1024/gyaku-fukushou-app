@@ -454,6 +454,7 @@ export const en: Translations = {
     recentLabel: (accuracyPercent) => `Recent accuracy: ${accuracyPercent}%`,
     previousLabel: (accuracyPercent) => `Earlier accuracy: ${accuracyPercent}%`,
     digit: { label: 'Digit Mode (Reverse)' },
+    'digit-sum': { label: 'Digit Mode (Sum)' },
     spatial: { label: 'Spatial Mode' },
     nback: { label: 'N-Back Mode' },
     pattern: { label: 'Change Detection Mode' },

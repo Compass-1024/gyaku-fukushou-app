@@ -15,7 +15,16 @@ const CHANGE_THRESHOLD = 5
 export type BenchmarkBand = 'below' | 'average' | 'above'
 
 export interface Benchmark {
-  mode: 'digit' | 'spatial' | 'nback' | 'pattern' | 'dual-nback' | 'random' | 'word' | 'tone'
+  mode:
+    | 'digit'
+    | 'digit-sum'
+    | 'spatial'
+    | 'nback'
+    | 'pattern'
+    | 'dual-nback'
+    | 'random'
+    | 'word'
+    | 'tone'
   // 直近期間の正答率（%）
   value: number
   // それ以前の期間の正答率（%）。valueとの比較でbandが決まる
@@ -80,6 +89,11 @@ export function getDigitSpanBenchmark(history: HistoryEntry[]): Benchmark | null
   return buildSelfBenchmark(history, 'digit', 'digit', 'reverse')
 }
 
+// すうじモード（合計を入力）: 過去の前半/後半で正答率を比較する
+export function getDigitSumBenchmark(history: HistoryEntry[]): Benchmark | null {
+  return buildSelfBenchmark(history, 'digit-sum', 'digit', 'sum')
+}
+
 // 空間モード: 過去の前半/後半で正答率を比較する
 export function getSpatialSpanBenchmark(history: HistoryEntry[]): Benchmark | null {
   return buildSelfBenchmark(history, 'spatial', 'spatial')
@@ -124,6 +138,7 @@ export function getToneBenchmark(history: HistoryEntry[]): Benchmark | null {
 export function getAllBenchmarks(history: HistoryEntry[]): Benchmark[] {
   return [
     getDigitSpanBenchmark(history),
+    getDigitSumBenchmark(history),
     getSpatialSpanBenchmark(history),
     getNBackBenchmark(history),
     getPatternCapacityBenchmark(history),

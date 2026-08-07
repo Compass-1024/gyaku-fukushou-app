@@ -423,6 +423,7 @@ export const ja: Translations = {
     recentLabel: (accuracyPercent) => `直近の正答率: ${accuracyPercent}%`,
     previousLabel: (accuracyPercent) => `以前の正答率: ${accuracyPercent}%`,
     digit: { label: 'すうじモード（逆から入力）' },
+    'digit-sum': { label: 'すうじモード（合計を入力）' },
     spatial: { label: '空間モード' },
     nback: { label: 'Nバックモード' },
     pattern: { label: '変化検出モード' },

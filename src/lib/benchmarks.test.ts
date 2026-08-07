@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   getDigitSpanBenchmark,
+  getDigitSumBenchmark,
   getSpatialSpanBenchmark,
   getNBackBenchmark,
   getPatternCapacityBenchmark,
@@ -72,6 +73,25 @@ describe('getDigitSpanBenchmark', () => {
   it('gameTypeが一致する記録のみ対象にする', () => {
     const history = entriesAt('digit', 2, 4, 3, 3, 10, 'sum')
     expect(getDigitSpanBenchmark(history)).toBeNull()
+  })
+})
+
+describe('getDigitSumBenchmark', () => {
+  it('gameTypeが一致する記録のみ対象にする（reverseは含めない）', () => {
+    const history = entriesAt('digit', 2, 4, 3, 3, 10, 'reverse')
+    expect(getDigitSumBenchmark(history)).toBeNull()
+  })
+
+  it('十分なデータがあれば比較結果を返す', () => {
+    const history = [
+      ...entriesAt('digit', 1, 2, 1, 3, 20, 'sum'),
+      ...entriesAt('digit', 1, 2, 3, 3, 5, 'sum'),
+    ]
+    const result = getDigitSumBenchmark(history)
+    expect(result?.mode).toBe('digit-sum')
+    expect(result?.previousValue).toBe(33)
+    expect(result?.value).toBe(100)
+    expect(result?.band).toBe('above')
   })
 })
 
@@ -153,21 +173,22 @@ describe('getAllBenchmarks', () => {
     expect(result[0].mode).toBe('spatial')
   })
 
-  it('8モードすべてに十分なデータがあれば8件返す', () => {
-    const modes: [Mode, number, number][] = [
-      ['digit', 2, 3],
-      ['spatial', 2, 3],
-      ['nback', 10, 15],
-      ['pattern', 3, 4],
-      ['dual-nback', 20, 40],
-      ['random', 2, 5],
-      ['word', 2, 3],
-      ['tone', 2, 3],
+  it('9エリアすべてに十分なデータがあれば9件返す', () => {
+    const areas: [Mode, DigitGameType | undefined, number, number][] = [
+      ['digit', 'reverse', 2, 3],
+      ['digit', 'sum', 2, 3],
+      ['spatial', undefined, 2, 3],
+      ['nback', undefined, 10, 15],
+      ['pattern', undefined, 3, 4],
+      ['dual-nback', undefined, 20, 40],
+      ['random', undefined, 2, 5],
+      ['word', undefined, 2, 3],
+      ['tone', undefined, 2, 3],
     ]
-    const history = modes.flatMap(([mode, correct, total]) => [
-      ...entriesAt(mode, 1, 2, correct, total, 20, mode === 'digit' ? 'reverse' : undefined),
-      ...entriesAt(mode, 1, 2, correct, total, 5, mode === 'digit' ? 'reverse' : undefined),
+    const history = areas.flatMap(([mode, gameType, correct, total]) => [
+      ...entriesAt(mode, 1, 2, correct, total, 20, gameType),
+      ...entriesAt(mode, 1, 2, correct, total, 5, gameType),
     ])
-    expect(getAllBenchmarks(history)).toHaveLength(8)
+    expect(getAllBenchmarks(history)).toHaveLength(9)
   })
 })

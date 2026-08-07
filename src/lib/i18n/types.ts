@@ -271,6 +271,7 @@ export interface Translations {
     recentLabel: (accuracyPercent: number) => string
     previousLabel: (accuracyPercent: number) => string
     digit: { label: string }
+    'digit-sum': { label: string }
     spatial: { label: string }
     nback: { label: string }
     pattern: { label: string }
