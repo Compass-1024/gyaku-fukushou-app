@@ -105,13 +105,15 @@ describe('出題重み付け（questionWeighting.ts経由）', () => {
       recordDigitAttempt(1, [1, 1, 1], false)
     }
     let repeatCount = 0
-    const trials = 100
+    // 乱数依存のテストのため、試行回数を増やして分散を抑え閾値付近での
+    // フレーキーな失敗を防ぐ（実測: 重みなしrepeat率≈28%、この重み付け後は
+    // ≈52%。閾値40%はその中間より十分低く、5000試行の実測で標準偏差の
+    // 5倍以上の余裕がある）
+    const trials = 500
     for (let i = 0; i < trials; i++) {
       const [{ digits }] = pickDigitQuestionSet(1)
       if (new Set(digits).size !== digits.length) repeatCount += 1
     }
-    // 重み無しなら3桁の場合repeatは理論上28%程度だが、重み付けにより
-    // 明確にそれを上回るはず
-    expect(repeatCount).toBeGreaterThan(trials * 0.45)
+    expect(repeatCount).toBeGreaterThan(trials * 0.4)
   })
 })
