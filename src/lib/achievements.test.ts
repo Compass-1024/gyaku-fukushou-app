@@ -144,6 +144,17 @@ describe('achievements', () => {
       ]),
     ).toBe(true)
   })
+
+  it('all-modes-mastered requires level 3 in all eight modes', () => {
+    const mastered = findAchievement('all-modes-mastered')
+    const sevenModes = (
+      ['word', 'digit', 'nback', 'dual-nback', 'spatial', 'pattern', 'tone'] as const
+    ).map((mode) => entry({ mode, level: 3 }))
+    expect(mastered.isUnlocked(sevenModes)).toBe(false)
+    expect(
+      mastered.isUnlocked([...sevenModes, entry({ mode: 'random', level: 3 })]),
+    ).toBe(true)
+  })
 })
 
 describe('getNewlyUnlockedAchievements', () => {

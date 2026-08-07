@@ -318,6 +318,10 @@ export const en: Translations = {
       description:
         'Tried all eight modes, including Dual N-Back and Random',
     },
+    'all-modes-mastered': {
+      label: 'Master of All',
+      description: 'Reached Level 3 in all eight modes',
+    },
   },
   digit: {
     title: 'Digit Mode',

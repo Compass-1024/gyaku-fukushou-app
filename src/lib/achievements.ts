@@ -25,6 +25,7 @@ export type AchievementId =
   | 'all-modes'
   | 'all-six-modes'
   | 'all-eight-modes'
+  | 'all-modes-mastered'
 
 export interface Achievement {
   id: AchievementId
@@ -38,6 +39,22 @@ export interface Achievement {
 function hasMode(history: HistoryEntry[], mode: Mode): boolean {
   return history.some((e) => e.mode === mode)
 }
+
+function hasLevel3(history: HistoryEntry[], mode: Mode): boolean {
+  return history.some((e) => e.mode === mode && e.level === 3)
+}
+
+// 「全モードマスター」実績が対象とする全8モード（Mode型の全種類）
+const ALL_MODES_FOR_MASTERY: readonly Mode[] = [
+  'word',
+  'digit',
+  'nback',
+  'dual-nback',
+  'spatial',
+  'pattern',
+  'tone',
+  'random',
+]
 
 export const ACHIEVEMENTS: Achievement[] = [
   {
@@ -153,6 +170,13 @@ export const ACHIEVEMENTS: Achievement[] = [
       hasMode(h, 'pattern') &&
       hasMode(h, 'tone') &&
       hasMode(h, 'random'),
+  },
+  {
+    id: 'all-modes-mastered',
+    icon: '👑',
+    requiresWordMode: true,
+    // 個々のlevel-3-*実績を横断し、全8モードでレベル3に挑戦履歴があれば解除する
+    isUnlocked: (h) => ALL_MODES_FOR_MASTERY.every((mode) => hasLevel3(h, mode)),
   },
 ]
 

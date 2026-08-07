@@ -295,6 +295,10 @@ export const ja: Translations = {
       label: 'コンプリート',
       description: 'Dual N-Back・ランダムを含む全8モードに挑戦した',
     },
+    'all-modes-mastered': {
+      label: '全モードマスター',
+      description: '全8モードでレベル3に挑戦した',
+    },
   },
   digit: {
     title: 'すうじモード',
