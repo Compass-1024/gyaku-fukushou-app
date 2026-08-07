@@ -1,12 +1,37 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, beforeEach } from 'vitest'
 import {
   reverseDigits,
   sumDigits,
   isDigitAnswerCorrect,
   pickDigitQuestionSet,
+  recordDigitAttempt,
   getAnswerTimeoutMs,
 } from './digits'
 import type { Level } from '../types'
+
+function createMemoryStorage(): Storage {
+  let store: Record<string, string> = {}
+  return {
+    getItem: (key: string) => (key in store ? store[key] : null),
+    setItem: (key: string, value: string) => {
+      store[key] = value
+    },
+    removeItem: (key: string) => {
+      delete store[key]
+    },
+    clear: () => {
+      store = {}
+    },
+    key: (i: number) => Object.keys(store)[i] ?? null,
+    get length() {
+      return Object.keys(store).length
+    },
+  }
+}
+
+beforeEach(() => {
+  globalThis.localStorage = createMemoryStorage()
+})
 
 describe('reverseDigits', () => {
   it('reverses a digit array, preserving a resulting leading zero', () => {
@@ -71,5 +96,22 @@ describe('pickDigitQuestionSet', () => {
 describe('getAnswerTimeoutMs', () => {
   it('grows with digit length', () => {
     expect(getAnswerTimeoutMs(7)).toBeGreaterThan(getAnswerTimeoutMs(3))
+  })
+})
+
+describe('出題重み付け（questionWeighting.ts経由）', () => {
+  it('数字の重複がある系列で不正解を繰り返し記録すると、以後その系列パターンが選ばれやすくなる', () => {
+    for (let i = 0; i < 20; i++) {
+      recordDigitAttempt(1, [1, 1, 1], false)
+    }
+    let repeatCount = 0
+    const trials = 100
+    for (let i = 0; i < trials; i++) {
+      const [{ digits }] = pickDigitQuestionSet(1)
+      if (new Set(digits).size !== digits.length) repeatCount += 1
+    }
+    // 重み無しなら3桁の場合repeatは理論上28%程度だが、重み付けにより
+    // 明確にそれを上回るはず
+    expect(repeatCount).toBeGreaterThan(trials * 0.45)
   })
 })

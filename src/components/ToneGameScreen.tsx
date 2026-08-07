@@ -6,6 +6,7 @@ import { useSetCompletionRecorder } from '../hooks/useSetCompletionRecorder'
 import {
   pickToneQuestionSet,
   isToneAnswerCorrect,
+  recordToneAttempt,
   TONE_SHOWN_MS,
   TONE_GAP_MS,
   READY_MS,
@@ -119,6 +120,7 @@ export function ToneGameScreen({
 
   function finalizeAnswer(value: number[]) {
     const correct = isToneAnswerCorrect(value, currentQuestion.sequence)
+    recordToneAttempt(level, currentQuestion.sequence, correct)
     if (loadSettings().soundEnabled) {
       if (correct) playCorrectSound()
       else playIncorrectSound()

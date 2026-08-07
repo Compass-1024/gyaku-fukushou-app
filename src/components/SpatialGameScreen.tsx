@@ -7,6 +7,7 @@ import {
   pickSpatialQuestionSet,
   reverseSequence,
   isSpatialAnswerCorrect,
+  recordSpatialAttempt,
   SPATIAL_SHOWN_MS,
   SPATIAL_GAP_MS,
   READY_MS,
@@ -104,6 +105,7 @@ export function SpatialGameScreen({
   function finalizeAnswer(value: number[]) {
     const expectedAnswer = reverseSequence(currentQuestion.sequence)
     const correct = isSpatialAnswerCorrect(value, expectedAnswer)
+    recordSpatialAttempt(level, currentQuestion.sequence, currentQuestion.gridSize, correct)
     if (loadSettings().soundEnabled) {
       if (correct) playCorrectSound()
       else playIncorrectSound()

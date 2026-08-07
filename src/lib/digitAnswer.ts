@@ -5,3 +5,10 @@ export function isDigitStringMatch(typed: string, expectedAnswer: string): boole
   if (typed.length === 0) return false
   return typed.padStart(expectedAnswer.length, '0') === expectedAnswer
 }
+
+// すうじ/順唱モードの出題重み付け（questionWeighting.ts）で使う系列パターンの
+// 粗い分類。同じ数字が2回以上出現するかどうかで2分割する（数字の重複は
+// 記憶時の混同・干渉が起きやすく、難易度に影響しうる特徴のため）
+export function classifyDigitPattern(digits: number[]): string {
+  return new Set(digits).size !== digits.length ? 'repeat' : 'unique'
+}

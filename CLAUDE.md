@@ -127,7 +127,7 @@ flowchart TD
 ### ことばモード（`src/lib/reverse.ts`, `src/lib/kana.ts`, `src/lib/phrases.ts`, `src/lib/phraseStats.ts`）
 
 - **多言語対応**: 日本語の音韻に強く依存するため、UI言語を英語にすると選択できなくなる（トップ画面にボタン自体が表示されない）。詳細は「多言語化（i18n）」セクションを参照。
-- **出題方式**: `PHRASES`（ひらがな表記の単語・文リスト）からレベルごとに重複なく3問抽出する。等確率のランダム抽選ではなく、`src/lib/phraseStats.ts`に蓄積したフレーズ単位の正誤履歴（`localStorage`キー`gyaku-fukushou:phraseStats`）に基づく重み付き抽選（`pickQuestionSet`）。誤答が多いフレーズほどウェイトが上がり選ばれやすくなり、未挑戦のフレーズは標準ウェイトのまま（既存フレーズより優先も劣後もしない）。1問終えるたびに`recordPhraseAttempt`でそのフレーズの正誤を記録する。この仕組みはことばモード固有（他5モードは固定候補プールを持たずその場で乱数生成する方式のため未対応、[ROADMAP.md](ROADMAP.md)参照）。
+- **出題方式**: `PHRASES`（ひらがな表記の単語・文リスト）からレベルごとに重複なく3問抽出する。等確率のランダム抽選ではなく、`src/lib/phraseStats.ts`に蓄積したフレーズ単位の正誤履歴（`localStorage`キー`gyaku-fukushou:phraseStats`）に基づく重み付き抽選（`pickQuestionSet`）。誤答が多いフレーズほどウェイトが上がり選ばれやすくなり、未挑戦のフレーズは標準ウェイトのまま（既存フレーズより優先も劣後もしない）。1問終えるたびに`recordPhraseAttempt`でそのフレーズの正誤を記録する。ことばモードはフレーズという固定候補プールを持つためこの方式が使えるが、他5モード（すうじ/順唱/空間/変化検出/音・色）は固定候補プールを持たないため、代わりに系列パターンをバケット分類して重み付ける方式を使う（[出題重み付け](#出題重み付けすうじ順唱空間変化検出音色srclibquestionweightingts)参照）。
 - **レベル定義**:
   | レベル | 文字数 | 収録語数 | 復唱の持ち時間 | 一致許容編集距離 |
   |---|---|---|---|---|
@@ -147,7 +147,7 @@ flowchart TD
 ### すうじモード（`src/lib/digits.ts`）
 
 - ゲームタイプ選択が先にある: 「逆から入力（reverse）」「合計を入力（sum）」の2種類。
-- **出題方式**: レベルごとの桁数でランダムな数字列を3問生成。
+- **出題方式**: レベルごとの桁数でランダムな数字列を3問生成。誤答が多い系列パターンほど選ばれやすい重み付き抽選（[出題重み付け](#出題重み付けすうじ順唱空間変化検出音色srclibquestionweightingts)参照）。
 - **レベル定義**:
   | レベル | 桁数 |
   |---|---|
@@ -167,7 +167,7 @@ flowchart TD
 
 Forward Digit Span（順唱スパン）課題。表示された数字を見た順番のまま入力する単純スパン課題で、すうじモード（逆から入力）と対をなす。実装はすうじモードのロジック・UI（`NumpadInput`等）をほぼそのまま流用し、逆順化のみ行わない。0埋め比較ロジックは`src/lib/digitAnswer.ts`に共通化し、`digits.ts`/`sequence.ts`双方から利用する。
 
-- **出題方式**: すうじモードと同じ桁数テーブルでランダムな数字列を3問生成。
+- **出題方式**: すうじモードと同じ桁数テーブルでランダムな数字列を3問生成。すうじモードと同じ重み付き抽選（`classifyDigitPattern`はすうじモードと共有）。
 - **レベル定義**:
   | レベル | 桁数 |
   |---|---|
@@ -205,7 +205,7 @@ Forward Digit Span（順唱スパン）課題。表示された数字を見た�
 
 視空間ワーキングメモリ（Corsi Block-Tapping Taskを参考）を鍛えるモード。マスが順番に光るのを見て覚え、逆の順番でタップして答える。
 
-- **出題方式**: レベルごとのグリッドサイズから、重複なくランダムにマスを選んで系列を生成し、3問1セットで出題。
+- **出題方式**: レベルごとのグリッドサイズから、重複なくランダムにマスを選んで系列を生成し、3問1セットで出題。誤答が多い系列パターン（隣接マス移動の有無）ほど選ばれやすい重み付き抽選。
 - **レベル定義**:
   | レベル | グリッド | マス数 |
   |---|---|---|
@@ -223,7 +223,7 @@ Forward Digit Span（順唱スパン）課題。表示された数字を見た�
 
 視覚ワーキングメモリの再生課題（Luck & Vogel 1997の変化検出課題を参考にした再生版）を鍛えるモード。一瞬表示される模様を覚え、白紙に戻った状態から元々塗りつぶされていたマスを選び直す。
 
-- **出題方式**: レベルごとのグリッドサイズ・塗りつぶしマス数でランダムな模様を生成。3問1セットで出題。
+- **出題方式**: レベルごとのグリッドサイズ・塗りつぶしマス数でランダムな模様を生成。3問1セットで出題。誤答が多い模様パターン（マスのかたまり具合）ほど選ばれやすい重み付き抽選。
 - **レベル定義**:
   | レベル | グリッド | 塗りつぶしマス数 |
   |---|---|---|
@@ -241,7 +241,7 @@ Forward Digit Span（順唱スパン）課題。表示された数字を見た�
 
 非言語性の聴覚ワーキングメモリ（ピッチ記憶が言語・数字の記憶と独立した貯蔵系であることを示すDeutsch 1970などの知見を参考）を鍛える、Simon型のモード。4色のパッドが音とともに光る順番を覚え、同じ順にタップして再現する。
 
-- **出題方式**: レベルごとの長さで、4色のパッド番号（重複可）をランダムに並べた系列を生成。3問1セットで出題。
+- **出題方式**: レベルごとの長さで、4色のパッド番号（重複可）をランダムに並べた系列を生成。3問1セットで出題。誤答が多い系列パターン（パッドの重複有無）ほど選ばれやすい重み付き抽選。
 - **レベル定義**:
   | レベル | 音数 |
   |---|---|
@@ -263,6 +263,20 @@ Forward Digit Span（順唱スパン）課題。表示された数字を見た�
 - **1ラウンドの流れ**: 各ラウンドの出題生成・正誤判定ロジックは対応する`lib/*.ts`をそのまま呼び出す（重複実装なし）。表示・入力UIのみラウンド種別ごとに`RandomGameScreen.tsx`内で切り替える。
 - **正誤判定**: 各ラウンドは元モードの判定関数（`isDigitAnswerCorrect`/`isSequenceAnswerCorrect`/`isSpatialAnswerCorrect`/`isPatternSelectionCorrect`/`isToneAnswerCorrect`）をそのまま使う。
 - `HistoryEntry`は`mode: 'random'`、`correct`＝5問中の正解数、`total`＝5として記録する。`src/lib/history.ts`の`ALL_AREAS`には**含めない**（単一スキル指標ではないため、苦手分野判定・ベンチマークの対象外）。累計セット数・実績等、履歴全体を見る集計には自動的にカウントされる。
+
+### 出題重み付け（すうじ/順唱/空間/変化検出/音・色、`src/lib/questionWeighting.ts`）
+
+ことばモードはフレーズという固定候補プール（`PHRASES`）を持つため`phraseStats.ts`でフレーズ単位に重み付けできるが、この5モードは固定プールを持たずその場で乱数生成する方式のため、代わりに「生成した系列パターンを粗い特徴（バケット）に分類し、バケット単位の正誤統計を蓄積する」方式を取る。出題時は候補を複数（既定5件）生成し、苦手なバケットに属する候補ほど選ばれやすい重み付き抽選（`pickWeightedCandidate`）で1件を選ぶ。重み計算式（`1 + 誤答率 × 3`）はことばモードの`getPhraseWeight`と同じ考え方。
+
+- **統計の保存**: `gyaku-fukushou:questionStats:<mode>`（`digit`/`sequence`/`spatial`/`pattern`/`tone`ごとに独立）に`Record<"<level>:<bucket>", { correct, total }>`形式で保存する。
+- **モードごとの分類（バケット）**:
+  | モード | 分類基準 | バケット |
+  |---|---|---|
+  | すうじ・順唱 | 数字の重複有無（`classifyDigitPattern`、`digitAnswer.ts`で共有） | `repeat` / `unique` |
+  | 空間 | 連続するタップ間に隣接マスへの移動があるか | `adjacent` / `scattered` |
+  | 変化検出 | 塗りつぶしマスの平均マス間距離がグリッド幅の半分以下か | `clustered` / `scattered` |
+  | 音・色 | パッドの重複有無 | `repeat` / `unique` |
+- 各GameScreenは正誤判定の直後に`record<Mode>Attempt(level, ..., correct)`（`recordDigitAttempt`/`recordSequenceAttempt`/`recordSpatialAttempt`/`recordPatternAttempt`/`recordToneAttempt`）を呼び、そのバケットの統計を更新する。ランダムモード（`RandomGameScreen.tsx`）は各`pick*QuestionSet`をそのまま呼ぶため重み付けの恩恵はそのまま受けるが、実行結果の記録（`record*Attempt`）はここでは行わない（統計は各専用モードでの挑戦から蓄積される設計）。
 
 ### 共通: レベル推奨ロジック（`src/lib/difficulty.ts`）
 
@@ -415,6 +429,7 @@ Web Audio APIによる完全プログラム生成のシンセサイザー方式�
 | `gyaku-fukushou:lastRecapWeekKey` | 週間振り返りカードの表示済み週（[週間振り返りカード](#週間振り返りカードsrclibrecapts)参照。読み書きは`src/lib/recap.ts`が単独で担い、上記2ファイルには集約していない） | 週の月曜日を表す日付キー文字列 |
 | `gyaku-fukushou:phraseStats` | ことばモードのフレーズ単位の正誤履歴（[ことばモード](#ことばモードsrclibreversets-srclibkanats-srclibphrasests-srclibphrasestatsts)参照。読み書きは`src/lib/phraseStats.ts`が単独で担う） | `Record<phraseId, { correct: number; total: number }>`のJSONオブジェクト |
 | `gyaku-fukushou:missionCompletions` | 今日のミッションの達成ログ（[今日のミッション](#今日のミッションsrclibmissionsts)参照。読み書きは`src/lib/missions.ts`が単独で担う。プレイヤーXP計算にも使う） | `{ dateKey: string; missionId: string }[]`のJSON配列（最大200件） |
+| `gyaku-fukushou:questionStats:<mode>` | すうじ/順唱/空間/変化検出/音・色モードの系列パターン単位の正誤統計（[出題重み付け](#出題重み付けすうじ順唱空間変化検出音色srclibquestionweightingts)参照。`<mode>`は`digit`/`sequence`/`spatial`/`pattern`/`tone`。読み書きは`src/lib/questionWeighting.ts`が単独で担う） | `Record<"<level>:<bucket>", { correct: number; total: number }>`のJSONオブジェクト |
 
 プレイヤーのレベル・経験値は上記のどのキーにも直接保存しない。`src/lib/xp.ts`の`computeTotalXp(history, missionCompletions.length)`で履歴＋ミッション達成ログから都度計算する（実績と同じ「派生できるものは保存しない」哲学）。
 
@@ -479,7 +494,7 @@ interface AppSettings {
 ## Testing
 
 - **ユニットテスト（Vitest）**: `src/lib/`配下にロジック層のテストを併置している（UIコンポーネントの単体テストはなし）:
-  `reverse.test.ts` / `digits.test.ts` / `digitAnswer.ts`（`digits.test.ts`/`sequence.test.ts`経由でカバー） / `sequence.test.ts` / `kana.test.ts` / `difficulty.test.ts` / `theme.test.ts` / `history.test.ts` / `nback.test.ts` / `dualNback.test.ts` / `achievements.test.ts` / `logger.test.ts` / `backup.test.ts` / `spatial.test.ts` / `pattern.test.ts` / `tone.test.ts` / `random.test.ts` / `benchmarks.test.ts` / `xp.test.ts` / `missions.test.ts` / `reminder.test.ts`
+  `reverse.test.ts` / `digits.test.ts` / `digitAnswer.ts`（`digits.test.ts`/`sequence.test.ts`経由でカバー） / `sequence.test.ts` / `kana.test.ts` / `difficulty.test.ts` / `theme.test.ts` / `history.test.ts` / `nback.test.ts` / `dualNback.test.ts` / `achievements.test.ts` / `logger.test.ts` / `backup.test.ts` / `spatial.test.ts` / `pattern.test.ts` / `tone.test.ts` / `random.test.ts` / `benchmarks.test.ts` / `xp.test.ts` / `missions.test.ts` / `questionWeighting.test.ts` / `reminder.test.ts`
 
   加えて`api/_lib/reminder.ts`（`src/lib/reminder.ts`の複製）にも同期確認用の軽量テスト`api/_lib/reminder.test.ts`がある。
   新しいロジックを`src/lib/`に追加する場合は、同ディレクトリに`*.test.ts`を併置してVitestでカバーすること。`vitest.config.ts`で`e2e/`ディレクトリは除外している。

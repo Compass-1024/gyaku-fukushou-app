@@ -1,11 +1,47 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, beforeEach } from 'vitest'
 import {
   pickSpatialQuestionSet,
   reverseSequence,
   isSpatialAnswerCorrect,
   getGridSize,
   getAnswerTimeoutMs,
+  recordSpatialAttempt,
 } from './spatial'
+
+function createMemoryStorage(): Storage {
+  let store: Record<string, string> = {}
+  return {
+    getItem: (key: string) => (key in store ? store[key] : null),
+    setItem: (key: string, value: string) => {
+      store[key] = value
+    },
+    removeItem: (key: string) => {
+      delete store[key]
+    },
+    clear: () => {
+      store = {}
+    },
+    key: (i: number) => Object.keys(store)[i] ?? null,
+    get length() {
+      return Object.keys(store).length
+    },
+  }
+}
+
+beforeEach(() => {
+  globalThis.localStorage = createMemoryStorage()
+})
+
+function hasAdjacentPair(sequence: number[], gridSize: number): boolean {
+  for (let i = 1; i < sequence.length; i++) {
+    const ax = sequence[i - 1] % gridSize
+    const ay = Math.floor(sequence[i - 1] / gridSize)
+    const bx = sequence[i] % gridSize
+    const by = Math.floor(sequence[i] / gridSize)
+    if (Math.abs(ax - bx) + Math.abs(ay - by) === 1) return true
+  }
+  return false
+}
 
 describe('pickSpatialQuestionSet', () => {
   it('generates 3 questions per set', () => {
@@ -75,5 +111,20 @@ describe('isSpatialAnswerCorrect', () => {
 describe('getAnswerTimeoutMs', () => {
   it('increases with sequence length', () => {
     expect(getAnswerTimeoutMs(3)).toBeLessThan(getAnswerTimeoutMs(5))
+  })
+})
+
+describe('出題重み付け（questionWeighting.ts経由）', () => {
+  it('隣接マス移動を含む系列で不正解を繰り返し記録すると、以後その系列パターンが選ばれやすくなる', () => {
+    for (let i = 0; i < 20; i++) {
+      recordSpatialAttempt(1, [0, 1, 2], 3, false)
+    }
+    let adjacentCount = 0
+    const trials = 100
+    for (let i = 0; i < trials; i++) {
+      const [{ sequence, gridSize }] = pickSpatialQuestionSet(1)
+      if (hasAdjacentPair(sequence, gridSize)) adjacentCount += 1
+    }
+    expect(adjacentCount).toBeGreaterThan(trials * 0.6)
   })
 })

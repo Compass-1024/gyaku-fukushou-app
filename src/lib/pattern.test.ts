@@ -1,9 +1,51 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, beforeEach } from 'vitest'
 import {
   pickPatternQuestionSet,
   isPatternSelectionCorrect,
   getAnswerTimeoutMs,
+  recordPatternAttempt,
 } from './pattern'
+
+function createMemoryStorage(): Storage {
+  let store: Record<string, string> = {}
+  return {
+    getItem: (key: string) => (key in store ? store[key] : null),
+    setItem: (key: string, value: string) => {
+      store[key] = value
+    },
+    removeItem: (key: string) => {
+      delete store[key]
+    },
+    clear: () => {
+      store = {}
+    },
+    key: (i: number) => Object.keys(store)[i] ?? null,
+    get length() {
+      return Object.keys(store).length
+    },
+  }
+}
+
+beforeEach(() => {
+  globalThis.localStorage = createMemoryStorage()
+})
+
+function isClustered(filledCells: number[], gridSize: number): boolean {
+  let totalDistance = 0
+  let pairCount = 0
+  for (let i = 0; i < filledCells.length; i++) {
+    for (let j = i + 1; j < filledCells.length; j++) {
+      const ax = filledCells[i] % gridSize
+      const ay = Math.floor(filledCells[i] / gridSize)
+      const bx = filledCells[j] % gridSize
+      const by = Math.floor(filledCells[j] / gridSize)
+      totalDistance += Math.abs(ax - bx) + Math.abs(ay - by)
+      pairCount += 1
+    }
+  }
+  const avgDistance = pairCount > 0 ? totalDistance / pairCount : 0
+  return avgDistance <= gridSize / 2
+}
 
 describe('pickPatternQuestionSet', () => {
   it('generates 3 questions per set', () => {
@@ -55,5 +97,22 @@ describe('isPatternSelectionCorrect', () => {
 describe('getAnswerTimeoutMs', () => {
   it('increases with the number of filled cells', () => {
     expect(getAnswerTimeoutMs(4)).toBeLessThan(getAnswerTimeoutMs(8))
+  })
+})
+
+describe('出題重み付け（questionWeighting.ts経由）', () => {
+  it('かたまった配置で不正解を繰り返し記録すると、以後その模様パターンが選ばれやすくなる', () => {
+    for (let i = 0; i < 20; i++) {
+      recordPatternAttempt(1, [0, 1, 4, 5], 4, false)
+    }
+    let clusteredCount = 0
+    const trials = 100
+    for (let i = 0; i < trials; i++) {
+      const [{ filledCells, gridSize }] = pickPatternQuestionSet(1)
+      if (isClustered(filledCells, gridSize)) clusteredCount += 1
+    }
+    // 4×4グリッドで4マスが「かたまって」いる確率はランダムだとかなり低い
+    // （厳しめの閾値のため）が、重み付けにより明確にベースラインを上回るはず
+    expect(clusteredCount).toBeGreaterThan(trials * 0.2)
   })
 })

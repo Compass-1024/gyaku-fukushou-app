@@ -1,9 +1,11 @@
 import type { Level, SpatialQuestion } from '../types'
+import { loadBucketStats, recordBucketAttempt, pickWeightedCandidate } from './questionWeighting'
 
 const GRID_SIZE: Record<Level, number> = { 1: 3, 2: 3, 3: 4 }
 const SEQUENCE_LENGTH: Record<Level, number> = { 1: 3, 2: 4, 3: 5 }
 
 const QUESTIONS_PER_SET = 3
+const STATS_MODE = 'spatial'
 
 export function getGridSize(level: Level): number {
   return GRID_SIZE[level]
@@ -22,15 +24,47 @@ function generateSequence(gridSize: number, length: number): number[] {
   return sequence
 }
 
+// 出題重み付け用の系列パターン分類。隣り合うマスへ連続して移動する箇所が
+// あるか（'adjacent'）、常に離れたマスへ飛ぶか（'scattered'）で2分割する
+// （隣接移動は空間的にチャンク化しやすく、難易度に影響しうる特徴のため）
+function classifySpatialSequence(sequence: number[], gridSize: number): string {
+  for (let i = 1; i < sequence.length; i++) {
+    const ax = sequence[i - 1] % gridSize
+    const ay = Math.floor(sequence[i - 1] / gridSize)
+    const bx = sequence[i] % gridSize
+    const by = Math.floor(sequence[i] / gridSize)
+    if (Math.abs(ax - bx) + Math.abs(ay - by) === 1) return 'adjacent'
+  }
+  return 'scattered'
+}
+
+// 誤答が多い系列パターンほど選ばれやすい重み付き抽選で出題する
 export function pickSpatialQuestionSet(level: Level): SpatialQuestion[] {
   const gridSize = GRID_SIZE[level]
   const length = SEQUENCE_LENGTH[level]
   const now = Date.now()
-  return Array.from({ length: QUESTIONS_PER_SET }, (_, i) => ({
-    id: `${level}-${now}-${i}`,
-    gridSize,
-    sequence: generateSequence(gridSize, length),
-  }))
+  const stats = loadBucketStats(STATS_MODE)
+  return Array.from({ length: QUESTIONS_PER_SET }, (_, i) => {
+    const sequence = pickWeightedCandidate(
+      () => generateSequence(gridSize, length),
+      (s) => `${level}:${classifySpatialSequence(s, gridSize)}`,
+      stats,
+    )
+    return { id: `${level}-${now}-${i}`, gridSize, sequence }
+  })
+}
+
+export function recordSpatialAttempt(
+  level: Level,
+  sequence: number[],
+  gridSize: number,
+  correct: boolean,
+): void {
+  recordBucketAttempt(
+    STATS_MODE,
+    `${level}:${classifySpatialSequence(sequence, gridSize)}`,
+    correct,
+  )
 }
 
 export function reverseSequence(sequence: number[]): number[] {

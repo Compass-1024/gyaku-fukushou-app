@@ -1,23 +1,39 @@
 import type { Level, SequenceQuestion } from '../types'
-import { isDigitStringMatch } from './digitAnswer'
+import { isDigitStringMatch, classifyDigitPattern } from './digitAnswer'
+import { loadBucketStats, recordBucketAttempt, pickWeightedCandidate } from './questionWeighting'
 
 // すうじモード（逆から入力）と同じ桁数テーブルを使い、見た順そのままに
 // 入力させる順唱（Forward Digit Span）課題
 const DIGIT_LENGTH: Record<Level, number> = { 1: 3, 2: 5, 3: 7 }
 
 const QUESTIONS_PER_SET = 3
+const STATS_MODE = 'sequence'
 
 function generateDigits(length: number): number[] {
   return Array.from({ length }, () => Math.floor(Math.random() * 10))
 }
 
+// 誤答が多い系列パターン（数字の重複あり/なし）ほど選ばれやすい重み付き抽選で出題する
 export function pickSequenceQuestionSet(level: Level): SequenceQuestion[] {
   const length = DIGIT_LENGTH[level]
   const now = Date.now()
-  return Array.from({ length: QUESTIONS_PER_SET }, (_, i) => ({
-    id: `${level}-${now}-${i}`,
-    digits: generateDigits(length),
-  }))
+  const stats = loadBucketStats(STATS_MODE)
+  return Array.from({ length: QUESTIONS_PER_SET }, (_, i) => {
+    const digits = pickWeightedCandidate(
+      () => generateDigits(length),
+      (d) => `${level}:${classifyDigitPattern(d)}`,
+      stats,
+    )
+    return { id: `${level}-${now}-${i}`, digits }
+  })
+}
+
+export function recordSequenceAttempt(
+  level: Level,
+  digits: number[],
+  correct: boolean,
+): void {
+  recordBucketAttempt(STATS_MODE, `${level}:${classifyDigitPattern(digits)}`, correct)
 }
 
 export function expectedSequenceAnswer(digits: number[]): string {

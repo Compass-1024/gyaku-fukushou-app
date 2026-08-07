@@ -7,6 +7,7 @@ import {
   pickSequenceQuestionSet,
   expectedSequenceAnswer,
   isSequenceAnswerCorrect,
+  recordSequenceAttempt,
   DIGIT_SHOWN_MS,
   DIGIT_GAP_MS,
   READY_MS,
@@ -135,6 +136,7 @@ export function SequenceGameScreen({
   function finalizeAnswer(value: string) {
     const expectedAnswer = expectedSequenceAnswer(currentQuestion.digits)
     const correct = isSequenceAnswerCorrect(value, expectedAnswer)
+    recordSequenceAttempt(level, currentQuestion.digits, correct)
     if (loadSettings().soundEnabled) {
       if (correct) playCorrectSound()
       else playIncorrectSound()

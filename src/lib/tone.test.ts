@@ -1,10 +1,35 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, beforeEach } from 'vitest'
 import {
   pickToneQuestionSet,
   isToneAnswerCorrect,
   getAnswerTimeoutMs,
+  recordToneAttempt,
   PAD_COUNT,
 } from './tone'
+
+function createMemoryStorage(): Storage {
+  let store: Record<string, string> = {}
+  return {
+    getItem: (key: string) => (key in store ? store[key] : null),
+    setItem: (key: string, value: string) => {
+      store[key] = value
+    },
+    removeItem: (key: string) => {
+      delete store[key]
+    },
+    clear: () => {
+      store = {}
+    },
+    key: (i: number) => Object.keys(store)[i] ?? null,
+    get length() {
+      return Object.keys(store).length
+    },
+  }
+}
+
+beforeEach(() => {
+  globalThis.localStorage = createMemoryStorage()
+})
 
 describe('pickToneQuestionSet', () => {
   it('generates 3 questions per set', () => {
@@ -43,5 +68,22 @@ describe('isToneAnswerCorrect', () => {
 describe('getAnswerTimeoutMs', () => {
   it('increases with sequence length', () => {
     expect(getAnswerTimeoutMs(3)).toBeLessThan(getAnswerTimeoutMs(5))
+  })
+})
+
+describe('出題重み付け（questionWeighting.ts経由）', () => {
+  it('パッドの重複がある系列で不正解を繰り返し記録すると、以後その系列パターンが選ばれやすくなる', () => {
+    for (let i = 0; i < 20; i++) {
+      recordToneAttempt(1, [0, 0, 1], false)
+    }
+    let repeatCount = 0
+    const trials = 100
+    for (let i = 0; i < trials; i++) {
+      const [{ sequence }] = pickToneQuestionSet(1)
+      if (new Set(sequence).size !== sequence.length) repeatCount += 1
+    }
+    // パッドは4種から重複ありで選ぶため、重み付けなしでも repeat の
+    // ベース確率は6割強とかなり高い。重み付けによりそれをさらに上回るはず
+    expect(repeatCount).toBeGreaterThan(trials * 0.75)
   })
 })

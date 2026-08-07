@@ -5,6 +5,7 @@ import { useSetCompletionRecorder } from '../hooks/useSetCompletionRecorder'
 import {
   pickPatternQuestionSet,
   isPatternSelectionCorrect,
+  recordPatternAttempt,
   PATTERN_SHOWN_MS,
   PATTERN_BLANK_MS,
   READY_MS,
@@ -101,6 +102,12 @@ export function PatternGameScreen({
 
   function finalizeAnswer(value: number[]) {
     const correct = isPatternSelectionCorrect(value, currentQuestion.filledCells)
+    recordPatternAttempt(
+      level,
+      currentQuestion.filledCells,
+      currentQuestion.gridSize,
+      correct,
+    )
     if (loadSettings().soundEnabled) {
       if (correct) playCorrectSound()
       else playIncorrectSound()

@@ -8,6 +8,7 @@ import {
   reverseDigits,
   sumDigits,
   isDigitAnswerCorrect,
+  recordDigitAttempt,
   DIGIT_SHOWN_MS,
   DIGIT_GAP_MS,
   READY_MS,
@@ -153,6 +154,7 @@ export function DigitGameScreen({
   function finalizeAnswer(value: string) {
     const expectedAnswer = computeExpectedAnswer(currentQuestion, gameType)
     const correct = isDigitAnswerCorrect(value, expectedAnswer)
+    recordDigitAttempt(level, currentQuestion.digits, correct)
     if (loadSettings().soundEnabled) {
       if (correct) playCorrectSound()
       else playIncorrectSound()
