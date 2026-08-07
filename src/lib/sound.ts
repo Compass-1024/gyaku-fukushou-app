@@ -1,5 +1,5 @@
 import { loadSettings } from './settings'
-import { getSharedAudioContext } from './audioContext'
+import { getSharedAudioContext, getMasterBus } from './audioContext'
 
 let reverbNode: ConvolverNode | null = null
 
@@ -30,7 +30,7 @@ function getReverb(ctx: AudioContext): ConvolverNode {
   const outGain = ctx.createGain()
   outGain.gain.value = 0.6
   convolver.connect(outGain)
-  outGain.connect(ctx.destination)
+  outGain.connect(getMasterBus(ctx))
   reverbNode = convolver
   return convolver
 }
@@ -39,7 +39,7 @@ function getReverb(ctx: AudioContext): ConvolverNode {
 function createVoiceBus(ctx: AudioContext, reverbSend: number): GainNode {
   const dry = ctx.createGain()
   dry.gain.value = getVolumeMultiplier()
-  dry.connect(ctx.destination)
+  dry.connect(getMasterBus(ctx))
   if (reverbSend > 0) {
     const send = ctx.createGain()
     send.gain.value = reverbSend
@@ -185,17 +185,28 @@ export function playIncorrectSound(): void {
   })
 }
 
-// ボタン操作の軽いタップ音
+// ボタン操作の軽いタップ音。ノイズバーストだけだとスマートフォンの
+// 内蔵スピーカーでは低音域が出ず埋もれがちなため、短いクリック音の芯となる
+// 高めのトーンを重ねて、小さなスピーカーでも聞き取りやすくしている
 export function playButtonTap(): void {
   const ctx = getAudioContext()
   if (!ctx) return
   const bus = createVoiceBus(ctx, 0)
   playNoiseBurst(ctx, bus, {
     startTime: ctx.currentTime,
-    duration: 0.03,
-    gain: 0.1,
-    filterFreq: 3000,
+    duration: 0.035,
+    gain: 0.16,
+    filterFreq: 3200,
     filterType: 'bandpass',
+  })
+  playHarmonicTone(ctx, bus, {
+    frequency: 1800,
+    startTime: ctx.currentTime,
+    duration: 0.05,
+    gain: 0.1,
+    type: 'sine',
+    harmonics: [1],
+    attack: 0.002,
   })
 }
 

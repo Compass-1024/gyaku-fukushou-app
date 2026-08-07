@@ -31,7 +31,6 @@ export const ja: Translations = {
       word: 'ことば',
       'digit-reverse': 'すうじ（逆から）',
       'digit-sum': 'すうじ（合計）',
-      sequence: '順唱',
       nback: 'Nバック',
       'dual-nback': 'Dual N-Back',
       spatial: '空間',
@@ -66,10 +65,15 @@ export const ja: Translations = {
         description:
           '言葉を聞いて、逆から声に出して答えるワーキングメモリトレーニングです。',
       },
-      digit: {
-        title: 'すうじモード',
+      digitReverse: {
+        title: 'すうじモード（逆から入力）',
         description:
           '表示された数字を逆の順番で入力するワーキングメモリトレーニングです。',
+      },
+      digitSum: {
+        title: 'すうじモード（合計を入力）',
+        description:
+          '表示された数字をすべて足した合計を入力するワーキングメモリトレーニングです。',
       },
       nback: {
         title: 'Nバックモード',
@@ -91,11 +95,6 @@ export const ja: Translations = {
         description:
           '色のパッドが音とともに光る順番を覚えて、同じ順にタップして再現する非言語性のワーキングメモリトレーニングです。',
       },
-      sequence: {
-        title: '順唱モード',
-        description:
-          '表示された数字を見た順番のまま入力するワーキングメモリトレーニングです。',
-      },
       dualNback: {
         title: 'Dual N-Backモード',
         description:
@@ -104,7 +103,7 @@ export const ja: Translations = {
       random: {
         title: 'ランダムモード',
         description:
-          'すうじ・順唱・空間・変化検出・音/色の中からランダムに5問出題される、ミックス練習モードです。',
+          'すうじ（逆から/合計）・空間・変化検出・音/色の中からランダムに5問出題される、ミックス練習モードです。',
       },
     },
     playerLevel: (level) => `プレイヤーLv.${level}`,
@@ -277,10 +276,6 @@ export const ja: Translations = {
       label: '音感上級者',
       description: '音・色モードのレベル3に挑戦した',
     },
-    'level-3-sequence': {
-      label: '順唱上級者',
-      description: '順唱モードのレベル3に挑戦した',
-    },
     'level-3-dual-nback': {
       label: 'Dual N-Back上級者',
       description: 'Dual N-Backモードのレベル3に挑戦した',
@@ -292,9 +287,9 @@ export const ja: Translations = {
       label: '全モード制覇',
       description: 'ことば・すうじ・Nバック・空間・変化検出・音の全6モードに挑戦した',
     },
-    'all-nine-modes': {
+    'all-eight-modes': {
       label: 'コンプリート',
-      description: '順唱・Dual N-Back・ランダムを含む全9モードに挑戦した',
+      description: 'Dual N-Back・ランダムを含む全8モードに挑戦した',
     },
   },
   digit: {
@@ -310,7 +305,6 @@ export const ja: Translations = {
         description: '表示された数字をすべて足した合計を入力しましょう',
       },
     },
-    backToTypeSelect: '← すうじモード選択',
     levelSelectTitle: (gameTypeTitle) => `すうじモード（${gameTypeTitle}）`,
     levelLabel: (level) =>
       ({ 1: 'レベル1（3桁）', 2: 'レベル2（5桁）', 3: 'レベル3（7桁）' })[level],
@@ -318,15 +312,6 @@ export const ja: Translations = {
       reverse: '逆から入力してください',
       sum: '全部たすといくつ？',
     },
-    noInput: '（未入力）',
-    questionLabel: '出題: ',
-  },
-  sequence: {
-    title: '順唱モード',
-    subtitle: '表示された数字を、見た順番のまま入力するワーキングメモリトレーニングです。',
-    levelLabel: (level) =>
-      ({ 1: 'レベル1（3桁）', 2: 'レベル2（5桁）', 3: 'レベル3（7桁）' })[level],
-    answerPrompt: '見た順番のまま入力してください',
     noInput: '（未入力）',
     questionLabel: '出題: ',
   },
@@ -405,7 +390,7 @@ export const ja: Translations = {
   random: {
     title: 'ランダムモード',
     subtitle:
-      'すうじ・順唱・空間・変化検出・音/色の中から1問ずつ、合計5問がランダムな順番で出題されます。',
+      'すうじ（逆から/合計）・空間・変化検出・音/色の中から1問ずつ、合計5問がランダムな順番で出題されます。',
     levelLabel: (level) =>
       ({ 1: 'レベル1', 2: 'レベル2', 3: 'レベル3' })[level],
     roundProgress: (current, total) => `問題 ${current} / ${total}`,
@@ -423,38 +408,19 @@ export const ja: Translations = {
     resultLabel: (padCount) => `${padCount}音`,
   },
   benchmarks: {
-    title: 'ワーキングメモリの目安',
+    title: 'ワーキングメモリの伸び',
     disclaimer:
-      'この目安は、各モードに対応する心理学の課題（逆唱スパン・視空間スパン・Nバック・視覚ワーキングメモリ容量）について一般的に知られている大まかな範囲と比較したものです。医学的な診断や公式な認知機能評価ではなく、個人差や体調によっても変動します。参考程度にご覧ください。',
+      'この目安は、一般的な心理学的基準ではなく、あなた自身のこれまでの挑戦履歴を前半・後半に分けて正答率を比較したものです。挑戦回数が十分に増えると内容が更新されます。医学的な診断や公式な認知機能評価ではなく、参考程度にご覧ください。',
     bandLabels: {
-      below: '目安より低め',
-      average: '目安の範囲内',
-      above: '目安より高め',
+      below: '低下ぎみ',
+      average: '横ばい',
+      above: '向上中',
     },
-    digit: {
-      label: '逆唱スパン（すうじモード・逆から入力）',
-      valueLabel: (digits) => `${digits}桁`,
-      referenceLabel: (min, max) => `一般的な目安: ${min}〜${max}桁`,
-    },
-    sequence: {
-      label: '順唱スパン（順唱モード）',
-      valueLabel: (digits) => `${digits}桁`,
-      referenceLabel: (min, max) => `一般的な目安: ${min}〜${max}桁`,
-    },
-    spatial: {
-      label: '視空間スパン（空間モード）',
-      valueLabel: (cells) => `${cells}マス`,
-      referenceLabel: (min, max) => `一般的な目安: ${min}〜${max}マス`,
-    },
-    nback: {
-      label: 'Nバック正答率',
-      valueLabel: (accuracyPercent) => `${accuracyPercent}%`,
-      referenceLabel: (min, max) => `一般的な目安: ${min}〜${max}%`,
-    },
-    pattern: {
-      label: '視覚ワーキングメモリ容量（変化検出モード）',
-      valueLabel: (k) => `${k}マス`,
-      referenceLabel: (min, max) => `一般的な目安: ${min}〜${max}マス`,
-    },
+    recentLabel: (accuracyPercent) => `直近の正答率: ${accuracyPercent}%`,
+    previousLabel: (accuracyPercent) => `以前の正答率: ${accuracyPercent}%`,
+    digit: { label: 'すうじモード（逆から入力）' },
+    spatial: { label: '空間モード' },
+    nback: { label: 'Nバックモード' },
+    pattern: { label: '変化検出モード' },
   },
 }

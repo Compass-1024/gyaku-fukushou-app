@@ -6,17 +6,13 @@ import { useSetCompletionRecorder } from '../hooks/useSetCompletionRecorder'
 import { buildRandomRounds } from '../lib/random'
 import {
   reverseDigits,
+  sumDigits,
   isDigitAnswerCorrect,
   DIGIT_SHOWN_MS,
   DIGIT_GAP_MS,
   READY_MS,
   getAnswerTimeoutMs as getDigitAnswerTimeoutMs,
 } from '../lib/digits'
-import {
-  expectedSequenceAnswer,
-  isSequenceAnswerCorrect,
-  getAnswerTimeoutMs as getSequenceAnswerTimeoutMs,
-} from '../lib/sequence'
 import {
   reverseSequence,
   isSpatialAnswerCorrect,
@@ -65,8 +61,6 @@ function getStepConfig(round: RandomRound) {
   switch (round.mode) {
     case 'digit':
       return { itemCount: round.question.digits.length, shownMs: DIGIT_SHOWN_MS, gapMs: DIGIT_GAP_MS }
-    case 'sequence':
-      return { itemCount: round.question.digits.length, shownMs: DIGIT_SHOWN_MS, gapMs: DIGIT_GAP_MS }
     case 'spatial':
       return {
         itemCount: round.question.sequence.length,
@@ -84,8 +78,6 @@ function getRoundAnswerTimeoutMs(round: RandomRound): number {
   switch (round.mode) {
     case 'digit':
       return getDigitAnswerTimeoutMs(round.question.digits.length)
-    case 'sequence':
-      return getSequenceAnswerTimeoutMs(round.question.digits.length)
     case 'spatial':
       return getSpatialAnswerTimeoutMs(round.question.sequence.length)
     case 'pattern':
@@ -96,7 +88,7 @@ function getRoundAnswerTimeoutMs(round: RandomRound): number {
 }
 
 function roundAreaLabel(t: Translations, round: RandomRound): string {
-  const key = round.mode === 'digit' ? 'digit-reverse' : round.mode
+  const key = round.mode === 'digit' ? `digit-${round.gameType}` : round.mode
   return t.common.areaLabels[key as keyof typeof t.common.areaLabels]
 }
 
@@ -160,12 +152,11 @@ export function RandomGameScreen({
     let correct = false
     switch (round.mode) {
       case 'digit':
-        correct = isDigitAnswerCorrect(typedRef.current, reverseDigits(round.question.digits))
-        break
-      case 'sequence':
-        correct = isSequenceAnswerCorrect(
+        correct = isDigitAnswerCorrect(
           typedRef.current,
-          expectedSequenceAnswer(round.question.digits),
+          round.gameType === 'reverse'
+            ? reverseDigits(round.question.digits)
+            : sumDigits(round.question.digits),
         )
         break
       case 'spatial':
@@ -191,7 +182,7 @@ export function RandomGameScreen({
 
   function handleDigitPress(d: string) {
     if (phase !== 'answering') return
-    if (currentRound.mode !== 'digit' && currentRound.mode !== 'sequence') return
+    if (currentRound.mode !== 'digit') return
     if (loadSettings().soundEnabled) playButtonTap()
     const maxLength = currentRound.question.digits.length
     setTyped((prev) => {
@@ -346,11 +337,6 @@ export function RandomGameScreen({
             {phase === 'showing' && !isGap ? currentRound.question.digits[stepIndex] : ' '}
           </p>
         )}
-        {phase !== 'ready' && phase !== 'result' && currentRound.mode === 'sequence' && (
-          <p aria-hidden="true" className="text-7xl font-bold tabular-nums text-indigo-500">
-            {phase === 'showing' && !isGap ? currentRound.question.digits[stepIndex] : ' '}
-          </p>
-        )}
 
         {phase !== 'result' && currentRound.mode === 'spatial' && (
           <div
@@ -460,7 +446,7 @@ export function RandomGameScreen({
             <p aria-hidden="true" className="text-2xl font-bold text-rose-500">
               {answerRemaining}
             </p>
-            {(currentRound.mode === 'digit' || currentRound.mode === 'sequence') && (
+            {currentRound.mode === 'digit' && (
               <NumpadInput
                 value={typed}
                 maxLength={currentRound.question.digits.length}

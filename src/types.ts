@@ -12,7 +12,6 @@ export interface BaseGameScreenProps {
 export type Mode =
   | 'word'
   | 'digit'
-  | 'sequence'
   | 'nback'
   | 'dual-nback'
   | 'spatial'
@@ -47,20 +46,6 @@ export type DigitQuestionPhase = 'ready' | 'showing' | 'answering' | 'result'
 
 export interface DigitQuestionResult {
   question: DigitQuestion
-  expectedAnswer: string
-  typed: string
-  correct: boolean
-}
-
-export interface SequenceQuestion {
-  id: string
-  digits: number[]
-}
-
-export type SequenceQuestionPhase = 'ready' | 'showing' | 'answering' | 'result'
-
-export interface SequenceQuestionResult {
-  question: SequenceQuestion
   expectedAnswer: string
   typed: string
   correct: boolean
@@ -146,11 +131,11 @@ export interface ToneQuestionResult {
   correct: boolean
 }
 
-// ランダムモード: 単発質問→回答型の5モード(すうじ・順唱・空間・変化検出・音/色)から
-// 1問ずつ集めて出題する。各ラウンドは元モードのQuestion型をそのまま内包する
+// ランダムモード: 単発質問→回答型の5ラウンド(すうじ・逆から入力/すうじ・合計を入力/
+// 空間/変化検出/音・色)から1問ずつ集めて出題する。各ラウンドは元モードのQuestion型を
+// そのまま内包する
 export type RandomRound =
-  | { mode: 'digit'; question: DigitQuestion }
-  | { mode: 'sequence'; question: SequenceQuestion }
+  | { mode: 'digit'; gameType: DigitGameType; question: DigitQuestion }
   | { mode: 'spatial'; question: SpatialQuestion }
   | { mode: 'pattern'; question: PatternQuestion }
   | { mode: 'tone'; question: ToneQuestion }

@@ -31,7 +31,6 @@ export const en: Translations = {
       word: 'Word',
       'digit-reverse': 'Digits (reverse)',
       'digit-sum': 'Digits (sum)',
-      sequence: 'Sequence',
       nback: 'N-Back',
       'dual-nback': 'Dual N-Back',
       spatial: 'Spatial',
@@ -67,10 +66,15 @@ export const en: Translations = {
         description:
           'Listen to a word, then say it back in reverse — a working memory challenge.',
       },
-      digit: {
-        title: 'Digit Mode',
+      digitReverse: {
+        title: 'Digit Mode (Reverse)',
         description:
           'Enter the digits you saw in reverse order — a working memory challenge.',
+      },
+      digitSum: {
+        title: 'Digit Mode (Sum)',
+        description:
+          'Enter the sum of all the digits you saw — a working memory challenge.',
       },
       nback: {
         title: 'N-Back Mode',
@@ -92,11 +96,6 @@ export const en: Translations = {
         description:
           'Remember the order in which colored pads light up with sound, then tap them back in the same order — a non-verbal working memory challenge.',
       },
-      sequence: {
-        title: 'Sequence Mode',
-        description:
-          'Enter the digits you saw in the same order you saw them — a working memory challenge.',
-      },
       dualNback: {
         title: 'Dual N-Back Mode',
         description:
@@ -105,7 +104,7 @@ export const en: Translations = {
       random: {
         title: 'Random Mode',
         description:
-          'A mixed workout drawing one question each from Digit, Sequence, Spatial, Change Detection, and Tone & Color.',
+          'A mixed workout drawing one question each from Digit (reverse/sum), Spatial, Change Detection, and Tone & Color.',
       },
     },
     playerLevel: (level) => `Player Lv.${level}`,
@@ -291,10 +290,6 @@ export const en: Translations = {
       label: 'Golden Ear',
       description: 'Reached Level 3 in Tone & Color Mode',
     },
-    'level-3-sequence': {
-      label: 'Sequence Expert',
-      description: 'Reached Level 3 in Sequence Mode',
-    },
     'level-3-dual-nback': {
       label: 'Dual N-Back Expert',
       description: 'Reached Level 3 in Dual N-Back Mode',
@@ -313,10 +308,10 @@ export const en: Translations = {
       description:
         'Tried all six modes: Word, Digit, N-Back, Spatial, Change Detection, and Tone',
     },
-    'all-nine-modes': {
+    'all-eight-modes': {
       label: 'Completionist',
       description:
-        'Tried all nine modes, including Sequence, Dual N-Back, and Random',
+        'Tried all eight modes, including Dual N-Back and Random',
     },
   },
   digit: {
@@ -332,7 +327,6 @@ export const en: Translations = {
         description: 'Enter the sum of all the digits shown',
       },
     },
-    backToTypeSelect: '← Digit mode select',
     levelSelectTitle: (gameTypeTitle) => `Digit Mode (${gameTypeTitle})`,
     levelLabel: (level) =>
       (
@@ -346,21 +340,6 @@ export const en: Translations = {
       reverse: 'Enter it in reverse order',
       sum: "What's the total?",
     },
-    noInput: '(no input)',
-    questionLabel: 'Shown: ',
-  },
-  sequence: {
-    title: 'Sequence Mode',
-    subtitle: 'Enter the digits you saw in the same order — a working memory challenge.',
-    levelLabel: (level) =>
-      (
-        {
-          1: 'Level 1 (3 digits)',
-          2: 'Level 2 (5 digits)',
-          3: 'Level 3 (7 digits)',
-        } as const
-      )[level],
-    answerPrompt: 'Enter it in the same order you saw it',
     noInput: '(no input)',
     questionLabel: 'Shown: ',
   },
@@ -439,7 +418,7 @@ export const en: Translations = {
   random: {
     title: 'Random Mode',
     subtitle:
-      'One question each from Digit, Sequence, Spatial, Change Detection, and Tone & Color — 5 rounds in a random order.',
+      'One question each from Digit (reverse/sum), Spatial, Change Detection, and Tone & Color — 5 rounds in a random order.',
     levelLabel: (level) =>
       ({ 1: 'Level 1', 2: 'Level 2', 3: 'Level 3' })[level],
     roundProgress: (current, total) => `Round ${current} / ${total}`,
@@ -459,38 +438,19 @@ export const en: Translations = {
     resultLabel: (padCount) => `${padCount} tone${padCount === 1 ? '' : 's'}`,
   },
   benchmarks: {
-    title: 'Working Memory Reference',
+    title: 'Working Memory Progress',
     disclaimer:
-      "These figures compare your results to rough, commonly reported ranges for the psychological tasks each mode is based on (backward digit span, visuospatial span, N-back, and visual working memory capacity). This is not a medical diagnosis or a formal cognitive assessment — individual variation and factors like fatigue matter a lot. Take it as a rough reference only.",
+      "Instead of comparing you to general population norms, this compares your own accuracy from earlier attempts to your more recent attempts (split into two halves chronologically). It updates as you play more. This is not a medical diagnosis or a formal cognitive assessment — take it as a rough reference only.",
     bandLabels: {
-      below: 'Below the typical range',
-      average: 'Within the typical range',
-      above: 'Above the typical range',
+      below: 'Trending down',
+      average: 'About the same',
+      above: 'Improving',
     },
-    digit: {
-      label: 'Backward digit span (Digit Mode, reverse)',
-      valueLabel: (digits) => `${digits} digits`,
-      referenceLabel: (min, max) => `Typical range: ${min}–${max} digits`,
-    },
-    sequence: {
-      label: 'Forward digit span (Sequence Mode)',
-      valueLabel: (digits) => `${digits} digits`,
-      referenceLabel: (min, max) => `Typical range: ${min}–${max} digits`,
-    },
-    spatial: {
-      label: 'Visuospatial span (Spatial Mode)',
-      valueLabel: (cells) => `${cells} squares`,
-      referenceLabel: (min, max) => `Typical range: ${min}–${max} squares`,
-    },
-    nback: {
-      label: 'N-back accuracy',
-      valueLabel: (accuracyPercent) => `${accuracyPercent}%`,
-      referenceLabel: (min, max) => `Typical range: ${min}–${max}%`,
-    },
-    pattern: {
-      label: 'Visual working memory capacity (Change Detection Mode)',
-      valueLabel: (k) => `${k} squares`,
-      referenceLabel: (min, max) => `Typical range: ${min}–${max} squares`,
-    },
+    recentLabel: (accuracyPercent) => `Recent accuracy: ${accuracyPercent}%`,
+    previousLabel: (accuracyPercent) => `Earlier accuracy: ${accuracyPercent}%`,
+    digit: { label: 'Digit Mode (Reverse)' },
+    spatial: { label: 'Spatial Mode' },
+    nback: { label: 'N-Back Mode' },
+    pattern: { label: 'Change Detection Mode' },
   },
 }

@@ -13,13 +13,12 @@ export type AchievementId =
   | 'level-3-spatial'
   | 'level-3-pattern'
   | 'level-3-tone'
-  | 'level-3-sequence'
   | 'level-3-dual-nback'
   | 'total-10'
   | 'total-50'
   | 'all-modes'
   | 'all-six-modes'
-  | 'all-nine-modes'
+  | 'all-eight-modes'
 
 export interface Achievement {
   id: AchievementId
@@ -92,11 +91,6 @@ export const ACHIEVEMENTS: Achievement[] = [
     isUnlocked: (h) => h.some((e) => e.mode === 'tone' && e.level === 3),
   },
   {
-    id: 'level-3-sequence',
-    icon: '📝',
-    isUnlocked: (h) => h.some((e) => e.mode === 'sequence' && e.level === 3),
-  },
-  {
     id: 'level-3-dual-nback',
     icon: '🧠🧠',
     isUnlocked: (h) => h.some((e) => e.mode === 'dual-nback' && e.level === 3),
@@ -131,13 +125,12 @@ export const ACHIEVEMENTS: Achievement[] = [
       hasMode(h, 'tone'),
   },
   {
-    id: 'all-nine-modes',
+    id: 'all-eight-modes',
     icon: '🌠',
     requiresWordMode: true,
     isUnlocked: (h) =>
       hasMode(h, 'word') &&
       hasMode(h, 'digit') &&
-      hasMode(h, 'sequence') &&
       hasMode(h, 'nback') &&
       hasMode(h, 'dual-nback') &&
       hasMode(h, 'spatial') &&

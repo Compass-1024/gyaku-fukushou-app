@@ -48,10 +48,9 @@ describe('createBackup / serializeBackup / parseBackupJson roundtrip（新3モ�
   })
 })
 
-describe('createBackup / serializeBackup / parseBackupJson roundtrip（順唱・DualN-Back・ランダム）', () => {
-  it('sequence/dual-nback/randomモードの履歴も正しく往復できる', () => {
+describe('createBackup / serializeBackup / parseBackupJson roundtrip（DualN-Back・ランダム）', () => {
+  it('dual-nback/randomモードの履歴も正しく往復できる', () => {
     const history: HistoryEntry[] = [
-      { mode: 'sequence', level: 1, correct: 3, total: 3, timestamp: '2026-08-01T00:00:00.000Z' },
       { mode: 'dual-nback', level: 2, correct: 30, total: 40, timestamp: '2026-08-01T01:00:00.000Z' },
       { mode: 'random', level: 3, correct: 4, total: 5, timestamp: '2026-08-01T02:00:00.000Z' },
     ]

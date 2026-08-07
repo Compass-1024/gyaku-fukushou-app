@@ -16,7 +16,6 @@ export interface BackupData {
 const VALID_MODES: readonly Mode[] = [
   'word',
   'digit',
-  'sequence',
   'nback',
   'dual-nback',
   'spatial',

@@ -189,9 +189,9 @@ describe('getStreakDays', () => {
 })
 
 describe('getAllAreaStats', () => {
-  it('enumerates all 27 mode/gameType/level combinations', () => {
+  it('enumerates all 24 mode/gameType/level combinations', () => {
     const areas = getAllAreaStats([])
-    expect(areas).toHaveLength(27)
+    expect(areas).toHaveLength(24)
     expect(areas.every((a) => a.stats.attempts === 0)).toBe(true)
   })
 })

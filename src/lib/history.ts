@@ -141,7 +141,6 @@ const ALL_AREAS: ReadonlyArray<{ mode: Mode; gameType?: DigitGameType }> = [
   { mode: 'word' },
   { mode: 'digit', gameType: 'reverse' },
   { mode: 'digit', gameType: 'sum' },
-  { mode: 'sequence' },
   { mode: 'nback' },
   { mode: 'dual-nback' },
   { mode: 'spatial' },

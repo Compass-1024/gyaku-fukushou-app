@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { loadSettings, saveSettings } from '../lib/settings'
-import { startBgm, stopBgm, applyBgmVolume } from '../lib/bgm'
+import { startBgm, stopBgm, applyBgmVolume, setBgmDucked } from '../lib/bgm'
 
 // BGMの有効/音量設定をApp.tsxのトップレベルで保持し、再生・停止・音量反映を行う。
 // themeMode（useThemeMode）と同じread-modify-writeパターン。App.tsxで1回だけ
@@ -31,5 +31,11 @@ export function useBackgroundMusic() {
     saveSettings({ ...loadSettings(), bgmVolume: volume })
   }, [])
 
-  return { bgmEnabled, bgmVolume, setBgmEnabled, setBgmVolume }
+  // 問題を解いている間（ゲーム画面表示中）はBGMを一時的に無音化し、
+  // 集中を妨げないようにする。レベル選択・結果画面・トップ画面では鳴らす
+  const setGameplayActive = useCallback((active: boolean) => {
+    setBgmDucked(active)
+  }, [])
+
+  return { bgmEnabled, bgmVolume, setBgmEnabled, setBgmVolume, setGameplayActive }
 }

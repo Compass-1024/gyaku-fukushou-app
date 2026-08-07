@@ -31,7 +31,6 @@ const ACCURACY_THRESHOLD = 80
 export const MISSION_DEFINITIONS: MissionDefinition[] = [
   playCountMission('word', 2, true),
   playCountMission('digit', 2),
-  playCountMission('sequence', 2),
   playCountMission('nback', 2),
   playCountMission('dual-nback', 2),
   playCountMission('spatial', 2),

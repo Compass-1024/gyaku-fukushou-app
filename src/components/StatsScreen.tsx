@@ -10,7 +10,7 @@ import { loadPhraseStats, getWeakestPhrases } from '../lib/phraseStats'
 import { findPhraseById } from '../lib/phrases'
 import { getAllBenchmarks } from '../lib/benchmarks'
 import { useLanguage, useTranslation } from '../contexts/LanguageContext'
-import type { ActivityDay, DailyAccuracy } from '../lib/history'
+import type { AreaStats, ActivityDay, DailyAccuracy } from '../lib/history'
 import type { Translations } from '../lib/i18n'
 import type { Benchmark } from '../lib/benchmarks'
 import type { DigitGameType, HistoryEntry, Mode } from '../types'
@@ -247,6 +247,18 @@ export function StatsScreen({ history, onBack }: StatsScreenProps) {
     () => new Set(weakest.map((a) => `${areaKey(a)}-${a.level}`)),
     [weakest],
   )
+  // レベルごとに縦積みで表示すると項目数(モード×3レベル)が多く縦に長くなるため、
+  // モードごとに1行へまとめ、3レベル分のミニバッジを横並びにして表示する
+  const areaGroups = useMemo(() => {
+    const groups = new Map<string, AreaStats[]>()
+    for (const area of areas) {
+      const key = areaKey(area)
+      const list = groups.get(key) ?? []
+      list.push(area)
+      groups.set(key, list)
+    }
+    return Array.from(groups.entries())
+  }, [areas])
   const hasAnyAttempts = areas.some((a) => a.stats.attempts > 0)
   const benchmarks = useMemo(() => getAllBenchmarks(history), [history])
   const trend = useMemo(() => getDailyAccuracyTrend(history, TREND_DAYS), [history])
@@ -338,38 +350,48 @@ export function StatsScreen({ history, onBack }: StatsScreenProps) {
             <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400">
               {t.stats.areaAccuracyTitle}
             </h2>
-            <ul className="flex flex-col gap-2">
-              {areas.map((area) => {
-                const key = `${areaKey(area)}-${area.level}`
-                const isWeak = weakestKeys.has(key)
+            <ul className="flex flex-col gap-1.5">
+              {areaGroups.map(([groupKey, levels]) => {
                 const label =
                   t.common.areaLabels[
-                    areaKey(area) as keyof typeof t.common.areaLabels
+                    groupKey as keyof typeof t.common.areaLabels
                   ]
                 return (
                   <li
-                    key={key}
-                    className={`flex items-center justify-between rounded-lg border px-4 py-3 text-sm ${
-                      isWeak
-                        ? 'border-amber-300 bg-amber-50 dark:border-amber-700 dark:bg-amber-900/30'
-                        : 'border-gray-200 dark:border-gray-700'
-                    }`}
+                    key={groupKey}
+                    className="flex items-center justify-between gap-2 rounded-lg border border-gray-200 px-3 py-2 text-sm dark:border-gray-700"
                   >
                     <span className="text-gray-700 dark:text-gray-200">
-                      {t.stats.areaLabel(label, area.level)}
-                      {isWeak && (
-                        <span className="ml-2 text-amber-600 dark:text-amber-400">
-                          {t.stats.needsReview}
-                        </span>
-                      )}
+                      {label}
                     </span>
-                    <span className="text-gray-500 dark:text-gray-400">
-                      {area.stats.accuracy !== null
-                        ? t.stats.accuracySummary(
-                            area.stats.accuracy,
-                            area.stats.attempts,
-                          )
-                        : t.stats.notAttempted}
+                    <span className="flex gap-1.5">
+                      {levels.map((area) => {
+                        const isWeak = weakestKeys.has(
+                          `${areaKey(area)}-${area.level}`,
+                        )
+                        return (
+                          <span
+                            key={area.level}
+                            title={t.stats.areaLabel(label, area.level)}
+                            className={`min-w-12 rounded-md px-1.5 py-1 text-center text-xs font-medium ${
+                              isWeak
+                                ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300'
+                                : area.stats.accuracy !== null
+                                  ? 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300'
+                                  : 'bg-gray-50 text-gray-400 dark:bg-gray-800 dark:text-gray-500'
+                            }`}
+                          >
+                            <span className="block leading-tight">
+                              Lv{area.level}
+                            </span>
+                            <span className="block leading-tight">
+                              {area.stats.accuracy !== null
+                                ? `${area.stats.accuracy}%`
+                                : '−'}
+                            </span>
+                          </span>
+                        )
+                      })}
                     </span>
                   </li>
                 )
@@ -393,15 +415,12 @@ export function StatsScreen({ history, onBack }: StatsScreenProps) {
                       <span className="text-gray-700 dark:text-gray-200">
                         {copy.label}
                         <span className="block text-xs text-gray-500 dark:text-gray-400">
-                          {copy.referenceLabel(
-                            benchmark.referenceMin,
-                            benchmark.referenceMax,
-                          )}
+                          {t.benchmarks.previousLabel(benchmark.previousValue)}
                         </span>
                       </span>
                       <span className="text-right">
                         <span className="block font-semibold text-gray-800 dark:text-gray-100">
-                          {copy.valueLabel(benchmark.value)}
+                          {t.benchmarks.recentLabel(benchmark.value)}
                         </span>
                         <span
                           className={`block text-xs font-medium ${BAND_TEXT_CLASSES[benchmark.band]}`}

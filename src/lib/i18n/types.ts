@@ -41,7 +41,6 @@ export interface Translations {
       word: string
       'digit-reverse': string
       'digit-sum': string
-      sequence: string
       nback: string
       'dual-nback': string
       spatial: string
@@ -86,8 +85,8 @@ export interface Translations {
     recommendedSummary: (areaLabel: string, accuracyPercent: number) => string
     modes: {
       word: ModeCopy
-      digit: ModeCopy
-      sequence: ModeCopy
+      digitReverse: ModeCopy
+      digitSum: ModeCopy
       nback: ModeCopy
       dualNback: ModeCopy
       spatial: ModeCopy
@@ -203,21 +202,12 @@ export interface Translations {
       reverse: ModeCopy
       sum: ModeCopy
     }
-    backToTypeSelect: string
     levelSelectTitle: (gameTypeTitle: string) => string
     levelLabel: (level: 1 | 2 | 3) => string
     answerPrompt: {
       reverse: string
       sum: string
     }
-    noInput: string
-    questionLabel: string
-  }
-  sequence: {
-    title: string
-    subtitle: string
-    levelLabel: (level: 1 | 2 | 3) => string
-    answerPrompt: string
     noInput: string
     questionLabel: string
   }
@@ -278,30 +268,11 @@ export interface Translations {
     title: string
     disclaimer: string
     bandLabels: Record<BenchmarkBand, string>
-    digit: {
-      label: string
-      valueLabel: (digits: number) => string
-      referenceLabel: (min: number, max: number) => string
-    }
-    sequence: {
-      label: string
-      valueLabel: (digits: number) => string
-      referenceLabel: (min: number, max: number) => string
-    }
-    spatial: {
-      label: string
-      valueLabel: (cells: number) => string
-      referenceLabel: (min: number, max: number) => string
-    }
-    nback: {
-      label: string
-      valueLabel: (accuracyPercent: number) => string
-      referenceLabel: (min: number, max: number) => string
-    }
-    pattern: {
-      label: string
-      valueLabel: (k: number) => string
-      referenceLabel: (min: number, max: number) => string
-    }
+    recentLabel: (accuracyPercent: number) => string
+    previousLabel: (accuracyPercent: number) => string
+    digit: { label: string }
+    spatial: { label: string }
+    nback: { label: string }
+    pattern: { label: string }
   }
 }

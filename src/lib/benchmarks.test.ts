@@ -1,9 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
-  bandFor,
-  getHighestMasteredLevel,
   getDigitSpanBenchmark,
-  getSequenceSpanBenchmark,
   getSpatialSpanBenchmark,
   getNBackBenchmark,
   getPatternCapacityBenchmark,
@@ -11,169 +8,94 @@ import {
 } from './benchmarks'
 import type { HistoryEntry, Level, Mode, DigitGameType } from '../types'
 
-function entries(
+// 指定件数分のエントリを、古い順になるようタイムスタンプをずらして生成する
+function entriesAt(
   mode: Mode,
   level: Level,
   count: number,
   correct: number,
   total: number,
+  startHoursAgo: number,
   gameType?: DigitGameType,
 ): HistoryEntry[] {
-  return Array.from({ length: count }, () => ({
+  return Array.from({ length: count }, (_, i) => ({
     mode,
     gameType,
     level,
     correct,
     total,
-    timestamp: new Date().toISOString(),
+    timestamp: new Date(
+      Date.now() - (startHoursAgo - i) * 3600_000,
+    ).toISOString(),
   }))
 }
 
-describe('bandFor', () => {
-  it('範囲未満はbelow', () => {
-    expect(bandFor(3, 4, 5)).toBe('below')
-  })
-  it('範囲内（境界含む）はaverage', () => {
-    expect(bandFor(4, 4, 5)).toBe('average')
-    expect(bandFor(5, 4, 5)).toBe('average')
-  })
-  it('範囲超過はabove', () => {
-    expect(bandFor(6, 4, 5)).toBe('above')
-  })
-})
-
-describe('getHighestMasteredLevel', () => {
-  it('挑戦回数不足なら未到達扱い', () => {
-    const history = entries('spatial', 2, 1, 4, 4)
-    expect(getHighestMasteredLevel(history, 'spatial')).toBeNull()
-  })
-
-  it('正答率不足なら未到達扱い', () => {
-    const history = entries('spatial', 2, 2, 1, 3)
-    expect(getHighestMasteredLevel(history, 'spatial')).toBeNull()
-  })
-
-  it('条件を満たす最も高いレベルを返す', () => {
-    const history = [
-      ...entries('spatial', 1, 2, 3, 3),
-      ...entries('spatial', 2, 2, 3, 3),
-      ...entries('spatial', 3, 2, 1, 3), // 正答率不足
-    ]
-    expect(getHighestMasteredLevel(history, 'spatial')).toBe(2)
-  })
-
-  it('gameTypeが一致する記録のみ対象にする', () => {
-    const history = entries('digit', 2, 2, 5, 5, 'sum')
-    expect(getHighestMasteredLevel(history, 'digit', 'reverse')).toBeNull()
-  })
-})
-
 describe('getDigitSpanBenchmark', () => {
-  it('データ不足ならnull', () => {
-    expect(getDigitSpanBenchmark([])).toBeNull()
+  it('挑戦回数が前半/後半それぞれ2回に満たなければnull', () => {
+    const history = entriesAt('digit', 1, 3, 2, 3, 10, 'reverse')
+    expect(getDigitSpanBenchmark(history)).toBeNull()
   })
 
-  it('レベル1到達（3桁）はbelow', () => {
-    const history = entries('digit', 1, 2, 3, 3, 'reverse')
-    const result = getDigitSpanBenchmark(history)
-    expect(result).toEqual({
-      mode: 'digit',
-      value: 3,
-      band: 'below',
-      referenceMin: 4,
-      referenceMax: 5,
-    })
-  })
-
-  it('レベル2到達（5桁）はaverage', () => {
-    const history = entries('digit', 2, 2, 3, 3, 'reverse')
-    expect(getDigitSpanBenchmark(history)?.band).toBe('average')
-  })
-
-  it('レベル3到達（7桁）はabove', () => {
-    const history = entries('digit', 3, 2, 3, 3, 'reverse')
-    expect(getDigitSpanBenchmark(history)?.band).toBe('above')
-  })
-})
-
-describe('getSequenceSpanBenchmark', () => {
-  it('データ不足ならnull', () => {
-    expect(getSequenceSpanBenchmark([])).toBeNull()
-  })
-
-  it('レベル3到達（7桁）はaverage（順唱スパンの目安は5〜9桁）', () => {
-    const history = entries('sequence', 3, 2, 3, 3)
-    expect(getSequenceSpanBenchmark(history)).toEqual({
-      mode: 'sequence',
-      value: 7,
-      band: 'average',
-      referenceMin: 5,
-      referenceMax: 9,
-    })
-  })
-})
-
-describe('getSpatialSpanBenchmark', () => {
-  it('レベル3到達（5マス）はaverage（上限と同値）', () => {
-    const history = entries('spatial', 3, 2, 3, 3)
-    expect(getSpatialSpanBenchmark(history)).toEqual({
-      mode: 'spatial',
-      value: 5,
-      band: 'average',
-      referenceMin: 4,
-      referenceMax: 5,
-    })
-  })
-})
-
-describe('getNBackBenchmark', () => {
-  it('データ不足ならnull', () => {
-    expect(getNBackBenchmark([])).toBeNull()
-  })
-
-  it('最も高いN値の正答率を対象にする（マスタリー閾値は問わない）', () => {
+  it('後半の正答率が前半より十分高ければaboveと判定される', () => {
     const history = [
-      ...entries('nback', 1, 2, 15, 15),
-      ...entries('nback', 2, 2, 6, 15), // 正答率40%でも対象になる
+      ...entriesAt('digit', 1, 2, 1, 3, 20, 'reverse'), // 古い方: 正答率33%
+      ...entriesAt('digit', 1, 2, 3, 3, 5, 'reverse'), // 新しい方: 正答率100%
     ]
-    const result = getNBackBenchmark(history)
-    expect(result?.value).toBe(40)
-    expect(result?.band).toBe('below')
-    expect(result?.referenceMin).toBe(70)
-    expect(result?.referenceMax).toBe(90)
+    const result = getDigitSpanBenchmark(history)
+    expect(result?.previousValue).toBe(33)
+    expect(result?.value).toBe(100)
+    expect(result?.band).toBe('above')
   })
 
-  it('2-backで正答率80%はaverage', () => {
-    const history = entries('nback', 2, 2, 12, 15)
-    expect(getNBackBenchmark(history)?.band).toBe('average')
-  })
-})
-
-describe('getPatternCapacityBenchmark', () => {
-  it('データ不足ならnull', () => {
-    expect(getPatternCapacityBenchmark([])).toBeNull()
-  })
-
-  it('レベル1到達（4マス）はaverage', () => {
-    const history = entries('pattern', 1, 2, 3, 3)
-    const result = getPatternCapacityBenchmark(history)
-    expect(result?.value).toBe(4)
+  it('前半・後半の正答率がほぼ同じならaverageと判定される', () => {
+    const history = [
+      ...entriesAt('digit', 1, 2, 2, 3, 20, 'reverse'),
+      ...entriesAt('digit', 1, 2, 2, 3, 5, 'reverse'),
+    ]
+    const result = getDigitSpanBenchmark(history)
     expect(result?.band).toBe('average')
   })
 
-  it('正答率不足（70%未満）は未到達扱いでnull', () => {
-    const history = entries('pattern', 1, 2, 2, 4) // 50%
-    expect(getPatternCapacityBenchmark(history)).toBeNull()
+  it('後半の正答率が前半より十分低ければbelowと判定される', () => {
+    const history = [
+      ...entriesAt('digit', 1, 2, 3, 3, 20, 'reverse'),
+      ...entriesAt('digit', 1, 2, 1, 3, 5, 'reverse'),
+    ]
+    const result = getDigitSpanBenchmark(history)
+    expect(result?.band).toBe('below')
   })
 
-  it('複数レベルに記録がある場合は最も高いマスタリー済みレベルの塗りつぶし数を採用する', () => {
-    const history = [
-      ...entries('pattern', 1, 2, 4, 4),
-      ...entries('pattern', 2, 2, 6, 6),
+  it('gameTypeが一致する記録のみ対象にする', () => {
+    const history = entriesAt('digit', 2, 4, 3, 3, 10, 'sum')
+    expect(getDigitSpanBenchmark(history)).toBeNull()
+  })
+})
+
+describe('getSpatialSpanBenchmark / getNBackBenchmark / getPatternCapacityBenchmark', () => {
+  it('データ不足ならnull', () => {
+    expect(getSpatialSpanBenchmark([])).toBeNull()
+    expect(getNBackBenchmark([])).toBeNull()
+    expect(getPatternCapacityBenchmark([])).toBeNull()
+  })
+
+  it('十分なデータがあれば比較結果を返す', () => {
+    const spatial = [
+      ...entriesAt('spatial', 1, 2, 2, 3, 20),
+      ...entriesAt('spatial', 1, 2, 2, 3, 5),
     ]
-    const result = getPatternCapacityBenchmark(history)
-    expect(result?.value).toBe(6)
-    expect(result?.band).toBe('above')
+    expect(getSpatialSpanBenchmark(spatial)?.band).toBe('average')
+
+    const nback = [
+      ...entriesAt('nback', 1, 2, 10, 15, 20),
+      ...entriesAt('nback', 1, 2, 10, 15, 5),
+    ]
+    expect(getNBackBenchmark(nback)?.band).toBe('average')
+
+    const pattern = [
+      ...entriesAt('pattern', 1, 2, 3, 4, 20),
+      ...entriesAt('pattern', 1, 2, 3, 4, 5),
+    ]
+    expect(getPatternCapacityBenchmark(pattern)?.band).toBe('average')
   })
 })
 
@@ -182,8 +104,11 @@ describe('getAllBenchmarks', () => {
     expect(getAllBenchmarks([])).toEqual([])
   })
 
-  it('データがあるモードのみ含める', () => {
-    const history = entries('spatial', 2, 2, 3, 3)
+  it('比較可能なモードのみ含める', () => {
+    const history = [
+      ...entriesAt('spatial', 2, 2, 3, 3, 20),
+      ...entriesAt('spatial', 2, 2, 3, 3, 5),
+    ]
     const result = getAllBenchmarks(history)
     expect(result).toHaveLength(1)
     expect(result[0].mode).toBe('spatial')

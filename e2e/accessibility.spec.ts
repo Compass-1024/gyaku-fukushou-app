@@ -48,8 +48,7 @@ test('すうじモードのレベル選択画面にアクセシビリティ違�
   page,
 }) => {
   await page.goto('/')
-  await page.getByRole('button', { name: /すうじモード/ }).click()
-  await page.getByRole('button', { name: /逆から入力/ }).click()
+  await page.getByRole('button', { name: /すうじモード（逆から入力）/ }).click()
   await expect(
     page.getByRole('button', { name: /レベル1（3桁）/ }),
   ).toBeVisible()

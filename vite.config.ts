@@ -56,7 +56,7 @@ export default defineConfig({
           },
           {
             name: 'すうじモード',
-            url: '/?shortcut=digit',
+            url: '/?shortcut=digit-reverse',
             icons: [{ src: '/icon-192.png', sizes: '192x192' }],
           },
           {

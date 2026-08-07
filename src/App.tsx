@@ -1,9 +1,7 @@
 import { lazy, Suspense, useEffect, useRef, useState } from 'react'
 import { TopScreen } from './components/TopScreen'
 import { LevelSelect } from './components/LevelSelect'
-import { DigitTypeSelect } from './components/DigitTypeSelect'
 import { DigitLevelSelect } from './components/DigitLevelSelect'
-import { SequenceLevelSelect } from './components/SequenceLevelSelect'
 import { NBackLevelSelect } from './components/NBackLevelSelect'
 import { DualNBackLevelSelect } from './components/DualNBackLevelSelect'
 import { SpatialLevelSelect } from './components/SpatialLevelSelect'
@@ -30,11 +28,6 @@ const GameScreen = lazy(() =>
 const DigitGameScreen = lazy(() =>
   import('./components/DigitGameScreen').then((m) => ({
     default: m.DigitGameScreen,
-  })),
-)
-const SequenceGameScreen = lazy(() =>
-  import('./components/SequenceGameScreen').then((m) => ({
-    default: m.SequenceGameScreen,
   })),
 )
 const NBackGameScreen = lazy(() =>
@@ -72,11 +65,8 @@ type View =
   | { screen: 'top' }
   | { screen: 'word-level' }
   | { screen: 'word-game'; level: Level }
-  | { screen: 'digit-type' }
   | { screen: 'digit-level'; gameType: DigitGameType }
   | { screen: 'digit-game'; gameType: DigitGameType; level: Level }
-  | { screen: 'sequence-level' }
-  | { screen: 'sequence-game'; level: Level }
   | { screen: 'nback-level' }
   | { screen: 'nback-game'; level: Level }
   | { screen: 'dual-nback-level' }
@@ -104,10 +94,10 @@ function getShortcutView(): View | null {
     case 'word':
       // 英語版ではことばモードは提供しない
       return loadSettings().language === 'en' ? null : { screen: 'word-level' }
-    case 'digit':
-      return { screen: 'digit-type' }
-    case 'sequence':
-      return { screen: 'sequence-level' }
+    case 'digit-reverse':
+      return { screen: 'digit-level', gameType: 'reverse' }
+    case 'digit-sum':
+      return { screen: 'digit-level', gameType: 'sum' }
     case 'nback':
       return { screen: 'nback-level' }
     case 'dual-nback':
@@ -127,7 +117,8 @@ function getShortcutView(): View | null {
 
 function App() {
   const { themeMode, setThemeMode } = useThemeMode()
-  const { bgmEnabled, bgmVolume, setBgmEnabled, setBgmVolume } = useBackgroundMusic()
+  const { bgmEnabled, bgmVolume, setBgmEnabled, setBgmVolume, setGameplayActive } =
+    useBackgroundMusic()
   const { language } = useLanguage()
   const t = useTranslation()
   const { supported: recognitionSupported } = useSpeechRecognition()
@@ -146,6 +137,12 @@ function App() {
       setView(TOP_VIEW)
     }
   }, [language, view.screen])
+
+  // 問題を解いている間（ゲーム画面表示中）はBGMを一時停止し、集中を
+  // 妨げないようにする。それ以外の画面（トップ・レベル選択・結果画面等）では鳴らす
+  useEffect(() => {
+    setGameplayActive(view.screen.endsWith('-game'))
+  }, [view.screen, setGameplayActive])
 
   // スクリーンリーダー利用者が画面遷移に気づけるよう、遷移のたびに
   // メインコンテンツへフォーカスを移す（初回描画時は移さない）
@@ -178,7 +175,6 @@ function App() {
       next.screen === 'top' ||
       next.screen === 'word-level' ||
       next.screen === 'digit-level' ||
-      next.screen === 'sequence-level' ||
       next.screen === 'nback-level' ||
       next.screen === 'dual-nback-level' ||
       next.screen === 'spatial-level' ||
@@ -201,8 +197,10 @@ function App() {
           history={history}
           onSelect={(mode) => {
             if (mode === 'word') goTo({ screen: 'word-level' })
-            else if (mode === 'digit') goTo({ screen: 'digit-type' })
-            else if (mode === 'sequence') goTo({ screen: 'sequence-level' })
+            else if (mode === 'digit-reverse')
+              goTo({ screen: 'digit-level', gameType: 'reverse' })
+            else if (mode === 'digit-sum')
+              goTo({ screen: 'digit-level', gameType: 'sum' })
             else if (mode === 'nback') goTo({ screen: 'nback-level' })
             else if (mode === 'dual-nback') goTo({ screen: 'dual-nback-level' })
             else if (mode === 'spatial') goTo({ screen: 'spatial-level' })
@@ -221,8 +219,6 @@ function App() {
                 gameType: area.gameType ?? 'reverse',
                 level: area.level,
               })
-            } else if (area.mode === 'sequence') {
-              goTo({ screen: 'sequence-game', level: area.level })
             } else if (area.mode === 'nback') {
               goTo({ screen: 'nback-game', level: area.level })
             } else if (area.mode === 'dual-nback') {
@@ -258,14 +254,6 @@ function App() {
         />
       )
       break
-    case 'digit-type':
-      content = (
-        <DigitTypeSelect
-          onSelect={(gameType) => goTo({ screen: 'digit-level', gameType })}
-          onBack={() => goTo({ screen: 'top' })}
-        />
-      )
-      break
     case 'digit-level':
       content = (
         <DigitLevelSelect
@@ -274,7 +262,7 @@ function App() {
           onSelect={(level) =>
             goTo({ screen: 'digit-game', gameType: view.gameType, level })
           }
-          onBack={() => goTo({ screen: 'digit-type' })}
+          onBack={() => goTo({ screen: 'top' })}
         />
       )
       break
@@ -290,25 +278,6 @@ function App() {
           onSelectLevel={(level) =>
             goTo({ screen: 'digit-game', gameType: view.gameType, level })
           }
-        />
-      )
-      break
-    case 'sequence-level':
-      content = (
-        <SequenceLevelSelect
-          history={history}
-          onSelect={(level) => goTo({ screen: 'sequence-game', level })}
-          onBack={() => goTo({ screen: 'top' })}
-        />
-      )
-      break
-    case 'sequence-game':
-      content = (
-        <SequenceGameScreen
-          key={view.level}
-          level={view.level}
-          onExit={() => goTo({ screen: 'sequence-level' })}
-          onSelectLevel={(level) => goTo({ screen: 'sequence-game', level })}
         />
       )
       break

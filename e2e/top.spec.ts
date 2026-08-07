@@ -7,8 +7,12 @@ test('トップ画面が表示され、9つのモードカードが見える', a
     page.getByRole('heading', { name: 'ワーキングメモリトレーニング' }),
   ).toBeVisible()
   await expect(page.getByRole('button', { name: /ことばモード/ })).toBeVisible()
-  await expect(page.getByRole('button', { name: /すうじモード/ })).toBeVisible()
-  await expect(page.getByRole('button', { name: /順唱モード/ })).toBeVisible()
+  await expect(
+    page.getByRole('button', { name: /すうじモード（逆から入力）/ }),
+  ).toBeVisible()
+  await expect(
+    page.getByRole('button', { name: /すうじモード（合計を入力）/ }),
+  ).toBeVisible()
   await expect(
     page.getByRole('button', { name: /Nバックモード/ }),
   ).toBeVisible()

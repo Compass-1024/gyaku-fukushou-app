@@ -4,8 +4,7 @@ test('すうじモード（逆から入力）: 出題→回答→結果表示ま
   page,
 }) => {
   await page.goto('/')
-  await page.getByRole('button', { name: /すうじモード/ }).click()
-  await page.getByRole('button', { name: /逆から入力/ }).click()
+  await page.getByRole('button', { name: /すうじモード（逆から入力）/ }).click()
   await page.getByRole('button', { name: /レベル1（3桁）/ }).click()
 
   // ready → showing を経て answering フェーズに入るまで待つ
@@ -28,8 +27,7 @@ test('すうじモード: 結果表示中はEnterキーでも次の問題へ進�
   page,
 }) => {
   await page.goto('/')
-  await page.getByRole('button', { name: /すうじモード/ }).click()
-  await page.getByRole('button', { name: /逆から入力/ }).click()
+  await page.getByRole('button', { name: /すうじモード（逆から入力）/ }).click()
   await page.getByRole('button', { name: /レベル1（3桁）/ }).click()
 
   await expect(
@@ -52,8 +50,7 @@ test('すうじモード: SetSummary（3問完了後）でもEnterキーで主�
   page,
 }) => {
   await page.goto('/')
-  await page.getByRole('button', { name: /すうじモード/ }).click()
-  await page.getByRole('button', { name: /逆から入力/ }).click()
+  await page.getByRole('button', { name: /すうじモード（逆から入力）/ }).click()
   await page.getByRole('button', { name: /レベル1（3桁）/ }).click()
 
   // 3問とも同じ手順で回答し、Enterキーで次の問題へ進める

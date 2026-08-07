@@ -18,9 +18,13 @@ import { computeTotalXp, getXpProgress, XP_PER_MISSION } from '../lib/xp'
 import { useLanguage, useTranslation } from '../contexts/LanguageContext'
 import type { HistoryEntry, Mode } from '../types'
 
+// ホームの3×3グリッド用の選択キー。すうじモードは「逆から入力」「合計を入力」を
+// 独立したカードとして扱うため、Mode型の'digit'ではなくこの拡張キーを使う
+export type TopModeSelection = Exclude<Mode, 'digit'> | 'digit-reverse' | 'digit-sum'
+
 interface TopScreenProps {
   history: HistoryEntry[]
-  onSelect: (mode: Mode) => void
+  onSelect: (mode: TopModeSelection) => void
   onOpenSettings: () => void
   onOpenStats: () => void
   onStartRecommended: (area: AreaStats) => void
@@ -39,7 +43,7 @@ export function TopScreen({
   // ホーム画面の3×3グリッドに表示するモードカードのメタデータ。
   // ことばモードのみ英語版では選択できないため対象外にする
   const allModeCards: Array<{
-    mode: Mode
+    mode: TopModeSelection
     icon: string
     gradient: string
     title: string
@@ -53,18 +57,18 @@ export function TopScreen({
       description: t.top.modes.word.description,
     },
     {
-      mode: 'digit',
+      mode: 'digit-reverse',
       icon: '🔢',
       gradient: 'from-indigo-500 to-fuchsia-500',
-      title: t.top.modes.digit.title,
-      description: t.top.modes.digit.description,
+      title: t.top.modes.digitReverse.title,
+      description: t.top.modes.digitReverse.description,
     },
     {
-      mode: 'sequence',
-      icon: '📝',
+      mode: 'digit-sum',
+      icon: '➕',
       gradient: 'from-teal-500 to-sky-500',
-      title: t.top.modes.sequence.title,
-      description: t.top.modes.sequence.description,
+      title: t.top.modes.digitSum.title,
+      description: t.top.modes.digitSum.description,
     },
     {
       mode: 'nback',
@@ -154,6 +158,21 @@ export function TopScreen({
       : t.missions.accuracyLabel(todayMission.spec.percent)
   const missionCompleted = isTodayMissionComplete(history, language)
 
+  // ミッションカードをクリックしたら該当モードへ直接遷移する。プレイ回数系
+  // ミッションはモードが決まっているためそのモードの選択画面へ、正答率系
+  // ミッションは対象モードを問わないため「今日のおすすめ」があればそちらへ飛ぶ
+  function handleMissionClick() {
+    if (loadSettings().soundEnabled) playButtonTap()
+    if (todayMission.spec.kind === 'playCount') {
+      const mode = todayMission.spec.mode
+      onSelect(mode === 'digit' ? 'digit-reverse' : (mode as TopModeSelection))
+    } else if (recommended) {
+      onStartRecommended(recommended)
+    }
+  }
+  const missionClickable =
+    todayMission.spec.kind === 'playCount' || recommended !== undefined
+
   // 週が変わるたびに、直近に完了した週の振り返りを1回だけ表示する
   const [recap, setRecap] = useState<WeeklyRecap | null>(null)
   useEffect(() => {
@@ -172,7 +191,7 @@ export function TopScreen({
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-md flex-col gap-8 px-4 py-8 sm:px-6 sm:py-12">
+    <div className="mx-auto flex w-full max-w-md flex-col gap-6 px-4 py-6 sm:gap-8 sm:px-6 sm:py-10">
       <div className="flex justify-end gap-2">
         <button
           type="button"
@@ -192,15 +211,15 @@ export function TopScreen({
         </button>
       </div>
 
-      <div className="-mt-4 text-center">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">
+      <div className="-mt-2 rounded-3xl border border-white/60 bg-white/70 px-5 py-6 text-center shadow-sm backdrop-blur-sm sm:px-8 sm:py-8 dark:border-gray-700/60 dark:bg-gray-800/60">
+        <h1 className="text-2xl leading-tight font-extrabold text-gray-900 sm:text-3xl dark:text-gray-100">
           {t.top.heading}
         </h1>
-        <p className="mt-3 text-sm text-gray-500 dark:text-gray-400">
+        <p className="mt-2 text-xs text-gray-500 sm:text-sm dark:text-gray-400">
           {t.top.subtitle}
         </p>
         {history.length > 0 && (
-          <div className="mt-3 flex justify-center gap-4 text-sm font-medium text-gray-600 dark:text-gray-300">
+          <div className="mt-3 flex flex-wrap justify-center gap-x-4 gap-y-1 text-xs font-medium text-gray-600 sm:text-sm dark:text-gray-300">
             {streakDays > 0 && <span>{t.top.streakDays(streakDays)}</span>}
             {todayCount > 0 && <span>{t.top.todayCount(todayCount)}</span>}
           </div>
@@ -211,7 +230,7 @@ export function TopScreen({
             <p className="text-xs font-semibold text-indigo-500 dark:text-indigo-300">
               {t.top.playerLevel(xpProgress.level)}
             </p>
-            <p className="text-xs text-gray-500 dark:text-gray-400">
+            <p className="text-[11px] text-gray-500 dark:text-gray-400">
               {t.top.xpToNextLevel(xpProgress.xpToNextLevel)}
             </p>
           </div>
@@ -225,7 +244,7 @@ export function TopScreen({
 
         {dailyGoal > 0 && (
           <div className="mt-4">
-            <p className="text-xs text-gray-500 dark:text-gray-400">
+            <p className="text-[11px] text-gray-500 dark:text-gray-400">
               {t.top.dailyGoal(todayCount, dailyGoal)}
             </p>
             <div className="mt-1 h-2 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
@@ -239,18 +258,21 @@ export function TopScreen({
         {streakAtRisk && (
           <p
             role="status"
-            className="mt-3 text-sm font-medium text-amber-600 dark:text-amber-400"
+            className="mt-3 text-xs font-medium text-amber-600 sm:text-sm dark:text-amber-400"
           >
             {t.top.streakAtRisk(streakDays)}
           </p>
         )}
       </div>
 
-      <div
-        className={`animate-pop rounded-xl border px-4 py-3 ${
+      <button
+        type="button"
+        disabled={!missionClickable}
+        onClick={handleMissionClick}
+        className={`animate-pop touch-manipulation rounded-xl border px-4 py-3 text-left transition disabled:cursor-default ${
           missionCompleted
             ? 'border-emerald-300 bg-emerald-50 dark:border-emerald-700 dark:bg-emerald-900/20'
-            : 'border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800'
+            : 'border-gray-200 bg-white hover:enabled:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:hover:enabled:bg-gray-700/60'
         }`}
       >
         <p className="text-xs font-semibold text-gray-500 dark:text-gray-400">
@@ -262,7 +284,7 @@ export function TopScreen({
             ? t.missions.completedBadge
             : t.missions.xpReward(XP_PER_MISSION)}
         </p>
-      </div>
+      </button>
 
       {recap && (
         <div className="animate-pop relative rounded-xl border border-sky-200 bg-sky-50 px-4 py-3 dark:border-sky-800 dark:bg-sky-900/20">
@@ -323,13 +345,15 @@ export function TopScreen({
               onSelect(card.mode)
             }}
             aria-label={`${card.title}: ${card.description}`}
-            className={`touch-manipulation flex flex-col items-center justify-center gap-1 rounded-2xl bg-gradient-to-br ${card.gradient} p-2 text-center text-white shadow-md transition hover:scale-[1.03] hover:shadow-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white`}
+            className={`touch-manipulation flex aspect-square flex-col items-center justify-center gap-1 rounded-2xl bg-gradient-to-br ${card.gradient} p-2 text-center text-white shadow-md ring-1 ring-white/10 transition hover:scale-[1.04] hover:shadow-lg active:scale-[0.98] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white sm:p-3`}
           >
-            <span className="text-2xl" aria-hidden="true">
+            <span className="text-2xl sm:text-3xl" aria-hidden="true">
               {card.icon}
             </span>
-            <span className="text-xs leading-tight font-bold">{card.title}</span>
-            <span className="line-clamp-2 text-[10px] leading-snug opacity-90">
+            <span className="text-[11px] leading-tight font-bold sm:text-xs">
+              {card.title}
+            </span>
+            <span className="line-clamp-2 text-[9px] leading-snug opacity-90 sm:text-[10px]">
               {card.description}
             </span>
           </button>

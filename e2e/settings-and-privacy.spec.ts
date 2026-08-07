@@ -70,17 +70,18 @@ test('統計画面: 記録がない場合の案内が表示される', async ({ 
   ).toBeVisible()
 })
 
-test('統計画面: 十分な記録があると「ワーキングメモリの目安」が表示される', async ({
+test('統計画面: 十分な記録があると「ワーキングメモリの伸び」が表示される', async ({
   page,
 }) => {
   await page.addInitScript(() => {
     const now = Date.now()
-    const history = Array.from({ length: 2 }, (_, i) => ({
+    // 前半2件・後半2件、計4件（自己比較の最低要件）を古い順に生成する
+    const history = Array.from({ length: 4 }, (_, i) => ({
       mode: 'spatial',
       level: 2,
       correct: 3,
       total: 3,
-      timestamp: new Date(now - i * 86400000).toISOString(),
+      timestamp: new Date(now - (4 - i) * 86400000).toISOString(),
     }))
     window.localStorage.setItem('gyaku-fukushou:history', JSON.stringify(history))
   })
@@ -88,10 +89,10 @@ test('統計画面: 十分な記録があると「ワーキングメモリの目
   await page.getByRole('button', { name: '統計' }).click()
 
   await expect(
-    page.getByRole('heading', { name: 'ワーキングメモリの目安' }),
+    page.getByRole('heading', { name: 'ワーキングメモリの伸び' }),
   ).toBeVisible()
-  await expect(page.getByText('視空間スパン（空間モード）')).toBeVisible()
-  await expect(page.getByText('4マス', { exact: true })).toBeVisible()
+  await expect(page.getByText('空間モード')).toBeVisible()
+  await expect(page.getByText('直近の正答率: 100%')).toBeVisible()
   await expect(
     page.getByText('医学的な診断や公式な認知機能評価ではなく', { exact: false }),
   ).toBeVisible()

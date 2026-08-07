@@ -19,15 +19,13 @@ test('ことばモード: レベル選択画面へ遷移し、戻るボタンで
   ).toBeVisible()
 })
 
-test('すうじモード: タイプ選択→レベル選択と遷移できる', async ({ page }) => {
+test('すうじモード（逆から入力）: カードから直接レベル選択に遷移できる', async ({ page }) => {
   await page.goto('/')
-  await page.getByRole('button', { name: /すうじモード/ }).click()
+  await page.getByRole('button', { name: /すうじモード（逆から入力）/ }).click()
 
   await expect(
-    page.getByRole('heading', { name: 'すうじモード' }),
+    page.getByRole('heading', { name: 'すうじモード（逆から入力）' }),
   ).toBeVisible()
-  await page.getByRole('button', { name: /逆から入力/ }).click()
-
   await expect(
     page.getByRole('button', { name: /レベル1（3桁）/ }),
   ).toBeVisible()
@@ -85,9 +83,9 @@ test('ブラウザバックでトップ画面に戻れる（History API連動）
   page,
 }) => {
   await page.goto('/')
-  await page.getByRole('button', { name: /すうじモード/ }).click()
+  await page.getByRole('button', { name: /すうじモード（逆から入力）/ }).click()
   await expect(
-    page.getByRole('heading', { name: 'すうじモード' }),
+    page.getByRole('heading', { name: 'すうじモード（逆から入力）' }),
   ).toBeVisible()
 
   await page.goBack()
