@@ -122,6 +122,7 @@ export interface Translations {
     on: string
     off: string
     sfxVolumeTitle: string
+    sfxTestButton: string
     bgmTitle: string
     bgmVolumeTitle: string
     notifications: {

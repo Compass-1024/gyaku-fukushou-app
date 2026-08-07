@@ -161,6 +161,7 @@ export const en: Translations = {
     on: 'On',
     off: 'Off',
     sfxVolumeTitle: 'Sound effects volume',
+    sfxTestButton: '🔊 Test sound',
     bgmTitle: 'Background music',
     bgmVolumeTitle: 'Background music volume',
     notifications: {

@@ -154,6 +154,7 @@ export const ja: Translations = {
     on: 'オン',
     off: 'オフ',
     sfxVolumeTitle: '効果音の音量',
+    sfxTestButton: '🔊 テスト再生',
     bgmTitle: 'BGM',
     bgmVolumeTitle: 'BGMの音量',
     notifications: {
