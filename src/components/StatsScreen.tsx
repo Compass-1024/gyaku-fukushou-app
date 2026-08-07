@@ -129,6 +129,12 @@ const BAND_TEXT_CLASSES: Record<Benchmark['band'], string> = {
   above: 'text-indigo-700 dark:text-indigo-300',
 }
 
+const BAND_ARROWS: Record<Benchmark['band'], string> = {
+  below: '↓',
+  average: '→',
+  above: '↑',
+}
+
 function AccuracyTrendChart({
   trend,
   t,
@@ -404,30 +410,26 @@ export function StatsScreen({ history, onBack }: StatsScreenProps) {
               <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400">
                 {t.benchmarks.title}
               </h2>
-              <ul className="flex flex-col gap-2">
+              <ul className="grid grid-cols-2 gap-2">
                 {benchmarks.map((benchmark) => {
                   const copy = benchmarkCopy(t, benchmark)
                   return (
                     <li
                       key={benchmark.mode}
-                      className={`flex items-center justify-between rounded-lg border px-4 py-3 text-sm ${BAND_CLASSES[benchmark.band]}`}
+                      title={`${t.benchmarks.previousLabel(benchmark.previousValue)} / ${t.benchmarks.recentLabel(benchmark.value)}`}
+                      className={`rounded-lg border px-3 py-2 text-xs ${BAND_CLASSES[benchmark.band]}`}
                     >
-                      <span className="text-gray-700 dark:text-gray-200">
+                      <p className="truncate font-medium text-gray-700 dark:text-gray-200">
                         {copy.label}
-                        <span className="block text-xs text-gray-500 dark:text-gray-400">
-                          {t.benchmarks.previousLabel(benchmark.previousValue)}
-                        </span>
-                      </span>
-                      <span className="text-right">
-                        <span className="block font-semibold text-gray-800 dark:text-gray-100">
-                          {t.benchmarks.recentLabel(benchmark.value)}
-                        </span>
-                        <span
-                          className={`block text-xs font-medium ${BAND_TEXT_CLASSES[benchmark.band]}`}
-                        >
-                          {t.benchmarks.bandLabels[benchmark.band]}
-                        </span>
-                      </span>
+                      </p>
+                      <p
+                        className={`mt-0.5 text-sm font-semibold ${BAND_TEXT_CLASSES[benchmark.band]}`}
+                      >
+                        {BAND_ARROWS[benchmark.band]} {benchmark.value}%
+                      </p>
+                      <p className="text-[10px] text-gray-500 dark:text-gray-400">
+                        {t.benchmarks.bandLabels[benchmark.band]}
+                      </p>
                     </li>
                   )
                 })}

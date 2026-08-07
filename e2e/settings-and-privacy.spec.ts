@@ -92,7 +92,8 @@ test('統計画面: 十分な記録があると「ワーキングメモリの伸
     page.getByRole('heading', { name: 'ワーキングメモリの伸び' }),
   ).toBeVisible()
   await expect(page.getByText('空間モード')).toBeVisible()
-  await expect(page.getByText('直近の正答率: 100%')).toBeVisible()
+  await expect(page.getByText('→ 100%')).toBeVisible()
+  await expect(page.getByText('横ばい')).toBeVisible()
   await expect(
     page.getByText('医学的な診断や公式な認知機能評価ではなく', { exact: false }),
   ).toBeVisible()
