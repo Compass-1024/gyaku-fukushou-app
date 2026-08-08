@@ -33,7 +33,7 @@ test('すうじモード（逆から入力）: カードから直接レベル選
 
 test('Nバックモード: レベル選択画面へ遷移できる', async ({ page }) => {
   await page.goto('/')
-  await page.getByRole('button', { name: /Nバックモード/ }).click()
+  await page.getByRole('button', { name: /^Nバックモード/ }).click()
 
   await expect(
     page.getByRole('heading', { name: 'Nバックモード' }),

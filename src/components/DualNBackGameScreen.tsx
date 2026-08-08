@@ -5,7 +5,6 @@ import {
   generateDualNBackSequence,
   scoreDualNBackTrials,
   getDualNValue,
-  DUAL_NBACK_SEQUENCE_LENGTH,
   GRID_SIZE,
   STIMULUS_MS,
   GAP_MS,
@@ -20,24 +19,25 @@ import { GameHeader } from './GameHeader'
 import { useTranslation } from '../contexts/LanguageContext'
 import type { BaseGameScreenProps, DualNBackPhase, DualNBackTrial } from '../types'
 
-type DualNBackGameScreenProps = BaseGameScreenProps
+type DualNBackGameScreenProps = BaseGameScreenProps & { trialCount: number }
 
 export function DualNBackGameScreen({
   level,
+  trialCount,
   onExit,
   onSelectLevel,
 }: DualNBackGameScreenProps) {
   const t = useTranslation()
   const n = getDualNValue(level)
   const [trials, setTrials] = useState<DualNBackTrial[]>(() =>
-    generateDualNBackSequence(level),
+    generateDualNBackSequence(level, trialCount),
   )
   const [phase, setPhase] = useState<DualNBackPhase>('ready')
   const [positionPressed, setPositionPressed] = useState<boolean[]>(() =>
-    new Array(DUAL_NBACK_SEQUENCE_LENGTH).fill(false),
+    new Array(trialCount).fill(false),
   )
   const [soundPressed, setSoundPressed] = useState<boolean[]>(() =>
-    new Array(DUAL_NBACK_SEQUENCE_LENGTH).fill(false),
+    new Array(trialCount).fill(false),
   )
 
   // 準備フェーズ: 少し間を置いてから開始する
@@ -113,9 +113,9 @@ export function DualNBackGameScreen({
   })
 
   function handleRetry() {
-    setTrials(generateDualNBackSequence(level))
-    setPositionPressed(new Array(DUAL_NBACK_SEQUENCE_LENGTH).fill(false))
-    setSoundPressed(new Array(DUAL_NBACK_SEQUENCE_LENGTH).fill(false))
+    setTrials(generateDualNBackSequence(level, trialCount))
+    setPositionPressed(new Array(trialCount).fill(false))
+    setSoundPressed(new Array(trialCount).fill(false))
     setPhase('ready')
   }
 

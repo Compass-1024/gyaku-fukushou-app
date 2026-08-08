@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test'
 
 test('Nバックモード: 出題が始まり「一致」ボタンを押せる', async ({ page }) => {
   await page.goto('/')
-  await page.getByRole('button', { name: /Nバックモード/ }).click()
+  await page.getByRole('button', { name: /^Nバックモード/ }).click()
   await page.getByRole('button', { name: /レベル1（1つ前と比較）/ }).click()
 
   await expect(

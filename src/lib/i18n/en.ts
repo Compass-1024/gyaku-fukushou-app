@@ -397,6 +397,8 @@ export const en: Translations = {
           3: 'Level 3 (compare to 3 back)',
         } as const
       )[level],
+    trialCountTitle: 'Number of trials',
+    trialCountLabel: (count) => `${count}`,
     matchPrompt: (n) => `Press the matching button if it's the same as ${n} step${n === 1 ? '' : 's'} back`,
     positionMatchButton: 'Position Match',
     positionMatchButtonPressed: '✓ Position Match',

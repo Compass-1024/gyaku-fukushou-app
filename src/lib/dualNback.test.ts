@@ -3,18 +3,22 @@ import {
   generateDualNBackSequence,
   scoreDualNBackTrials,
   getDualNValue,
-  DUAL_NBACK_SEQUENCE_LENGTH,
+  DEFAULT_TRIAL_COUNT,
   GRID_SIZE,
   SOUND_COUNT,
 } from './dualNback'
 
 describe('generateDualNBackSequence', () => {
-  it('generates the configured number of trials', () => {
-    expect(generateDualNBackSequence(1)).toHaveLength(DUAL_NBACK_SEQUENCE_LENGTH)
+  it('defaults to DEFAULT_TRIAL_COUNT when no count is given', () => {
+    expect(generateDualNBackSequence(1)).toHaveLength(DEFAULT_TRIAL_COUNT)
+  })
+
+  it('generates the requested number of trials', () => {
+    expect(generateDualNBackSequence(1, 10)).toHaveLength(10)
   })
 
   it('keeps positions and sounds within range', () => {
-    const trials = generateDualNBackSequence(2)
+    const trials = generateDualNBackSequence(2, 10)
     for (const trial of trials) {
       expect(trial.position).toBeGreaterThanOrEqual(0)
       expect(trial.position).toBeLessThan(GRID_SIZE * GRID_SIZE)
@@ -25,7 +29,7 @@ describe('generateDualNBackSequence', () => {
 
   it('flags positionMatch/soundMatch correctly against N steps back', () => {
     const n = getDualNValue(3)
-    const trials = generateDualNBackSequence(3)
+    const trials = generateDualNBackSequence(3, 10)
     trials.forEach((trial, i) => {
       if (i < n) {
         expect(trial.positionMatch).toBe(false)

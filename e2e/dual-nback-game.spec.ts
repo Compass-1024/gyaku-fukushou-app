@@ -1,10 +1,10 @@
 import { test, expect } from '@playwright/test'
 
-test('Dual N-Backモード: 出題が始まり位置/音の一致を回答できる', async ({
+test('デュアルNバックモード: 出題が始まり位置/音の一致を回答できる', async ({
   page,
 }) => {
   await page.goto('/')
-  await page.getByRole('button', { name: /Dual N-Backモード/ }).click()
+  await page.getByRole('button', { name: /デュアルNバックモード/ }).click()
   await page
     .getByRole('button', { name: /レベル1（1つ前と比較）/ })
     .click()

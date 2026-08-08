@@ -233,6 +233,8 @@ export interface Translations {
     title: string
     subtitle: string
     levelLabel: (level: 1 | 2 | 3) => string
+    trialCountTitle: string
+    trialCountLabel: (count: number) => string
     matchPrompt: (n: number) => string
     positionMatchButton: string
     positionMatchButtonPressed: string

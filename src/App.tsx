@@ -18,6 +18,7 @@ import { useLanguage, useTranslation } from './contexts/LanguageContext'
 import { loadHistory } from './lib/history'
 import { loadSettings } from './lib/settings'
 import { DEFAULT_TRIAL_COUNT } from './lib/nback'
+import { DEFAULT_TRIAL_COUNT as DUAL_NBACK_DEFAULT_TRIAL_COUNT } from './lib/dualNback'
 import type { AreaStats } from './lib/history'
 import type { DigitGameType, HistoryEntry, Level } from './types'
 
@@ -71,7 +72,7 @@ type View =
   | { screen: 'nback-level' }
   | { screen: 'nback-game'; level: Level; trialCount: number }
   | { screen: 'dual-nback-level' }
-  | { screen: 'dual-nback-game'; level: Level }
+  | { screen: 'dual-nback-game'; level: Level; trialCount: number }
   | { screen: 'spatial-level' }
   | { screen: 'spatial-game'; level: Level }
   | { screen: 'pattern-level' }
@@ -227,7 +228,11 @@ function App() {
                 trialCount: DEFAULT_TRIAL_COUNT,
               })
             } else if (area.mode === 'dual-nback') {
-              goTo({ screen: 'dual-nback-game', level: area.level })
+              goTo({
+                screen: 'dual-nback-game',
+                level: area.level,
+                trialCount: DUAL_NBACK_DEFAULT_TRIAL_COUNT,
+              })
             } else if (area.mode === 'spatial') {
               goTo({ screen: 'spatial-game', level: area.level })
             } else if (area.mode === 'pattern') {
@@ -314,7 +319,9 @@ function App() {
       content = (
         <DualNBackLevelSelect
           history={history}
-          onSelect={(level) => goTo({ screen: 'dual-nback-game', level })}
+          onSelect={(level, trialCount) =>
+            goTo({ screen: 'dual-nback-game', level, trialCount })
+          }
           onBack={() => goTo({ screen: 'top' })}
         />
       )
@@ -322,10 +329,17 @@ function App() {
     case 'dual-nback-game':
       content = (
         <DualNBackGameScreen
-          key={view.level}
+          key={`${view.level}-${view.trialCount}`}
           level={view.level}
+          trialCount={view.trialCount}
           onExit={() => goTo({ screen: 'dual-nback-level' })}
-          onSelectLevel={(level) => goTo({ screen: 'dual-nback-game', level })}
+          onSelectLevel={(level) =>
+            goTo({
+              screen: 'dual-nback-game',
+              level,
+              trialCount: view.trialCount,
+            })
+          }
         />
       )
       break

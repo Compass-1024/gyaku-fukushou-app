@@ -32,7 +32,7 @@ export const ja: Translations = {
       'digit-reverse': 'すうじ（逆から）',
       'digit-sum': 'すうじ（合計）',
       nback: 'Nバック',
-      'dual-nback': 'Dual N-Back',
+      'dual-nback': 'デュアルNバック',
       spatial: '空間',
       pattern: '変化検出',
       tone: '音・色の順番',
@@ -89,7 +89,7 @@ export const ja: Translations = {
         description: '音の順番を再現する',
       },
       dualNback: {
-        title: 'Dual N-Backモード',
+        title: 'デュアルNバックモード',
         description: '位置と音を同時に判定',
       },
       random: {
@@ -278,8 +278,8 @@ export const ja: Translations = {
       description: '音・色モードのレベル3に挑戦した',
     },
     'level-3-dual-nback': {
-      label: 'Dual N-Back上級者',
-      description: 'Dual N-Backモードのレベル3に挑戦した',
+      label: 'デュアルNバック上級者',
+      description: 'デュアルNバックモードのレベル3に挑戦した',
     },
     'total-10': { label: '継続力', description: '累計10セットを完了した' },
     'total-50': { label: '継続力（上級）', description: '累計50セットを完了した' },
@@ -294,7 +294,7 @@ export const ja: Translations = {
     },
     'all-eight-modes': {
       label: 'コンプリート',
-      description: 'Dual N-Back・ランダムを含む全8モードに挑戦した',
+      description: 'デュアルNバック・ランダムを含む全8モードに挑戦した',
     },
     'all-modes-mastered': {
       label: '全モードマスター',
@@ -357,7 +357,7 @@ export const ja: Translations = {
       isMatch ? `位置${position + 1}（一致）` : `位置${position + 1}`,
   },
   dualNback: {
-    title: 'Dual N-Backモード',
+    title: 'デュアルNバックモード',
     subtitle:
       'マスの位置と音が同時に提示されます。N個前と位置が同じなら「位置一致」、音が同じなら「音一致」を押すワーキングメモリトレーニングです。',
     levelLabel: (level) =>
@@ -368,6 +368,8 @@ export const ja: Translations = {
           3: 'レベル3（3つ前と比較）',
         } as const
       )[level],
+    trialCountTitle: '出題数',
+    trialCountLabel: (count) => `${count}問`,
     matchPrompt: (n) => `${n}個前と同じなら該当ボタンを押してください`,
     positionMatchButton: '位置一致',
     positionMatchButtonPressed: '✓ 位置一致',
@@ -447,7 +449,7 @@ export const ja: Translations = {
     spatial: { label: '空間モード' },
     nback: { label: 'Nバックモード' },
     pattern: { label: '変化検出モード' },
-    'dual-nback': { label: 'Dual N-Backモード' },
+    'dual-nback': { label: 'デュアルNバックモード' },
     random: { label: 'ランダムモード' },
     word: { label: 'ことばモード' },
     tone: { label: '音・色モード' },

@@ -5,7 +5,11 @@ import type { Level, DualNBackTrial } from '../types'
 // レベルが上がるほど何個前と比較するかを増やす（1back/2back/3back）
 const N_VALUE: Record<Level, number> = { 1: 1, 2: 2, 3: 3 }
 
-export const DUAL_NBACK_SEQUENCE_LENGTH = 20
+// 出題数（問題セットの試行数）を選べるようにする（Nバックモードと同様）
+export const TRIAL_COUNT_OPTIONS = [10, 20, 30] as const
+export type TrialCount = (typeof TRIAL_COUNT_OPTIONS)[number]
+export const DEFAULT_TRIAL_COUNT: TrialCount = 20
+
 const MATCH_PROBABILITY = 0.3
 
 // 3×3グリッドの位置(0〜8)と8種類の音(0〜7)
@@ -23,12 +27,15 @@ export function getDualNValue(level: Level): number {
 }
 
 // 位置・音それぞれ独立に、N個前と一致する箇所を一定確率で混ぜつつ生成する
-export function generateDualNBackSequence(level: Level): DualNBackTrial[] {
+export function generateDualNBackSequence(
+  level: Level,
+  trialCount: number = DEFAULT_TRIAL_COUNT,
+): DualNBackTrial[] {
   const n = N_VALUE[level]
   const positions: number[] = []
   const sounds: number[] = []
   const trials: DualNBackTrial[] = []
-  for (let i = 0; i < DUAL_NBACK_SEQUENCE_LENGTH; i++) {
+  for (let i = 0; i < trialCount; i++) {
     const position =
       i >= n && Math.random() < MATCH_PROBABILITY
         ? positions[i - n]

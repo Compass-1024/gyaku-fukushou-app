@@ -59,7 +59,7 @@ test('Nバックモードのレベル選択画面にアクセシビリティ違�
   page,
 }) => {
   await page.goto('/')
-  await page.getByRole('button', { name: /Nバックモード/ }).click()
+  await page.getByRole('button', { name: /^Nバックモード/ }).click()
   await expect(
     page.getByRole('heading', { name: 'Nバックモード' }),
   ).toBeVisible()
