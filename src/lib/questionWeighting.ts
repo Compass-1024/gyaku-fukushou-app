@@ -24,13 +24,31 @@ function storageKey(mode: string): string {
   return `gyaku-fukushou:questionStats:${mode}`
 }
 
+function isValidBucketStat(value: unknown): value is BucketStat {
+  if (typeof value !== 'object' || value === null) return false
+  const v = value as Record<string, unknown>
+  return (
+    typeof v.correct === 'number' &&
+    Number.isFinite(v.correct) &&
+    v.correct >= 0 &&
+    typeof v.total === 'number' &&
+    Number.isFinite(v.total) &&
+    v.total >= 0 &&
+    v.correct <= v.total
+  )
+}
+
 export function loadBucketStats(mode: string): BucketStats {
   try {
     const raw = localStorage.getItem(storageKey(mode))
     if (!raw) return {}
     const parsed: unknown = JSON.parse(raw)
     if (typeof parsed !== 'object' || parsed === null) return {}
-    return parsed as BucketStats
+    const result: BucketStats = {}
+    for (const [bucket, stat] of Object.entries(parsed as Record<string, unknown>)) {
+      if (isValidBucketStat(stat)) result[bucket] = stat
+    }
+    return result
   } catch {
     return {}
   }

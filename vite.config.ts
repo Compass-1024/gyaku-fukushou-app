@@ -69,6 +69,21 @@ export default defineConfig({
             url: '/?shortcut=spatial',
             icons: [{ src: '/icon-192.png', sizes: '192x192' }],
           },
+          {
+            name: 'デュアルNバックモード',
+            url: '/?shortcut=dual-nback',
+            icons: [{ src: '/icon-192.png', sizes: '192x192' }],
+          },
+          {
+            name: '変化検出モード',
+            url: '/?shortcut=pattern',
+            icons: [{ src: '/icon-192.png', sizes: '192x192' }],
+          },
+          {
+            name: '音・色モード',
+            url: '/?shortcut=tone',
+            icons: [{ src: '/icon-192.png', sizes: '192x192' }],
+          },
         ],
       },
     }),

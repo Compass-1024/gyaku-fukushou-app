@@ -17,6 +17,13 @@ export function getHeader(req: IncomingMessage, name: string): string | undefine
   return Array.isArray(value) ? value[0] : value
 }
 
+// Vercelはクライアントの実IPを x-forwarded-for の先頭要素として渡す
+export function getClientIp(req: IncomingMessage): string {
+  const forwarded = getHeader(req, 'x-forwarded-for')
+  if (forwarded) return forwarded.split(',')[0].trim()
+  return req.socket.remoteAddress ?? 'unknown'
+}
+
 export function sendEmpty(res: ServerResponse, status: number): void {
   res.statusCode = status
   res.end()

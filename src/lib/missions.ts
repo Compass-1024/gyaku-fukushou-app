@@ -88,13 +88,19 @@ export interface MissionCompletion {
 const COMPLETIONS_KEY = 'gyaku-fukushou:missionCompletions'
 const MAX_COMPLETIONS = 200
 
+function isValidMissionCompletion(value: unknown): value is MissionCompletion {
+  if (typeof value !== 'object' || value === null) return false
+  const v = value as Record<string, unknown>
+  return typeof v.dateKey === 'string' && typeof v.missionId === 'string'
+}
+
 export function loadMissionCompletions(): MissionCompletion[] {
   try {
     const raw = localStorage.getItem(COMPLETIONS_KEY)
     if (!raw) return []
     const parsed: unknown = JSON.parse(raw)
     if (!Array.isArray(parsed)) return []
-    return parsed
+    return parsed.filter(isValidMissionCompletion)
   } catch {
     return []
   }

@@ -221,7 +221,7 @@ export function TopScreen({
           type="button"
           onClick={onOpenStats}
           aria-label={t.common.stats}
-          className="touch-manipulation rounded-full p-2 text-xl text-gray-500 hover:bg-gray-200/60 dark:text-gray-400 dark:hover:bg-gray-700/60"
+          className="touch-manipulation flex min-h-12 min-w-12 items-center justify-center rounded-full text-xl text-gray-500 hover:bg-gray-200/60 dark:text-gray-400 dark:hover:bg-gray-700/60"
         >
           📊
         </button>
@@ -229,7 +229,7 @@ export function TopScreen({
           type="button"
           onClick={onOpenSettings}
           aria-label={t.common.settings}
-          className="touch-manipulation rounded-full p-2 text-xl text-gray-500 hover:bg-gray-200/60 dark:text-gray-400 dark:hover:bg-gray-700/60"
+          className="touch-manipulation flex min-h-12 min-w-12 items-center justify-center rounded-full text-xl text-gray-500 hover:bg-gray-200/60 dark:text-gray-400 dark:hover:bg-gray-700/60"
         >
           ⚙️
         </button>

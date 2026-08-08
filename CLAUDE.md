@@ -511,7 +511,7 @@ React描画時の例外は`src/components/ErrorBoundary.tsx`で捕捉し、`wind
 - リリースする場合の手順:
   1. `CHANGELOG.md`の`[Unreleased]`セクションの内容を、新しいバージョン番号＋日付の見出し（例: `## [0.2.0] - 2026-08-02`）に変更する（`[Unreleased]`見出し自体は空のまま残し、次回以降の変更を追記できるようにする）
   2. バージョン番号は[Semantic Versioning](https://semver.org/lang/ja/)に従って判断する（新機能追加は`MINOR`、バグ修正のみは`PATCH`、破壊的変更は`MAJOR`）
-  3. `package.json`と`package-lock.json`（ルートおよび`packages[""]`の2箇所）の`version`を同じ番号に同期させる
+  3. `npm version <major|minor|patch> --no-git-tag-version`を実行する（`package.json`と`package-lock.json`のルート・`packages[""]`の2箇所を自動同期でき、手動編集によるズレを防げる。gitタグは打たずコミットのみ後続ステップでまとめて作成する）
   4. `npm run verify`が通ることを確認し、コミット・（ユーザー確認の上）push する
 - バージョン番号は常に`package.json`の値を正とし、CHANGELOG.mdの見出しと一致させる。
 
@@ -526,6 +526,7 @@ React描画時の例外は`src/components/ErrorBoundary.tsx`で捕捉し、`wind
 - `src/components/<Mode>LevelSelect.tsx` / `<Mode>GameScreen.tsx`: 画面実装
 - `src/components/StatsScreen.tsx` / `TopScreen.tsx`: `AREA_LABELS`などのラベル追加
 - `src/App.tsx`: `View`型・`goTo`の履歴再読み込み条件・ルーティングのcase分岐
+- `vite.config.ts`: PWAマニフェストの`shortcuts`配列（漏れるとホーム画面ショートカットから新モードに到達できない）
 - `e2e/`: 主要導線のスモークテスト
 - CLAUDE.md（本ファイル）: Screen structure図・Feature requirements・実績一覧・データモデルの反映
 

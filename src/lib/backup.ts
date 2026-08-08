@@ -1,6 +1,7 @@
 import { DEFAULT_SETTINGS } from './settings'
+import { isValidHistoryEntry } from './history'
 import type { MissionCompletion } from './missions'
-import type { AppSettings, DigitGameType, HistoryEntry, Level, Mode } from '../types'
+import type { AppSettings, HistoryEntry } from '../types'
 
 const BACKUP_VERSION = 2
 
@@ -11,37 +12,6 @@ export interface BackupData {
   settings: AppSettings
   // v1のバックアップには存在しないため、復元時は空配列として扱う
   missionCompletions: MissionCompletion[]
-}
-
-const VALID_MODES: readonly Mode[] = [
-  'word',
-  'digit',
-  'nback',
-  'dual-nback',
-  'spatial',
-  'pattern',
-  'tone',
-  'random',
-]
-const VALID_GAME_TYPES: readonly DigitGameType[] = ['reverse', 'sum']
-const VALID_LEVELS: readonly Level[] = [1, 2, 3]
-
-function isValidHistoryEntry(value: unknown): value is HistoryEntry {
-  if (typeof value !== 'object' || value === null) return false
-  const e = value as Record<string, unknown>
-  if (!VALID_MODES.includes(e.mode as Mode)) return false
-  if (
-    e.gameType !== undefined &&
-    !VALID_GAME_TYPES.includes(e.gameType as DigitGameType)
-  ) {
-    return false
-  }
-  if (!VALID_LEVELS.includes(e.level as Level)) return false
-  if (typeof e.correct !== 'number' || typeof e.total !== 'number') return false
-  if (typeof e.timestamp !== 'string' || Number.isNaN(Date.parse(e.timestamp))) {
-    return false
-  }
-  return true
 }
 
 function isValidMissionCompletion(value: unknown): value is MissionCompletion {

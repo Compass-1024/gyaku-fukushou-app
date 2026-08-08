@@ -7,6 +7,9 @@ export interface KVStore {
   set<T>(key: string, value: T): Promise<void>
   del(key: string): Promise<void>
   scanKeys(prefix: string): Promise<string[]>
+  // 固定ウィンドウ方式のレート制限用カウンタ。キーが存在しなければ1に初期化し
+  // ttlSeconds後に自動失効させ、存在すればインクリメントした値を返す
+  incrWithExpiry(key: string, ttlSeconds: number): Promise<number>
 }
 
 let redis: Redis | null = null
@@ -33,7 +36,25 @@ export function getKV(): KVStore {
       await client.del(key)
     },
     async scanKeys(prefix: string): Promise<string[]> {
-      return client.keys(`${prefix}*`)
+      // KEYSはRedisをブロックしうるため、SCANのカーソル走査で分割取得する
+      const keys: string[] = []
+      let cursor = 0
+      do {
+        const [nextCursor, batch] = await client.scan(cursor, {
+          match: `${prefix}*`,
+          count: 200,
+        })
+        keys.push(...batch)
+        cursor = Number(nextCursor)
+      } while (cursor !== 0)
+      return keys
+    },
+    async incrWithExpiry(key: string, ttlSeconds: number): Promise<number> {
+      const count = await client.incr(key)
+      if (count === 1) {
+        await client.expire(key, ttlSeconds)
+      }
+      return count
     },
   }
 }

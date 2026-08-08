@@ -54,16 +54,16 @@ export default async function handler(
   let deleted = 0
   let errored = 0
 
-  for (const key of keys) {
+  async function processOne(key: string): Promise<void> {
     const record = await kv.get<StoredSubscription>(key)
-    if (!record) continue
+    if (!record) return
 
     const send = shouldSendReminder({
       lastPracticedDateKey: record.lastPracticedDateKey,
       lastReminderSentDateKey: record.lastReminderSentDateKey,
       nowUtc,
     })
-    if (!send) continue
+    if (!send) return
 
     try {
       const message = buildReminderMessage(record.language ?? 'ja')
@@ -87,6 +87,13 @@ export default async function handler(
         console.error('[cron/reminder] failed to send push notification', error)
       }
     }
+  }
+
+  // 購読者数が増えても実行時間が線形に伸びないよう、一定件数ずつ並列処理する
+  const CONCURRENCY = 20
+  for (let i = 0; i < keys.length; i += CONCURRENCY) {
+    const chunk = keys.slice(i, i + CONCURRENCY)
+    await Promise.allSettled(chunk.map(processOne))
   }
 
   sendJson(res, 200, { sent, deleted, errored })

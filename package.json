@@ -10,7 +10,8 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:e2e": "playwright test",
-    "verify": "npm run build && npm run lint && npm run test"
+    "check:reminder-sync": "node scripts/check-reminder-sync.mjs",
+    "verify": "npm run build && npm run lint && npm run test && npm run check:reminder-sync"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.3.3",

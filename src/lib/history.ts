@@ -3,13 +3,58 @@ import type { DigitGameType, HistoryEntry, Level, Mode } from '../types'
 const STORAGE_KEY = 'gyaku-fukushou:history'
 const MAX_ENTRIES = 200
 
+const VALID_MODES: readonly Mode[] = [
+  'word',
+  'digit',
+  'nback',
+  'dual-nback',
+  'spatial',
+  'pattern',
+  'tone',
+  'random',
+]
+const VALID_GAME_TYPES: readonly DigitGameType[] = ['reverse', 'sum']
+const VALID_LEVELS: readonly Level[] = [1, 2, 3]
+
+// localStorageは手動改変・旧バージョンのデータ形式・将来のスキーマ変更などで
+// 不正な形のデータが混入しうる唯一の永続化層のため、読み込み時に各フィールドの
+// 型・値域を検証し、不正な要素は静かに除外する（バックアップ復元時の検証
+// `backup.ts`の`isValidHistoryEntry`と同じ基準）
+export function isValidHistoryEntry(value: unknown): value is HistoryEntry {
+  if (typeof value !== 'object' || value === null) return false
+  const e = value as Record<string, unknown>
+  if (!VALID_MODES.includes(e.mode as Mode)) return false
+  if (
+    e.gameType !== undefined &&
+    !VALID_GAME_TYPES.includes(e.gameType as DigitGameType)
+  ) {
+    return false
+  }
+  if (!VALID_LEVELS.includes(e.level as Level)) return false
+  if (
+    typeof e.correct !== 'number' ||
+    !Number.isFinite(e.correct) ||
+    e.correct < 0
+  ) {
+    return false
+  }
+  if (typeof e.total !== 'number' || !Number.isFinite(e.total) || e.total < 0) {
+    return false
+  }
+  if (e.correct > e.total) return false
+  if (typeof e.timestamp !== 'string' || Number.isNaN(Date.parse(e.timestamp))) {
+    return false
+  }
+  return true
+}
+
 export function loadHistory(): HistoryEntry[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
     if (!raw) return []
     const parsed: unknown = JSON.parse(raw)
     if (!Array.isArray(parsed)) return []
-    return parsed
+    return parsed.filter(isValidHistoryEntry)
   } catch {
     return []
   }
@@ -26,7 +71,8 @@ export function clearHistory(): void {
 // バックアップからのインポートなど、履歴全体を丸ごと置き換える用途向け
 export function replaceHistory(entries: HistoryEntry[]): void {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(entries.slice(-MAX_ENTRIES)))
+    const valid = entries.filter(isValidHistoryEntry)
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(valid.slice(-MAX_ENTRIES)))
   } catch {
     /* localStorage unavailable (private mode, quota, etc.) */
   }
