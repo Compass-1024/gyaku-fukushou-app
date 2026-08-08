@@ -27,6 +27,9 @@ export const ja: Translations = {
     questionProgress: (current, total) => `問題 ${current} / ${total}`,
     attemptStats: (accuracyPercent, attempts) =>
       `これまでの正答率: ${accuracyPercent}%（${attempts}回挑戦）`,
+    pauseButton: '⏸ 一時停止',
+    pausedMessage: '一時停止中です。準備ができたら再開してください',
+    resumeButton: '▶ 再開する',
     areaLabels: {
       word: 'ことば',
       'digit-reverse': 'すうじ（逆から）',

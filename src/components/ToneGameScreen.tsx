@@ -3,6 +3,7 @@ import { useEnterKey } from '../hooks/useEnterKey'
 import { useCountdown } from '../hooks/useCountdown'
 import { useStepReveal } from '../hooks/useStepReveal'
 import { useSetCompletionRecorder } from '../hooks/useSetCompletionRecorder'
+import { usePauseState } from '../hooks/usePauseState'
 import {
   pickToneQuestionSet,
   isToneAnswerCorrect,
@@ -25,6 +26,7 @@ import {
 import { SetSummary } from './SetSummary'
 import { GameHeader } from './GameHeader'
 import { ResultBadge } from './ResultBadge'
+import { PauseOverlay } from './PauseOverlay'
 import { useTranslation } from '../contexts/LanguageContext'
 import type {
   BaseGameScreenProps,
@@ -93,15 +95,19 @@ export function ToneGameScreen({
   const litPad =
     phase === 'showing' && !isGap ? currentQuestion.sequence[trialIndex] : null
 
+  // ④-7: 回答フェーズ限定の一時停止
+  const { paused, pause, resume } = usePauseState(currentQuestion)
+
   // 回答フェーズ: 残り時間をカウントダウンし、時間切れなら自動で採点する
   const answerRemaining = useCountdown(
     phase === 'answering',
     getAnswerTimeoutMs(currentQuestion.sequence.length),
     () => finalizeAnswer(tappedRef.current),
+    paused,
   )
 
   function handlePadTap(pad: number) {
-    if (phase !== 'answering') return
+    if (phase !== 'answering' || paused) return
     if (loadSettings().soundEnabled) playPadTone(pad)
     setTapped((prev) => {
       if (prev.length >= currentQuestion.sequence.length) return prev
@@ -217,18 +223,30 @@ export function ToneGameScreen({
             {t.common.rememberPrompt}
           </p>
         )}
-        {phase === 'answering' && (
+        {phase === 'answering' && paused && <PauseOverlay onResume={resume} />}
+
+        {phase === 'answering' && !paused && (
           <>
-            <p className="text-lg font-medium text-gray-800 dark:text-gray-100">
-              {t.tone.answerPrompt}
-            </p>
+            <div className="flex w-full items-center justify-between">
+              <span className="w-14" aria-hidden="true" />
+              <p className="text-lg font-medium text-gray-800 dark:text-gray-100">
+                {t.tone.answerPrompt}
+              </p>
+              <button
+                type="button"
+                onClick={pause}
+                className="touch-manipulation rounded-full px-2 py-1 text-xs font-semibold text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700"
+              >
+                {t.common.pauseButton}
+              </button>
+            </div>
             <p aria-hidden="true" className="text-2xl font-bold text-rose-500">
               {answerRemaining}
             </p>
           </>
         )}
 
-        {phase !== 'result' && (
+        {phase !== 'result' && !(phase === 'answering' && paused) && (
           <div className="grid grid-cols-2 gap-3" style={{ width: 176 }}>
             {Array.from({ length: PAD_COUNT }, (_, pad) => {
               const isLit = litPad === pad

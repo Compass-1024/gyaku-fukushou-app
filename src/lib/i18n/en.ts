@@ -27,6 +27,9 @@ export const en: Translations = {
     questionProgress: (current, total) => `Question ${current} / ${total}`,
     attemptStats: (accuracyPercent, attempts) =>
       `Accuracy so far: ${accuracyPercent}% (${attempts} attempt${attempts === 1 ? '' : 's'})`,
+    pauseButton: '⏸ Pause',
+    pausedMessage: 'Paused. Resume when you’re ready.',
+    resumeButton: '▶ Resume',
     areaLabels: {
       word: 'Word',
       'digit-reverse': 'Digits (reverse)',

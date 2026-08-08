@@ -3,6 +3,7 @@ import { useEnterKey } from '../hooks/useEnterKey'
 import { useCountdown } from '../hooks/useCountdown'
 import { useStepReveal } from '../hooks/useStepReveal'
 import { useSetCompletionRecorder } from '../hooks/useSetCompletionRecorder'
+import { usePauseState } from '../hooks/usePauseState'
 import {
   pickDigitQuestionSet,
   reverseDigits,
@@ -22,6 +23,7 @@ import { NumpadInput } from './NumpadInput'
 import { SetSummary } from './SetSummary'
 import { GameHeader } from './GameHeader'
 import { ResultBadge } from './ResultBadge'
+import { PauseOverlay } from './PauseOverlay'
 import { useTranslation } from '../contexts/LanguageContext'
 import type {
   BaseGameScreenProps,
@@ -95,14 +97,20 @@ export function DigitGameScreen({
     onComplete: () => setPhase('answering'),
   })
 
+  // ④-7: 回答フェーズ限定の一時停止（出題を覚える「showing」中は記憶効果を
+  // 損なうため一時停止できない）。出題が変わるたびに自動解除される
+  const { paused, pause, resume } = usePauseState(currentQuestion)
+
   // 回答フェーズ: 残り時間をカウントダウンし、時間切れなら自動で採点する
   const answerRemaining = useCountdown(
     phase === 'answering',
     getAnswerTimeoutMs(currentQuestion.digits.length),
     () => finalizeAnswer(typedRef.current),
+    paused,
   )
 
   function handleDigitPress(d: string) {
+    if (paused) return
     if (loadSettings().soundEnabled) playButtonTap()
     setTyped((prev) => {
       if (prev.length >= maxAnswerLength) return prev
@@ -117,13 +125,14 @@ export function DigitGameScreen({
   }
 
   function handleBackspacePress() {
+    if (paused) return
     if (loadSettings().soundEnabled) playButtonTap()
     setTyped((prev) => prev.slice(0, -1))
   }
 
   // 回答フェーズ中は物理キーボードの数字入力も受け付ける
   useEffect(() => {
-    if (phase !== 'answering') return
+    if (phase !== 'answering' || paused) return
     function handleKeyDown(e: KeyboardEvent) {
       if (e.key >= '0' && e.key <= '9') {
         handleDigitPress(e.key)
@@ -145,6 +154,7 @@ export function DigitGameScreen({
 
   // setTyped の関数形更新の中で読むことで、直前の入力を確実に拾ってから採点する
   function commitAnswer() {
+    if (paused) return
     setTyped((prev) => {
       if (prev.length > 0) finalizeAnswer(prev)
       return prev
@@ -266,11 +276,23 @@ export function DigitGameScreen({
           </>
         )}
 
-        {phase === 'answering' && (
+        {phase === 'answering' && paused && <PauseOverlay onResume={resume} />}
+
+        {phase === 'answering' && !paused && (
           <>
-            <p className="text-lg font-medium text-gray-800 dark:text-gray-100">
-              {t.digit.answerPrompt[gameType]}
-            </p>
+            <div className="flex w-full items-center justify-between">
+              <span className="w-14" aria-hidden="true" />
+              <p className="text-lg font-medium text-gray-800 dark:text-gray-100">
+                {t.digit.answerPrompt[gameType]}
+              </p>
+              <button
+                type="button"
+                onClick={pause}
+                className="touch-manipulation rounded-full px-2 py-1 text-xs font-semibold text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700"
+              >
+                {t.common.pauseButton}
+              </button>
+            </div>
             <p aria-hidden="true" className="text-2xl font-bold text-rose-500">
               {answerRemaining}
             </p>

@@ -36,6 +36,10 @@ export interface Translations {
     confirmExitMessage: string
     questionProgress: (current: number, total: number) => string
     attemptStats: (accuracyPercent: number, attempts: number) => string
+    // ④-7: 回答中の一時停止機能
+    pauseButton: string
+    pausedMessage: string
+    resumeButton: string
     // モード×レベルの表示ラベル（TopScreen/StatsScreenで共有）
     areaLabels: {
       word: string

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useEnterKey } from '../hooks/useEnterKey'
 import { useCountdown } from '../hooks/useCountdown'
 import { useSetCompletionRecorder } from '../hooks/useSetCompletionRecorder'
+import { usePauseState } from '../hooks/usePauseState'
 import {
   pickPatternQuestionSet,
   isPatternSelectionCorrect,
@@ -18,6 +19,7 @@ import { playCorrectSound, playIncorrectSound, playButtonTap } from '../lib/soun
 import { SetSummary } from './SetSummary'
 import { GameHeader } from './GameHeader'
 import { ResultBadge } from './ResultBadge'
+import { PauseOverlay } from './PauseOverlay'
 import { useTranslation } from '../contexts/LanguageContext'
 import type {
   BaseGameScreenProps,
@@ -80,11 +82,15 @@ export function PatternGameScreen({
     return () => clearTimeout(timeout)
   }, [phase, step, currentQuestion])
 
+  // ④-7: 回答フェーズ限定の一時停止
+  const { paused, pause, resume } = usePauseState(currentQuestion)
+
   // 回答フェーズ: 残り時間をカウントダウンし、時間切れなら現在の選択で自動採点する
   const answerRemaining = useCountdown(
     phase === 'answering',
     getAnswerTimeoutMs(currentQuestion.filledCells.length),
     () => finalizeAnswer(selectedRef.current),
+    paused,
   )
 
   // 結果表示中はEnterキーでも次の問題へ進めるようにする。finished後もこれが
@@ -93,7 +99,7 @@ export function PatternGameScreen({
   useEnterKey(phase === 'result' && !finished, handleNext)
 
   function toggleCell(cell: number) {
-    if (phase !== 'answering') return
+    if (phase !== 'answering' || paused) return
     if (loadSettings().soundEnabled) playButtonTap()
     setSelected((prev) =>
       prev.includes(cell) ? prev.filter((c) => c !== cell) : [...prev, cell],
@@ -117,7 +123,7 @@ export function PatternGameScreen({
   }
 
   function handleSubmit() {
-    if (phase !== 'answering') return
+    if (phase !== 'answering' || paused) return
     if (loadSettings().soundEnabled) playButtonTap()
     finalizeAnswer(selected)
   }
@@ -220,18 +226,30 @@ export function PatternGameScreen({
             &nbsp;
           </p>
         )}
-        {phase === 'answering' && (
-          <>
+        {phase === 'answering' && paused && <PauseOverlay onResume={resume} />}
+
+        {phase === 'answering' && !paused && (
+          <div className="flex w-full items-center justify-between">
+            <span className="w-14" aria-hidden="true" />
             <p className="text-lg font-medium text-gray-800 dark:text-gray-100">
               {t.pattern.selectPrompt}
             </p>
-            <p aria-hidden="true" className="text-2xl font-bold text-rose-500">
-              {answerRemaining}
-            </p>
-          </>
+            <button
+              type="button"
+              onClick={pause}
+              className="touch-manipulation rounded-full px-2 py-1 text-xs font-semibold text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700"
+            >
+              {t.common.pauseButton}
+            </button>
+          </div>
+        )}
+        {phase === 'answering' && !paused && (
+          <p aria-hidden="true" className="text-2xl font-bold text-rose-500">
+            {answerRemaining}
+          </p>
         )}
 
-        {phase !== 'result' && (
+        {phase !== 'result' && !(phase === 'answering' && paused) && (
           <div
             className="grid gap-2"
             style={{
@@ -262,7 +280,7 @@ export function PatternGameScreen({
           </div>
         )}
 
-        {phase === 'answering' && (
+        {phase === 'answering' && !paused && (
           <button
             type="button"
             onClick={handleSubmit}

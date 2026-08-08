@@ -3,6 +3,7 @@ import { useEnterKey } from '../hooks/useEnterKey'
 import { useCountdown } from '../hooks/useCountdown'
 import { useStepReveal } from '../hooks/useStepReveal'
 import { useSetCompletionRecorder } from '../hooks/useSetCompletionRecorder'
+import { usePauseState } from '../hooks/usePauseState'
 import { buildRandomRounds } from '../lib/random'
 import { loadHistory } from '../lib/history'
 import {
@@ -47,6 +48,7 @@ import { NumpadInput } from './NumpadInput'
 import { SetSummary } from './SetSummary'
 import { GameHeader } from './GameHeader'
 import { ResultBadge } from './ResultBadge'
+import { PauseOverlay } from './PauseOverlay'
 import { useTranslation } from '../contexts/LanguageContext'
 import type { Translations } from '../lib/i18n'
 import type {
@@ -161,10 +163,14 @@ export function RandomGameScreen({
     onComplete: () => setPhase('answering'),
   })
 
+  // ④-7: 回答フェーズ限定の一時停止
+  const { paused, pause, resume } = usePauseState(currentRound)
+
   const answerRemaining = useCountdown(
     phase === 'answering',
     getRoundAnswerTimeoutMs(currentRound),
     () => finalizeAnswer(),
+    paused,
   )
 
   function finalizeAnswer() {
@@ -201,7 +207,7 @@ export function RandomGameScreen({
   }
 
   function handleDigitPress(d: string) {
-    if (phase !== 'answering') return
+    if (phase !== 'answering' || paused) return
     if (currentRound.mode !== 'digit') return
     if (loadSettings().soundEnabled) playButtonTap()
     const maxLength = currentRound.question.digits.length
@@ -214,11 +220,13 @@ export function RandomGameScreen({
   }
 
   function handleBackspacePress() {
+    if (paused) return
     if (loadSettings().soundEnabled) playButtonTap()
     setTyped((prev) => prev.slice(0, -1))
   }
 
   function commitTypedAnswer() {
+    if (paused) return
     setTyped((prev) => {
       if (prev.length > 0) finalizeAnswer()
       return prev
@@ -227,7 +235,7 @@ export function RandomGameScreen({
 
   // 空間・音/色ラウンド: 順番にタップし、期待される長さに達したら自動採点する
   function handleOrderedTap(cell: number) {
-    if (phase !== 'answering') return
+    if (phase !== 'answering' || paused) return
     if (currentRound.mode !== 'spatial' && currentRound.mode !== 'tone') return
     if (loadSettings().soundEnabled) {
       if (currentRound.mode === 'tone') playPadTone(cell)
@@ -245,7 +253,7 @@ export function RandomGameScreen({
 
   // 変化検出ラウンド: トグル選択し、「回答する」ボタンで明示的に確定する
   function handlePatternToggle(cell: number) {
-    if (phase !== 'answering' || currentRound.mode !== 'pattern') return
+    if (phase !== 'answering' || paused || currentRound.mode !== 'pattern') return
     if (loadSettings().soundEnabled) playButtonTap()
     setArrayValue((prev) =>
       prev.includes(cell) ? prev.filter((c) => c !== cell) : [...prev, cell],
@@ -253,7 +261,7 @@ export function RandomGameScreen({
   }
 
   function handlePatternSubmit() {
-    if (phase !== 'answering' || currentRound.mode !== 'pattern') return
+    if (phase !== 'answering' || paused || currentRound.mode !== 'pattern') return
     if (loadSettings().soundEnabled) playButtonTap()
     finalizeAnswer()
   }
@@ -380,7 +388,7 @@ export function RandomGameScreen({
                   <button
                     key={cell}
                     type="button"
-                    disabled={phase !== 'answering'}
+                    disabled={phase !== 'answering' || paused}
                     onClick={() => handleOrderedTap(cell)}
                     className={`aspect-square touch-manipulation rounded-lg text-sm font-bold transition disabled:cursor-not-allowed ${
                       isLit
@@ -419,7 +427,7 @@ export function RandomGameScreen({
                   <button
                     key={cell}
                     type="button"
-                    disabled={phase !== 'answering'}
+                    disabled={phase !== 'answering' || paused}
                     onClick={() => handlePatternToggle(cell)}
                     className={`aspect-square touch-manipulation rounded-lg transition disabled:cursor-not-allowed ${
                       isShown || isSelected
@@ -445,7 +453,7 @@ export function RandomGameScreen({
                 <button
                   key={pad}
                   type="button"
-                  disabled={phase !== 'answering'}
+                  disabled={phase !== 'answering' || paused}
                   onClick={() => handleOrderedTap(pad)}
                   aria-label={t.tone.padAriaLabel(t.tone.padColors[pad])}
                   className={`aspect-square touch-manipulation rounded-xl text-white shadow-sm transition disabled:cursor-not-allowed ${
@@ -461,8 +469,19 @@ export function RandomGameScreen({
           </div>
         )}
 
-        {phase === 'answering' && (
+        {phase === 'answering' && paused && <PauseOverlay onResume={resume} />}
+
+        {phase === 'answering' && !paused && (
           <>
+            <div className="flex w-full items-center justify-end">
+              <button
+                type="button"
+                onClick={pause}
+                className="touch-manipulation rounded-full px-2 py-1 text-xs font-semibold text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700"
+              >
+                {t.common.pauseButton}
+              </button>
+            </div>
             <p aria-hidden="true" className="text-2xl font-bold text-rose-500">
               {answerRemaining}
             </p>
