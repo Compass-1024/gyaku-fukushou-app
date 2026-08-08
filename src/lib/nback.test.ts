@@ -5,6 +5,11 @@ import {
   getNValue,
   GRID_SIZE,
   DEFAULT_TRIAL_COUNT,
+  createAdaptiveNState,
+  generateNextAdaptiveTrial,
+  advanceAdaptiveState,
+  ADAPTIVE_MIN_N,
+  ADAPTIVE_MAX_N,
 } from './nback'
 import type { NBackTrial } from '../types'
 
@@ -50,6 +55,66 @@ describe('generateNBackSequence', () => {
         expect(trial.isMatch).toBe(trial.position === trials[i - n].position)
       }
     })
+  })
+})
+
+describe('adaptive N-back staircase (④-1)', () => {
+  it('generateNextAdaptiveTrial grows the position history by one each call', () => {
+    let state = createAdaptiveNState(1)
+    for (let i = 0; i < 5; i++) {
+      const result = generateNextAdaptiveTrial(state)
+      expect(result.state.positions).toHaveLength(i + 1)
+      state = result.state
+    }
+  })
+
+  it('never marks a match before the position history reaches n', () => {
+    let state = createAdaptiveNState(3)
+    for (let i = 0; i < 3; i++) {
+      const { trial, state: next } = generateNextAdaptiveTrial(state)
+      expect(trial.isMatch).toBe(false)
+      state = next
+    }
+  })
+
+  it('stays at the max bound after a perfect window when already at max', () => {
+    let state = createAdaptiveNState(ADAPTIVE_MAX_N)
+    state = advanceAdaptiveState(state, true)
+    state = advanceAdaptiveState(state, true)
+    state = advanceAdaptiveState(state, true)
+    expect(state.n).toBe(ADAPTIVE_MAX_N) // 既に上限のため据え置き
+  })
+
+  it('increases n by one after 3 consecutive correct answers', () => {
+    let state = createAdaptiveNState(1)
+    state = advanceAdaptiveState(state, true)
+    state = advanceAdaptiveState(state, true)
+    expect(state.n).toBe(1) // まだ3件揃っていない
+    state = advanceAdaptiveState(state, true)
+    expect(state.n).toBe(2)
+    expect(state.recentResults).toEqual([])
+  })
+
+  it('decreases n after 2 or more wrong answers within the window, bounded by the minimum', () => {
+    let state = createAdaptiveNState(ADAPTIVE_MIN_N)
+    state = advanceAdaptiveState(state, false)
+    state = advanceAdaptiveState(state, false)
+    state = advanceAdaptiveState(state, true)
+    expect(state.n).toBe(ADAPTIVE_MIN_N) // 既に下限
+
+    state = createAdaptiveNState(2)
+    state = advanceAdaptiveState(state, false)
+    state = advanceAdaptiveState(state, true)
+    state = advanceAdaptiveState(state, false)
+    expect(state.n).toBe(1)
+  })
+
+  it('does not change n with only a single wrong answer in the window', () => {
+    let state = createAdaptiveNState(2)
+    state = advanceAdaptiveState(state, true)
+    state = advanceAdaptiveState(state, false)
+    state = advanceAdaptiveState(state, true)
+    expect(state.n).toBe(2)
   })
 })
 

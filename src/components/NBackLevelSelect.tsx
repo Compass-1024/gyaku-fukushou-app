@@ -8,7 +8,7 @@ import type { HistoryEntry, Level } from '../types'
 
 interface NBackLevelSelectProps {
   history: HistoryEntry[]
-  onSelect: (level: Level, trialCount: number) => void
+  onSelect: (level: Level, trialCount: number, adaptive: boolean) => void
   onBack: () => void
 }
 
@@ -19,6 +19,9 @@ export function NBackLevelSelect({
 }: NBackLevelSelectProps) {
   const t = useTranslation()
   const [trialCount, setTrialCount] = useState<number>(DEFAULT_TRIAL_COUNT)
+  // ④-1: オンにすると選んだレベルは開始N値としてのみ使い、セッション中は
+  // 正誤に応じてN値が自動で上下する
+  const [adaptive, setAdaptive] = useState(false)
 
   return (
     <div className="mx-auto flex w-full max-w-md flex-col gap-6 px-4 py-8 sm:px-6 sm:py-12">
@@ -62,11 +65,28 @@ export function NBackLevelSelect({
         </div>
       </div>
 
+      <label className="flex touch-manipulation items-start gap-3 rounded-lg border border-gray-200 px-4 py-3 dark:border-gray-700">
+        <input
+          type="checkbox"
+          checked={adaptive}
+          onChange={(e) => setAdaptive(e.target.checked)}
+          className="mt-0.5 h-4 w-4 accent-indigo-500"
+        />
+        <span>
+          <span className="block text-sm font-semibold text-gray-800 dark:text-gray-100">
+            {t.nback.adaptiveLabel}
+          </span>
+          <span className="block text-xs text-gray-500 dark:text-gray-400">
+            {t.nback.adaptiveDescription}
+          </span>
+        </span>
+      </label>
+
       <LevelPicker
         labelFor={(level) => t.nback.levelLabel(level)}
         colorFor={(level) => LEVEL_STYLES[level]}
         statsFor={(level) => getLevelStats(history, level, 'nback')}
-        onSelect={(level) => onSelect(level, trialCount)}
+        onSelect={(level) => onSelect(level, trialCount, adaptive)}
       />
     </div>
   )

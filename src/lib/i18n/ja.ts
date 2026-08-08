@@ -412,6 +412,11 @@ export const ja: Translations = {
     matchButtonPressed: '✓ 一致',
     resultLabel: (position, isMatch) =>
       isMatch ? `位置${position + 1}（一致）` : `位置${position + 1}`,
+    adaptiveLabel: 'アダプティブ（おすすめ）',
+    adaptiveDescription:
+      '正解が続くとN値が自動で上がり、間違いが続くと下がります。今の実力に合わせて挑戦したい方に',
+    currentNLabel: (n) => `現在: ${n}個前`,
+    maxNReachedLabel: (n) => `到達した最大N: ${n}個前`,
   },
   dualNback: {
     title: 'デュアルNバックモード',

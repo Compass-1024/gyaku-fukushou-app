@@ -48,6 +48,66 @@ export function generateNBackSequence(
   return trials
 }
 
+// ④-1: アダプティブ難易度モード。従来のNバックはセット開始時にN値を
+// 固定選択するのみで、セッション内でのリアルタイムな難易度適応が無い
+// （レベル提案はセット完了後にしか出ない）。Jaeggi et al.のdual n-back
+// 研究をはじめ学術的な適応課題プロトコルに倣い、直近の正誤に応じて
+// N値を試行の合間に自動で上下させる「階段法（staircase）」を追加する。
+export const ADAPTIVE_MIN_N = 1
+export const ADAPTIVE_MAX_N = 3
+// この件数分の直近試行がすべて正解ならN+1、2件以上不正解ならN-1する
+const ADAPTIVE_WINDOW = 3
+
+export interface AdaptiveNState {
+  n: number
+  positions: number[]
+  recentResults: boolean[]
+}
+
+export function createAdaptiveNState(startN: number): AdaptiveNState {
+  return { n: startN, positions: [], recentResults: [] }
+}
+
+// 現在のn値に基づき1試行分の刺激を生成し、生成後の状態（position履歴に
+// 今回の位置を追加したもの）を返す
+export function generateNextAdaptiveTrial(
+  state: AdaptiveNState,
+): { trial: NBackTrial; state: AdaptiveNState } {
+  const { n, positions } = state
+  let position: number
+  if (positions.length >= n && Math.random() < MATCH_PROBABILITY) {
+    position = positions[positions.length - n]
+  } else {
+    position = Math.floor(Math.random() * CELL_COUNT)
+  }
+  const isMatch = positions.length >= n && position === positions[positions.length - n]
+  return {
+    trial: { position, isMatch },
+    state: { ...state, positions: [...positions, position] },
+  }
+}
+
+// 直前の試行の正誤を反映してnを更新する。ADAPTIVE_WINDOW件たまるたびに
+// 判定し、n が変化したら直近結果のウィンドウをリセットする（変化直後の
+// 数試行だけで再度昇降しないようにするため）
+export function advanceAdaptiveState(
+  state: AdaptiveNState,
+  correct: boolean,
+): AdaptiveNState {
+  const recentResults = [...state.recentResults, correct].slice(-ADAPTIVE_WINDOW)
+  if (recentResults.length < ADAPTIVE_WINDOW) {
+    return { ...state, recentResults }
+  }
+  const wrongCount = recentResults.filter((r) => !r).length
+  let n = state.n
+  if (wrongCount === 0) n = Math.min(ADAPTIVE_MAX_N, state.n + 1)
+  else if (wrongCount >= 2) n = Math.max(ADAPTIVE_MIN_N, state.n - 1)
+  if (n !== state.n) {
+    return { ...state, n, recentResults: [] }
+  }
+  return { ...state, recentResults }
+}
+
 export interface NBackScore {
   hits: number
   misses: number

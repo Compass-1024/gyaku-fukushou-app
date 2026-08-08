@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import type { ReactNode } from 'react'
 import { getStreakDays, getTodayCount, loadHistory } from '../lib/history'
 import { buildResultShareText, shareText } from '../lib/share'
 import { loadSettings } from '../lib/settings'
@@ -34,6 +35,9 @@ interface SetSummaryProps {
   xpGained?: number
   leveledUp?: boolean
   newLevel?: number
+  // ④-1: アダプティブNバックの到達最大Nなど、モード固有の補足情報を
+  // スコア表示のすぐ下に差し込むための任意の拡張ポイント
+  children?: ReactNode
 }
 
 export function SetSummary({
@@ -46,6 +50,7 @@ export function SetSummary({
   xpGained,
   leveledUp,
   newLevel,
+  children,
 }: SetSummaryProps) {
   const t = useTranslation()
   const correctCount = items.filter((item) => item.correct).length
@@ -123,6 +128,7 @@ export function SetSummary({
             {xpGained > 0 ? t.setSummary.xpGained(xpGained) : t.setSummary.xpGainedZero}
           </p>
         )}
+        {children}
         <button
           type="button"
           onClick={handleShare}

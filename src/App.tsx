@@ -72,7 +72,7 @@ type View =
   | { screen: 'digit-level'; gameType: DigitGameType }
   | { screen: 'digit-game'; gameType: DigitGameType; level: Level }
   | { screen: 'nback-level' }
-  | { screen: 'nback-game'; level: Level; trialCount: number }
+  | { screen: 'nback-game'; level: Level; trialCount: number; adaptive?: boolean }
   | { screen: 'dual-nback-level' }
   | { screen: 'dual-nback-game'; level: Level; trialCount: number }
   | { screen: 'spatial-level' }
@@ -298,8 +298,8 @@ function App() {
       content = (
         <NBackLevelSelect
           history={history}
-          onSelect={(level, trialCount) =>
-            goTo({ screen: 'nback-game', level, trialCount })
+          onSelect={(level, trialCount, adaptive) =>
+            goTo({ screen: 'nback-game', level, trialCount, adaptive })
           }
           onBack={() => goTo({ screen: 'top' })}
         />
@@ -308,12 +308,18 @@ function App() {
     case 'nback-game':
       content = (
         <NBackGameScreen
-          key={`${view.level}-${view.trialCount}`}
+          key={`${view.level}-${view.trialCount}-${view.adaptive}`}
           level={view.level}
           trialCount={view.trialCount}
+          adaptive={view.adaptive}
           onExit={() => goTo({ screen: 'nback-level' })}
           onSelectLevel={(level) =>
-            goTo({ screen: 'nback-game', level, trialCount: view.trialCount })
+            goTo({
+              screen: 'nback-game',
+              level,
+              trialCount: view.trialCount,
+              adaptive: view.adaptive,
+            })
           }
         />
       )

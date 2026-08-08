@@ -266,6 +266,11 @@ export interface Translations {
     resultLabel: (position: number, isMatch: boolean) => string
     trialCountTitle: string
     trialCountLabel: (count: number) => string
+    // ④-1: アダプティブ難易度モード
+    adaptiveLabel: string
+    adaptiveDescription: string
+    currentNLabel: (n: number) => string
+    maxNReachedLabel: (n: number) => string
   }
   dualNback: {
     title: string

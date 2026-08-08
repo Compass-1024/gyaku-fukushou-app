@@ -442,6 +442,11 @@ export const en: Translations = {
     matchButtonPressed: '✓ Match',
     resultLabel: (position, isMatch) =>
       isMatch ? `Position ${position + 1} (match)` : `Position ${position + 1}`,
+    adaptiveLabel: 'Adaptive (recommended)',
+    adaptiveDescription:
+      "N automatically increases after a run of correct answers and decreases after mistakes, matching the challenge to your current skill.",
+    currentNLabel: (n) => `Now: ${n} step${n === 1 ? '' : 's'} back`,
+    maxNReachedLabel: (n) => `Highest N reached: ${n} step${n === 1 ? '' : 's'} back`,
   },
   dualNback: {
     title: 'Dual N-Back Mode',
