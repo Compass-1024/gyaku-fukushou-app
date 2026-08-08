@@ -189,13 +189,19 @@ export const ja: Translations = {
     heading: '統計',
     noRecordsYet: 'まだ記録がありません。プレイすると統計が表示されます。',
     calendarTitle: '学習カレンダー',
+    calendarCaption: '色が濃いほど、その日に完了したセット数が多いことを表します',
     calendarSummary: (weeks, activeDays) =>
       `直近${weeks}週間で${activeDays}日学習`,
     calendarAriaLabel: (weeks, activeDays) =>
       `直近${weeks}週間の学習カレンダー。学習した日数は${activeDays}日`,
     calendarLegendLow: '少ない',
     calendarLegendHigh: '多い',
+    calendarLegendCount: (count) => (count >= 3 ? '3+' : `${count}`),
     weekdayLabels: ['日', '月', '火', '水', '木', '金', '土'],
+    monthLabels: [
+      '1月', '2月', '3月', '4月', '5月', '6月',
+      '7月', '8月', '9月', '10月', '11月', '12月',
+    ],
     dayCellTooltip: (dateKey, count) => `${dateKey}: ${count}セット`,
     trendTitle: (days) => `正答率の推移（直近${days}日間）`,
     trendAriaLabel: (days) => `直近${days}日間の正答率の推移`,
@@ -203,8 +209,10 @@ export const ja: Translations = {
     trendDaysAgo: (days) => `${days}日前`,
     trendToday: '今日',
     achievementsTitle: '実績',
+    achievementsCountLabel: (unlocked, total) => `${unlocked} / ${total} 解除`,
     achievementUnlocked: '解除済み',
     achievementLocked: '未解除',
+    achievementCloseDetail: '閉じる',
     areaAccuracyTitle: 'モード別の正答率',
     areaLabel: (label, level) => `${label} レベル${level}`,
     needsReview: '⚠️ 要復習',
@@ -291,6 +299,18 @@ export const ja: Translations = {
     'all-modes-mastered': {
       label: '全モードマスター',
       description: '全8モードでレベル3に挑戦した',
+    },
+    'player-level-5': {
+      label: '駆け出しトレーナー',
+      description: 'プレイヤーLv.5に到達した',
+    },
+    'player-level-10': {
+      label: '熟練トレーナー',
+      description: 'プレイヤーLv.10に到達した',
+    },
+    'player-level-20': {
+      label: 'マスタートレーナー',
+      description: 'プレイヤーLv.20に到達した',
     },
   },
   digit: {

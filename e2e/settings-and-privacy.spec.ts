@@ -88,12 +88,13 @@ test('統計画面: 十分な記録があると「ワーキングメモリの伸
   await page.goto('/')
   await page.getByRole('button', { name: '統計' }).click()
 
-  await expect(
-    page.getByRole('heading', { name: 'ワーキングメモリの伸び' }),
-  ).toBeVisible()
-  await expect(page.getByText('空間モード')).toBeVisible()
-  await expect(page.getByText('→ 100%')).toBeVisible()
-  await expect(page.getByText('横ばい')).toBeVisible()
+  const benchmarkSection = page.locator('section', {
+    has: page.getByRole('heading', { name: 'ワーキングメモリの伸び' }),
+  })
+  await expect(benchmarkSection).toBeVisible()
+  await expect(benchmarkSection.getByText('空間モード')).toBeVisible()
+  await expect(benchmarkSection.getByText('→ 100%')).toBeVisible()
+  await expect(benchmarkSection.getByText('横ばい')).toBeVisible()
   await expect(
     page.getByText('医学的な診断や公式な認知機能評価ではなく', { exact: false }),
   ).toBeVisible()

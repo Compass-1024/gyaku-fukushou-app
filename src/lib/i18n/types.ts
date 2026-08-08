@@ -151,11 +151,14 @@ export interface Translations {
     heading: string
     noRecordsYet: string
     calendarTitle: string
+    calendarCaption: string
     calendarSummary: (weeks: number, activeDays: number) => string
     calendarAriaLabel: (weeks: number, activeDays: number) => string
     calendarLegendLow: string
     calendarLegendHigh: string
+    calendarLegendCount: (count: number) => string
     weekdayLabels: string[]
+    monthLabels: string[]
     dayCellTooltip: (dateKey: string, count: number) => string
     trendTitle: (days: number) => string
     trendAriaLabel: (days: number) => string
@@ -163,8 +166,10 @@ export interface Translations {
     trendDaysAgo: (days: number) => string
     trendToday: string
     achievementsTitle: string
+    achievementsCountLabel: (unlocked: number, total: number) => string
     achievementUnlocked: string
     achievementLocked: string
+    achievementCloseDetail: string
     areaAccuracyTitle: string
     areaLabel: (label: string, level: number) => string
     needsReview: string

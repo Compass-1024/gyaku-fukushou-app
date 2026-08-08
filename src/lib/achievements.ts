@@ -1,5 +1,6 @@
 import { getStreakDays } from './history'
 import { getAllBenchmarks } from './benchmarks'
+import { computeTotalXp, getXpProgress } from './xp'
 import type { HistoryEntry, Mode } from '../types'
 
 // 「成長中」実績の判定に使う、正答率が向上中(band: 'above')と判定される
@@ -26,6 +27,9 @@ export type AchievementId =
   | 'all-six-modes'
   | 'all-eight-modes'
   | 'all-modes-mastered'
+  | 'player-level-5'
+  | 'player-level-10'
+  | 'player-level-20'
 
 export interface Achievement {
   id: AchievementId
@@ -33,7 +37,9 @@ export interface Achievement {
   // ラベル・説明文はi18n辞書（achievements: Record<AchievementId, ...>）が持つ
   // 英語版ではことばモードが選択できないため、これらの実績は実績グリッドに表示しない
   requiresWordMode?: boolean
-  isUnlocked: (history: HistoryEntry[]) => boolean
+  // missionCompletionCountはプレイヤーLv系実績のみが使う（XP計算に必要なため）。
+  // 省略時は0として扱う
+  isUnlocked: (history: HistoryEntry[], missionCompletionCount?: number) => boolean
 }
 
 function hasMode(history: HistoryEntry[], mode: Mode): boolean {
@@ -178,18 +184,46 @@ export const ACHIEVEMENTS: Achievement[] = [
     // 個々のlevel-3-*実績を横断し、全8モードでレベル3に挑戦履歴があれば解除する
     isUnlocked: (h) => ALL_MODES_FOR_MASTERY.every((mode) => hasLevel3(h, mode)),
   },
+  {
+    id: 'player-level-5',
+    icon: '🥉',
+    // プレイヤーLv（XPシステム）が指定値に到達したら解除する。実績・自己ベストと
+    // 同じく履歴（＋ミッション達成ログ件数）から都度動的計算する
+    isUnlocked: (h, missionCompletionCount = 0) =>
+      getXpProgress(computeTotalXp(h, missionCompletionCount)).level >= 5,
+  },
+  {
+    id: 'player-level-10',
+    icon: '🥈',
+    isUnlocked: (h, missionCompletionCount = 0) =>
+      getXpProgress(computeTotalXp(h, missionCompletionCount)).level >= 10,
+  },
+  {
+    id: 'player-level-20',
+    icon: '🥇',
+    isUnlocked: (h, missionCompletionCount = 0) =>
+      getXpProgress(computeTotalXp(h, missionCompletionCount)).level >= 20,
+  },
 ]
 
-export function getUnlockedCount(history: HistoryEntry[]): number {
-  return ACHIEVEMENTS.filter((a) => a.isUnlocked(history)).length
+export function getUnlockedCount(
+  history: HistoryEntry[],
+  missionCompletionCount = 0,
+): number {
+  return ACHIEVEMENTS.filter((a) => a.isUnlocked(history, missionCompletionCount))
+    .length
 }
 
 // beforeでは未解除だったがafterで新たに解除された実績を返す（1セット完了直後の演出用）
 export function getNewlyUnlockedAchievements(
   before: HistoryEntry[],
   after: HistoryEntry[],
+  missionCompletionCountBefore = 0,
+  missionCompletionCountAfter = 0,
 ): Achievement[] {
   return ACHIEVEMENTS.filter(
-    (a) => !a.isUnlocked(before) && a.isUnlocked(after),
+    (a) =>
+      !a.isUnlocked(before, missionCompletionCountBefore) &&
+      a.isUnlocked(after, missionCompletionCountAfter),
   )
 }

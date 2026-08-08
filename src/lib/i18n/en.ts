@@ -197,13 +197,19 @@ export const en: Translations = {
     heading: 'Stats',
     noRecordsYet: 'No records yet. Stats will appear once you start playing.',
     calendarTitle: 'Activity calendar',
+    calendarCaption: 'Darker squares mean more sets completed that day',
     calendarSummary: (weeks, activeDays) =>
       `${activeDays} active day${activeDays === 1 ? '' : 's'} in the last ${weeks} weeks`,
     calendarAriaLabel: (weeks, activeDays) =>
       `Activity calendar for the last ${weeks} weeks. You practiced on ${activeDays} day${activeDays === 1 ? '' : 's'}.`,
     calendarLegendLow: 'Less',
     calendarLegendHigh: 'More',
+    calendarLegendCount: (count) => (count >= 3 ? '3+' : `${count}`),
     weekdayLabels: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
+    monthLabels: [
+      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+    ],
     dayCellTooltip: (dateKey, count) => `${dateKey}: ${count} set${count === 1 ? '' : 's'}`,
     trendTitle: (days) => `Accuracy trend (last ${days} days)`,
     trendAriaLabel: (days) => `Accuracy trend over the last ${days} days`,
@@ -211,8 +217,10 @@ export const en: Translations = {
     trendDaysAgo: (days) => `${days}d ago`,
     trendToday: 'Today',
     achievementsTitle: 'Achievements',
+    achievementsCountLabel: (unlocked, total) => `${unlocked} / ${total} unlocked`,
     achievementUnlocked: 'Unlocked',
     achievementLocked: 'Locked',
+    achievementCloseDetail: 'Close',
     areaAccuracyTitle: 'Accuracy by mode',
     areaLabel: (label, level) => `${label} Level ${level}`,
     needsReview: '⚠️ Needs review',
@@ -314,6 +322,18 @@ export const en: Translations = {
     'all-modes-mastered': {
       label: 'Master of All',
       description: 'Reached Level 3 in all eight modes',
+    },
+    'player-level-5': {
+      label: 'Rookie Trainer',
+      description: 'Reached Player Lv.5',
+    },
+    'player-level-10': {
+      label: 'Skilled Trainer',
+      description: 'Reached Player Lv.10',
+    },
+    'player-level-20': {
+      label: 'Master Trainer',
+      description: 'Reached Player Lv.20',
     },
   },
   digit: {

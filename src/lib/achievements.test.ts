@@ -145,6 +145,24 @@ describe('achievements', () => {
     ).toBe(true)
   })
 
+  it('player-level-5 unlocks once mission-completion XP reaches player Lv.5 (700 total XP)', () => {
+    const achievement = findAchievement('player-level-5')
+    expect(achievement.isUnlocked([], 6)).toBe(false)
+    expect(achievement.isUnlocked([], 7)).toBe(true)
+  })
+
+  it('player-level-10 unlocks once mission-completion XP reaches player Lv.10 (2700 total XP)', () => {
+    const achievement = findAchievement('player-level-10')
+    expect(achievement.isUnlocked([], 26)).toBe(false)
+    expect(achievement.isUnlocked([], 27)).toBe(true)
+  })
+
+  it('player-level-20 unlocks once mission-completion XP reaches player Lv.20 (10450 total XP)', () => {
+    const achievement = findAchievement('player-level-20')
+    expect(achievement.isUnlocked([], 104)).toBe(false)
+    expect(achievement.isUnlocked([], 105)).toBe(true)
+  })
+
   it('all-modes-mastered requires level 3 in all eight modes', () => {
     const mastered = findAchievement('all-modes-mastered')
     const sevenModes = (

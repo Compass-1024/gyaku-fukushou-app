@@ -70,13 +70,18 @@ export function useSetCompletionRecorder({
     appendHistoryEntry({ mode, gameType, level, correct: correctCount, total })
     syncPushState()
     const after = loadHistory()
-    const newly = getNewlyUnlockedAchievements(before, after)
-    setNewAchievements(newly)
 
     // 今日のミッションがこのセット完了により初めて達成されたかを判定し、
     // 達成していればXP付与用のミッション完了ログに記録する
     const newMissionCompletions = checkAndRecordMissionCompletion(after, language)
     const completionsAfter = loadMissionCompletions()
+    const newly = getNewlyUnlockedAchievements(
+      before,
+      after,
+      completionsBefore.length,
+      completionsAfter.length,
+    )
+    setNewAchievements(newly)
     const xpAfter = computeTotalXp(after, completionsAfter.length)
     const gained = xpAfter - xpBefore
     setXpGained(gained)

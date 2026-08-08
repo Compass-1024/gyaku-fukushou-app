@@ -1,11 +1,14 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import {
   getAllAreaStats,
   getWeakestAreas,
   getDailyAccuracyTrend,
   getActivityCalendar,
+  localDateKey,
 } from '../lib/history'
-import { ACHIEVEMENTS } from '../lib/achievements'
+import { ACHIEVEMENTS, getUnlockedCount } from '../lib/achievements'
+import type { AchievementId } from '../lib/achievements'
+import { loadMissionCompletions } from '../lib/missions'
 import { loadPhraseStats, getWeakestPhrases } from '../lib/phraseStats'
 import { findPhraseById } from '../lib/phrases'
 import { getAllBenchmarks } from '../lib/benchmarks'
@@ -37,6 +40,10 @@ const ACTIVITY_LEVEL_CLASSES: Record<0 | 1 | 2 | 3, string> = {
   3: 'fill-indigo-600 dark:fill-indigo-400',
 }
 
+// 行ラベルは全曜日を表示すると詰まって読みにくいため、GitHubの草生やしと
+// 同様に隔週（月・水・金）だけ表示する
+const WEEKDAY_LABEL_ROWS = [1, 3, 5]
+
 function ActivityHeatmap({
   calendar,
   t,
@@ -47,12 +54,33 @@ function ActivityHeatmap({
   const weeks = calendar.length / 7
   const gap = 2
   const cellSize = 12
-  const width = weeks * cellSize + (weeks - 1) * gap
-  const height = 7 * cellSize + 6 * gap
+  const weekdayLabelWidth = 16
+  const monthLabelHeight = 12
+  const gridWidth = weeks * cellSize + (weeks - 1) * gap
+  const gridHeight = 7 * cellSize + 6 * gap
+  const width = gridWidth + weekdayLabelWidth
+  const height = gridHeight + monthLabelHeight
   const activeDays = calendar.filter((d) => d.count > 0).length
+  const todayKey = localDateKey(new Date())
+
+  // 月が切り替わる列にだけ月ラベルを表示する（全列に出すと詰まって読みにくいため）
+  const monthLabels: { col: number; label: string }[] = []
+  let lastMonth = -1
+  for (let col = 0; col < weeks; col++) {
+    const day = calendar[col * 7]
+    if (!day) continue
+    const month = Number(day.dateKey.slice(5, 7)) - 1
+    if (month !== lastMonth) {
+      monthLabels.push({ col, label: t.stats.monthLabels[month] })
+      lastMonth = month
+    }
+  }
 
   return (
     <div className="flex flex-col gap-2">
+      <p className="text-xs text-gray-500 dark:text-gray-400">
+        {t.stats.calendarCaption}
+      </p>
       <div className="overflow-x-auto">
         <svg
           viewBox={`0 0 ${width} ${height}`}
@@ -61,12 +89,34 @@ function ActivityHeatmap({
           role="img"
           aria-label={t.stats.calendarAriaLabel(weeks, activeDays)}
         >
+          {monthLabels.map(({ col, label }) => (
+            <text
+              key={col}
+              x={weekdayLabelWidth + col * (cellSize + gap)}
+              y={monthLabelHeight - 3}
+              fontSize={8}
+              className="fill-gray-500 dark:fill-gray-400"
+            >
+              {label}
+            </text>
+          ))}
+          {WEEKDAY_LABEL_ROWS.map((row) => (
+            <text
+              key={row}
+              x={0}
+              y={monthLabelHeight + row * (cellSize + gap) + cellSize - 2}
+              fontSize={8}
+              className="fill-gray-500 dark:fill-gray-400"
+            >
+              {t.stats.weekdayLabels[row]}
+            </text>
+          ))}
           {calendar.map((day, i) => {
             if (day.count < 0) return null
             const col = Math.floor(i / 7)
             const row = day.weekday
-            const x = col * (cellSize + gap)
-            const y = row * (cellSize + gap)
+            const x = weekdayLabelWidth + col * (cellSize + gap)
+            const y = monthLabelHeight + row * (cellSize + gap)
             return (
               <rect
                 key={day.dateKey}
@@ -75,7 +125,12 @@ function ActivityHeatmap({
                 width={cellSize}
                 height={cellSize}
                 rx={2}
-                className={ACTIVITY_LEVEL_CLASSES[activityLevel(day.count)]}
+                className={`${ACTIVITY_LEVEL_CLASSES[activityLevel(day.count)]} ${
+                  day.dateKey === todayKey
+                    ? 'stroke-indigo-500 dark:stroke-indigo-300'
+                    : ''
+                }`}
+                strokeWidth={day.dateKey === todayKey ? 1.5 : 0}
               >
                 <title>{t.stats.dayCellTooltip(day.dateKey, day.count)}</title>
               </rect>
@@ -88,21 +143,23 @@ function ActivityHeatmap({
         <span className="flex items-center gap-1">
           {t.stats.calendarLegendLow}
           {([0, 1, 2, 3] as const).map((level) => (
-            <svg key={level} width={10} height={10} aria-hidden="true">
-              <rect
-                width={10}
-                height={10}
-                rx={2}
-                className={ACTIVITY_LEVEL_CLASSES[level]}
-              />
-            </svg>
+            <span key={level} className="flex flex-col items-center gap-0.5">
+              <svg width={10} height={10} aria-hidden="true">
+                <rect
+                  width={10}
+                  height={10}
+                  rx={2}
+                  className={ACTIVITY_LEVEL_CLASSES[level]}
+                />
+              </svg>
+              <span aria-hidden="true" className="text-[8px] leading-none">
+                {t.stats.calendarLegendCount(level)}
+              </span>
+            </span>
           ))}
           {t.stats.calendarLegendHigh}
         </span>
       </div>
-      <span className="sr-only">
-        {t.stats.weekdayLabels.join('・')}
-      </span>
     </div>
   )
 }
@@ -248,6 +305,20 @@ export function StatsScreen({ history, onBack }: StatsScreenProps) {
     () => ACHIEVEMENTS.filter((a) => language === 'ja' || !a.requiresWordMode),
     [language],
   )
+  // プレイヤーLv系実績の判定にはXP計算に使うミッション達成ログ件数が必要
+  const missionCompletionCount = useMemo(
+    () => loadMissionCompletions().length,
+    // historyの更新に連動してlocalStorageを読み直す
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [history],
+  )
+  const unlockedAchievementCount = useMemo(
+    () => getUnlockedCount(history, missionCompletionCount),
+    [history, missionCompletionCount],
+  )
+  // スマホではホバーできないため、タップした実績の説明をインラインで表示する
+  const [selectedAchievementId, setSelectedAchievementId] =
+    useState<AchievementId | null>(null)
   const weakest = useMemo(() => getWeakestAreas(history, 2), [history])
   const weakestKeys = useMemo(
     () => new Set(weakest.map((a) => `${areaKey(a)}-${a.level}`)),
@@ -318,38 +389,101 @@ export function StatsScreen({ history, onBack }: StatsScreenProps) {
           </section>
 
           <section className="flex flex-col gap-2">
-            <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400">
-              {t.stats.achievementsTitle}
-            </h2>
-            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+            <div className="flex items-baseline justify-between">
+              <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400">
+                {t.stats.achievementsTitle}
+              </h2>
+              <span className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                {t.stats.achievementsCountLabel(
+                  unlockedAchievementCount,
+                  achievements.length,
+                )}
+              </span>
+            </div>
+            <div className="grid grid-cols-4 gap-1.5 sm:grid-cols-5">
               {achievements.map((achievement) => {
-                const unlocked = achievement.isUnlocked(history)
+                const unlocked = achievement.isUnlocked(
+                  history,
+                  missionCompletionCount,
+                )
                 const copy = t.achievements[achievement.id]
+                const isSelected = selectedAchievementId === achievement.id
                 return (
-                  <div
+                  <button
                     key={achievement.id}
+                    type="button"
                     title={copy.description}
-                    className={`flex flex-col items-center gap-1 rounded-lg border px-2 py-3 text-center ${
+                    aria-expanded={isSelected}
+                    onClick={() =>
+                      setSelectedAchievementId(isSelected ? null : achievement.id)
+                    }
+                    className={`touch-manipulation flex flex-col items-center gap-0.5 rounded-lg border px-1 py-2 text-center transition ${
                       unlocked
                         ? 'border-amber-300 bg-amber-50 dark:border-amber-700 dark:bg-amber-900/30'
                         : 'border-gray-200 bg-gray-50 opacity-50 dark:border-gray-700 dark:bg-gray-800/50'
-                    }`}
+                    } ${isSelected ? 'ring-2 ring-indigo-400' : ''}`}
                   >
-                    <span aria-hidden="true" className="text-2xl">
+                    <span aria-hidden="true" className="text-xl">
                       {achievement.icon}
                     </span>
-                    <span className="text-xs font-medium text-gray-700 dark:text-gray-200">
+                    <span className="line-clamp-1 text-[9px] leading-tight font-medium text-gray-700 dark:text-gray-200">
                       {copy.label}
                     </span>
                     <span className="sr-only">
                       {unlocked
                         ? t.stats.achievementUnlocked
                         : t.stats.achievementLocked}
+                      {copy.description}
                     </span>
-                  </div>
+                  </button>
                 )
               })}
             </div>
+            {selectedAchievementId &&
+              (() => {
+                const selected = achievements.find(
+                  (a) => a.id === selectedAchievementId,
+                )
+                if (!selected) return null
+                const copy = t.achievements[selected.id]
+                const unlocked = selected.isUnlocked(
+                  history,
+                  missionCompletionCount,
+                )
+                return (
+                  <div
+                    role="status"
+                    className={`flex items-start justify-between gap-2 rounded-lg border px-3 py-2 text-sm ${
+                      unlocked
+                        ? 'border-amber-300 bg-amber-50 dark:border-amber-700 dark:bg-amber-900/30'
+                        : 'border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-800/50'
+                    }`}
+                  >
+                    <div>
+                      <p className="font-semibold text-gray-800 dark:text-gray-100">
+                        <span aria-hidden="true">{selected.icon} </span>
+                        {copy.label}
+                        <span className="ml-2 text-xs font-normal text-gray-500 dark:text-gray-400">
+                          {unlocked
+                            ? t.stats.achievementUnlocked
+                            : t.stats.achievementLocked}
+                        </span>
+                      </p>
+                      <p className="mt-1 text-xs text-gray-600 dark:text-gray-300">
+                        {copy.description}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedAchievementId(null)}
+                      aria-label={t.stats.achievementCloseDetail}
+                      className="touch-manipulation rounded-full p-1 text-gray-400 hover:bg-gray-200/60 dark:text-gray-500 dark:hover:bg-gray-700/60"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                )
+              })()}
           </section>
 
           <section className="flex flex-col gap-2">
