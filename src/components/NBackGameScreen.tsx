@@ -5,7 +5,7 @@ import {
   generateNBackSequence,
   scoreNBackTrials,
   getNValue,
-  NBACK_SEQUENCE_LENGTH,
+  GRID_SIZE,
   STIMULUS_MS,
   GAP_MS,
   READY_MS,
@@ -19,21 +19,22 @@ import { GameHeader } from './GameHeader'
 import { useTranslation } from '../contexts/LanguageContext'
 import type { BaseGameScreenProps, NBackPhase, NBackTrial } from '../types'
 
-type NBackGameScreenProps = BaseGameScreenProps
+type NBackGameScreenProps = BaseGameScreenProps & { trialCount: number }
 
 export function NBackGameScreen({
   level,
+  trialCount,
   onExit,
   onSelectLevel,
 }: NBackGameScreenProps) {
   const t = useTranslation()
   const n = getNValue(level)
   const [trials, setTrials] = useState<NBackTrial[]>(() =>
-    generateNBackSequence(level),
+    generateNBackSequence(level, trialCount),
   )
   const [phase, setPhase] = useState<NBackPhase>('ready')
   const [pressed, setPressed] = useState<boolean[]>(() =>
-    new Array(NBACK_SEQUENCE_LENGTH).fill(false),
+    new Array(trialCount).fill(false),
   )
 
   // 準備フェーズ: 少し間を置いてから開始する
@@ -91,8 +92,8 @@ export function NBackGameScreen({
   })
 
   function handleRetry() {
-    setTrials(generateNBackSequence(level))
-    setPressed(new Array(NBACK_SEQUENCE_LENGTH).fill(false))
+    setTrials(generateNBackSequence(level, trialCount))
+    setPressed(new Array(trialCount).fill(false))
     setPhase('ready')
   }
 
@@ -102,7 +103,7 @@ export function NBackGameScreen({
       <SetSummary
         items={trials.map((trial, i) => ({
           key: `${i}`,
-          label: t.nback.resultLabel(trial.digit, trial.isMatch),
+          label: t.nback.resultLabel(trial.position, trial.isMatch),
           correct:
             (trial.isMatch && pressed[i]) || (!trial.isMatch && !pressed[i]),
         }))}
@@ -128,6 +129,9 @@ export function NBackGameScreen({
     )
   }
 
+  const currentTrial = trials[trialIndex]
+  const litCell = phase === 'showing' && !isGap ? currentTrial?.position : null
+
   return (
     <div className="mx-auto flex w-full max-w-md flex-col gap-6 px-4 py-8 sm:gap-8 sm:px-6 sm:py-12">
       <GameHeader
@@ -147,12 +151,28 @@ export function NBackGameScreen({
         <p className="text-lg font-medium text-gray-800 dark:text-gray-100">
           {t.nback.matchPrompt(n)}
         </p>
-        <p
+
+        <div
+          className="grid gap-2"
+          style={{
+            gridTemplateColumns: `repeat(${GRID_SIZE}, minmax(0, 1fr))`,
+            width: GRID_SIZE * 56,
+            maxWidth: '100%',
+          }}
           aria-hidden="true"
-          className="text-7xl font-bold tabular-nums text-indigo-500"
         >
-          {phase === 'ready' || isGap ? ' ' : (trials[trialIndex]?.digit ?? ' ')}
-        </p>
+          {Array.from({ length: GRID_SIZE * GRID_SIZE }, (_, cell) => (
+            <div
+              key={cell}
+              className={`aspect-square rounded-lg ${
+                litCell === cell
+                  ? 'bg-indigo-500'
+                  : 'bg-gray-100 dark:bg-gray-700'
+              }`}
+            />
+          ))}
+        </div>
+
         {phase === 'showing' && (
           <button
             type="button"

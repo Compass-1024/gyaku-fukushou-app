@@ -6,7 +6,7 @@ test('Nバックモード: 出題が始まり「一致」ボタンを押せる',
   await page.getByRole('button', { name: /レベル1（1つ前と比較）/ }).click()
 
   await expect(
-    page.getByText('1個前と同じなら「一致」を押してください'),
+    page.getByText('1個前と同じ位置なら「一致」を押してください'),
   ).toBeVisible()
 
   // ready(1000ms)経過後、最初の試行の「一致」ボタンが操作可能になる

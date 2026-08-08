@@ -220,7 +220,9 @@ export interface Translations {
     matchPrompt: (n: number) => string
     matchButton: string
     matchButtonPressed: string
-    resultLabel: (digit: number, isMatch: boolean) => string
+    resultLabel: (position: number, isMatch: boolean) => string
+    trialCountTitle: string
+    trialCountLabel: (count: number) => string
   }
   dualNback: {
     title: string

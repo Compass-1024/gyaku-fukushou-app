@@ -17,6 +17,7 @@ import { useBackgroundMusic } from './hooks/useBackgroundMusic'
 import { useLanguage, useTranslation } from './contexts/LanguageContext'
 import { loadHistory } from './lib/history'
 import { loadSettings } from './lib/settings'
+import { DEFAULT_TRIAL_COUNT } from './lib/nback'
 import type { AreaStats } from './lib/history'
 import type { DigitGameType, HistoryEntry, Level } from './types'
 
@@ -68,7 +69,7 @@ type View =
   | { screen: 'digit-level'; gameType: DigitGameType }
   | { screen: 'digit-game'; gameType: DigitGameType; level: Level }
   | { screen: 'nback-level' }
-  | { screen: 'nback-game'; level: Level }
+  | { screen: 'nback-game'; level: Level; trialCount: number }
   | { screen: 'dual-nback-level' }
   | { screen: 'dual-nback-game'; level: Level }
   | { screen: 'spatial-level' }
@@ -220,7 +221,11 @@ function App() {
                 level: area.level,
               })
             } else if (area.mode === 'nback') {
-              goTo({ screen: 'nback-game', level: area.level })
+              goTo({
+                screen: 'nback-game',
+                level: area.level,
+                trialCount: DEFAULT_TRIAL_COUNT,
+              })
             } else if (area.mode === 'dual-nback') {
               goTo({ screen: 'dual-nback-game', level: area.level })
             } else if (area.mode === 'spatial') {
@@ -285,7 +290,9 @@ function App() {
       content = (
         <NBackLevelSelect
           history={history}
-          onSelect={(level) => goTo({ screen: 'nback-game', level })}
+          onSelect={(level, trialCount) =>
+            goTo({ screen: 'nback-game', level, trialCount })
+          }
           onBack={() => goTo({ screen: 'top' })}
         />
       )
@@ -293,10 +300,13 @@ function App() {
     case 'nback-game':
       content = (
         <NBackGameScreen
-          key={view.level}
+          key={`${view.level}-${view.trialCount}`}
           level={view.level}
+          trialCount={view.trialCount}
           onExit={() => goTo({ screen: 'nback-level' })}
-          onSelectLevel={(level) => goTo({ screen: 'nback-game', level })}
+          onSelectLevel={(level) =>
+            goTo({ screen: 'nback-game', level, trialCount: view.trialCount })
+          }
         />
       )
       break

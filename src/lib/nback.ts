@@ -1,14 +1,22 @@
 import type { Level, NBackTrial } from '../types'
 
-// レベルが上がるほど何個前の数字かを増やす（1back/2back/3back）
+// レベルが上がるほど何個前の位置かを増やす（1back/2back/3back）
 const N_VALUE: Record<Level, number> = { 1: 1, 2: 2, 3: 3 }
 
-export const NBACK_SEQUENCE_LENGTH = 15
+// 3×3グリッドのマス数（空間版Nバック課題）
+export const GRID_SIZE = 3
+const CELL_COUNT = GRID_SIZE * GRID_SIZE
+
+// 出題数（問題セットの試行数）を選べるようにする
+export const TRIAL_COUNT_OPTIONS = [10, 20, 30] as const
+export type TrialCount = (typeof TRIAL_COUNT_OPTIONS)[number]
+export const DEFAULT_TRIAL_COUNT: TrialCount = 20
+
 const MATCH_PROBABILITY = 0.35
 
 // 開始前の間、および各試行を表示する時間
 export const READY_MS = 1000
-// 数字の表示時間と、次の数字との間に挟む空白時間（切り替わりを分かりやすくするため）
+// マスの表示時間と、次のマスとの間に挟む空白時間（切り替わりを分かりやすくするため）
 export const STIMULUS_MS = 1800
 export const GAP_MS = 400
 
@@ -16,21 +24,26 @@ export function getNValue(level: Level): number {
   return N_VALUE[level]
 }
 
-// N個前と一致する箇所を意図的に一定確率で混ぜつつ、数字の系列を生成する
-export function generateNBackSequence(level: Level): NBackTrial[] {
+// N個前と一致する位置を意図的に一定確率で混ぜつつ、3×3グリッドの
+// マス位置の系列を生成する（空間版Nバック課題、Kirchner 1958のspatial
+// n-back課題を参考にした「位置が一致するか判定する」形式）
+export function generateNBackSequence(
+  level: Level,
+  trialCount: number = DEFAULT_TRIAL_COUNT,
+): NBackTrial[] {
   const n = N_VALUE[level]
-  const digits: number[] = []
+  const positions: number[] = []
   const trials: NBackTrial[] = []
-  for (let i = 0; i < NBACK_SEQUENCE_LENGTH; i++) {
-    let digit: number
+  for (let i = 0; i < trialCount; i++) {
+    let position: number
     if (i >= n && Math.random() < MATCH_PROBABILITY) {
-      digit = digits[i - n]
+      position = positions[i - n]
     } else {
-      digit = Math.floor(Math.random() * 10)
+      position = Math.floor(Math.random() * CELL_COUNT)
     }
-    const isMatch = i >= n && digit === digits[i - n]
-    digits.push(digit)
-    trials.push({ digit, isMatch })
+    const isMatch = i >= n && position === positions[i - n]
+    positions.push(position)
+    trials.push({ position, isMatch })
   }
   return trials
 }

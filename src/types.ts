@@ -74,7 +74,7 @@ export interface AppSettings {
 }
 
 export interface NBackTrial {
-  digit: number
+  position: number
   isMatch: boolean
 }
 

@@ -3,7 +3,8 @@ import {
   generateNBackSequence,
   scoreNBackTrials,
   getNValue,
-  NBACK_SEQUENCE_LENGTH,
+  GRID_SIZE,
+  DEFAULT_TRIAL_COUNT,
 } from './nback'
 import type { NBackTrial } from '../types'
 
@@ -16,19 +17,23 @@ describe('getNValue', () => {
 })
 
 describe('generateNBackSequence', () => {
-  it('generates a sequence of the expected length with valid digits', () => {
+  it('generates a sequence of the requested length with valid grid positions', () => {
     for (const level of [1, 2, 3] as const) {
-      const trials = generateNBackSequence(level)
-      expect(trials).toHaveLength(NBACK_SEQUENCE_LENGTH)
+      const trials = generateNBackSequence(level, 10)
+      expect(trials).toHaveLength(10)
       for (const t of trials) {
-        expect(t.digit).toBeGreaterThanOrEqual(0)
-        expect(t.digit).toBeLessThanOrEqual(9)
+        expect(t.position).toBeGreaterThanOrEqual(0)
+        expect(t.position).toBeLessThan(GRID_SIZE * GRID_SIZE)
       }
     }
   })
 
+  it('defaults to DEFAULT_TRIAL_COUNT when no count is given', () => {
+    expect(generateNBackSequence(1)).toHaveLength(DEFAULT_TRIAL_COUNT)
+  })
+
   it('never marks a match within the first N positions', () => {
-    const trials = generateNBackSequence(3)
+    const trials = generateNBackSequence(3, 10)
     for (let i = 0; i < 3; i++) {
       expect(trials[i].isMatch).toBe(false)
     }
@@ -37,12 +42,12 @@ describe('generateNBackSequence', () => {
   it('correctly labels isMatch against the true N-back distance', () => {
     const level = 2
     const n = getNValue(level)
-    const trials = generateNBackSequence(level)
+    const trials = generateNBackSequence(level, 10)
     trials.forEach((trial, i) => {
       if (i < n) {
         expect(trial.isMatch).toBe(false)
       } else {
-        expect(trial.isMatch).toBe(trial.digit === trials[i - n].digit)
+        expect(trial.isMatch).toBe(trial.position === trials[i - n].position)
       }
     })
   })
@@ -51,10 +56,10 @@ describe('generateNBackSequence', () => {
 describe('scoreNBackTrials', () => {
   it('scores hits, misses, false alarms, and correct rejections', () => {
     const trials: NBackTrial[] = [
-      { digit: 1, isMatch: false },
-      { digit: 2, isMatch: true },
-      { digit: 3, isMatch: true },
-      { digit: 4, isMatch: false },
+      { position: 1, isMatch: false },
+      { position: 2, isMatch: true },
+      { position: 3, isMatch: true },
+      { position: 4, isMatch: false },
     ]
     // trial0: no match, no press -> correct rejection
     // trial1: match, pressed -> hit
@@ -73,8 +78,8 @@ describe('scoreNBackTrials', () => {
 
   it('gives 100% accuracy for a perfect run', () => {
     const trials: NBackTrial[] = [
-      { digit: 1, isMatch: false },
-      { digit: 2, isMatch: true },
+      { position: 1, isMatch: false },
+      { position: 2, isMatch: true },
     ]
     const score = scoreNBackTrials(trials, [false, true])
     expect(score.accuracy).toBe(100)

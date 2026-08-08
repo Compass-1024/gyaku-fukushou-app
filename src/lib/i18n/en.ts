@@ -42,7 +42,7 @@ export const en: Translations = {
   top: {
     heading: 'Working Memory Training',
     subtitle:
-      'Train your brain by recalling what you heard or saw — in reverse.',
+      'Train your working memory with 8 fun brain-training modes.',
     streakDays: (days) => `🔥 ${days}-day streak`,
     todayCount: (count) => `${count} session${count === 1 ? '' : 's'} today`,
     dailyGoal: (today, goal) => `Today's goal: ${today} / ${goal} sets`,
@@ -63,48 +63,39 @@ export const en: Translations = {
     modes: {
       word: {
         title: 'Word Mode',
-        description:
-          'Listen to a word, then say it back in reverse — a working memory challenge.',
+        description: 'Repeat words backward',
       },
       digitReverse: {
         title: 'Digit Mode (Reverse)',
-        description:
-          'Enter the digits you saw in reverse order — a working memory challenge.',
+        description: 'Enter digits in reverse',
       },
       digitSum: {
         title: 'Digit Mode (Sum)',
-        description:
-          'Enter the sum of all the digits you saw — a working memory challenge.',
+        description: 'Enter the digit sum',
       },
       nback: {
         title: 'N-Back Mode',
-        description:
-          'React when the current digit matches the one N steps back — a scientifically validated working memory task.',
+        description: 'Spot the matching position',
       },
       spatial: {
         title: 'Spatial Mode',
-        description:
-          'Remember the order in which squares light up, then tap them back in reverse — a visuospatial working memory challenge.',
+        description: 'Tap lit squares in reverse',
       },
       pattern: {
         title: 'Change Detection Mode',
-        description:
-          'Remember a briefly shown pattern and spot whether it changed — a working memory challenge.',
+        description: 'Spot the changed pattern',
       },
       tone: {
         title: 'Tone & Color Mode',
-        description:
-          'Remember the order in which colored pads light up with sound, then tap them back in the same order — a non-verbal working memory challenge.',
+        description: 'Repeat the tone sequence',
       },
       dualNback: {
         title: 'Dual N-Back Mode',
-        description:
-          'Remember a position and a sound at the same time, and judge each independently against N steps back — a demanding working memory challenge.',
+        description: 'Match position and sound',
       },
       random: {
         title: 'Random Mode',
-        description:
-          'A mixed workout drawing one question each from Digit (reverse/sum), Spatial, Change Detection, and Tone & Color.',
+        description: 'Mixed 5-mode workout',
       },
     },
     playerLevel: (level) => `Player Lv.${level}`,
@@ -357,7 +348,7 @@ export const en: Translations = {
   nback: {
     title: 'N-Back Mode',
     subtitle:
-      "Digits appear one at a time. Press \"Match\" whenever the current digit matches the one N steps back.",
+      'A square in a 3×3 grid lights up one at a time. Press "Match" whenever the current position matches the one N steps back.',
     levelLabel: (level) =>
       (
         {
@@ -366,10 +357,13 @@ export const en: Translations = {
           3: 'Level 3 (compare to 3 back)',
         } as const
       )[level],
-    matchPrompt: (n) => `Press "Match" if it's the same as ${n} step${n === 1 ? '' : 's'} back`,
+    trialCountTitle: 'Number of trials',
+    trialCountLabel: (count) => `${count}`,
+    matchPrompt: (n) => `Press "Match" if it's the same position as ${n} step${n === 1 ? '' : 's'} back`,
     matchButton: 'Match',
     matchButtonPressed: '✓ Match',
-    resultLabel: (digit, isMatch) => (isMatch ? `${digit} (match)` : `${digit}`),
+    resultLabel: (position, isMatch) =>
+      isMatch ? `Position ${position + 1} (match)` : `Position ${position + 1}`,
   },
   dualNback: {
     title: 'Dual N-Back Mode',

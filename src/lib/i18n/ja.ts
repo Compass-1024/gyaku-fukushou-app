@@ -41,7 +41,7 @@ export const ja: Translations = {
   },
   top: {
     heading: 'ワーキングメモリトレーニング',
-    subtitle: '聞いたり見たりしたものを、逆から答えて脳を鍛えましょう',
+    subtitle: '9種類のトレーニングで、脳のワーキングメモリを楽しく鍛えましょう',
     streakDays: (days) => `🔥 ${days}日連続`,
     todayCount: (count) => `今日 ${count}回挑戦`,
     dailyGoal: (today, goal) => `今日の目標: ${today} / ${goal} セット`,
@@ -62,48 +62,39 @@ export const ja: Translations = {
     modes: {
       word: {
         title: 'ことばモード',
-        description:
-          '言葉を聞いて、逆から声に出して答えるワーキングメモリトレーニングです。',
+        description: '聞いた言葉を逆から答える',
       },
       digitReverse: {
         title: 'すうじモード（逆から入力）',
-        description:
-          '表示された数字を逆の順番で入力するワーキングメモリトレーニングです。',
+        description: '数字を逆から入力する',
       },
       digitSum: {
         title: 'すうじモード（合計を入力）',
-        description:
-          '表示された数字をすべて足した合計を入力するワーキングメモリトレーニングです。',
+        description: '数字の合計を入力する',
       },
       nback: {
         title: 'Nバックモード',
-        description:
-          'N個前と同じ数字が出たら反応する、科学的根拠のあるワーキングメモリトレーニングです。',
+        description: 'N個前と同じ位置か判定',
       },
       spatial: {
         title: '空間モード',
-        description:
-          'マスが光る順番を覚えて、逆から画面をタップして答える視空間ワーキングメモリトレーニングです。',
+        description: '光ったマスを逆順にタップ',
       },
       pattern: {
         title: '変化検出モード',
-        description:
-          '一瞬表示される模様を覚えて、変化したかどうかを見分けるワーキングメモリトレーニングです。',
+        description: '模様の変化を見分ける',
       },
       tone: {
         title: '音・色モード',
-        description:
-          '色のパッドが音とともに光る順番を覚えて、同じ順にタップして再現する非言語性のワーキングメモリトレーニングです。',
+        description: '音の順番を再現する',
       },
       dualNback: {
         title: 'Dual N-Backモード',
-        description:
-          'マスの位置と音を同時に覚え、それぞれN個前と一致するかを別々に判定する高難度トレーニングです。',
+        description: '位置と音を同時に判定',
       },
       random: {
         title: 'ランダムモード',
-        description:
-          'すうじ（逆から/合計）・空間・変化検出・音/色の中からランダムに5問出題される、ミックス練習モードです。',
+        description: '5モードを一気に練習',
       },
     },
     playerLevel: (level) => `プレイヤーLv.${level}`,
@@ -328,7 +319,7 @@ export const ja: Translations = {
   nback: {
     title: 'Nバックモード',
     subtitle:
-      '数字が1つずつ表示されます。N個前と同じ数字なら「一致」を押すワーキングメモリトレーニングです。',
+      '3×3マスのどこかが1つずつ光ります。N個前と同じ位置なら「一致」を押すワーキングメモリトレーニングです。',
     levelLabel: (level) =>
       (
         {
@@ -337,10 +328,13 @@ export const ja: Translations = {
           3: 'レベル3（3つ前と比較）',
         } as const
       )[level],
-    matchPrompt: (n) => `${n}個前と同じなら「一致」を押してください`,
+    trialCountTitle: '出題数',
+    trialCountLabel: (count) => `${count}問`,
+    matchPrompt: (n) => `${n}個前と同じ位置なら「一致」を押してください`,
     matchButton: '一致',
     matchButtonPressed: '✓ 一致',
-    resultLabel: (digit, isMatch) => (isMatch ? `${digit}（一致）` : `${digit}`),
+    resultLabel: (position, isMatch) =>
+      isMatch ? `位置${position + 1}（一致）` : `位置${position + 1}`,
   },
   dualNback: {
     title: 'Dual N-Backモード',
