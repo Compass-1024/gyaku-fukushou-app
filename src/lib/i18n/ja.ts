@@ -436,6 +436,9 @@ export const ja: Translations = {
       ({ 1: 'レベル1', 2: 'レベル2', 3: 'レベル3' })[level],
     roundProgress: (current, total) => `問題 ${current} / ${total}`,
     resultLabel: (correct, total) => `${correct} / ${total} 問正解`,
+    weakPointFocusLabel: '弱点重視',
+    weakPointFocusDescription:
+      'オンにすると、各ラウンドのレベルを一律ではなく、モードごとに最も正答率が低いレベルへ自動で合わせます',
   },
   tone: {
     title: '音・色モード',

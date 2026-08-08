@@ -465,6 +465,9 @@ export const en: Translations = {
       ({ 1: 'Level 1', 2: 'Level 2', 3: 'Level 3' })[level],
     roundProgress: (current, total) => `Round ${current} / ${total}`,
     resultLabel: (correct, total) => `${correct} / ${total} correct`,
+    weakPointFocusLabel: 'Focus on weak points',
+    weakPointFocusDescription:
+      "When on, each round's level is set automatically to whichever level has your lowest accuracy for that mode, instead of the level you picked.",
   },
   tone: {
     title: 'Tone & Color Mode',

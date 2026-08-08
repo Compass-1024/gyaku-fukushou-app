@@ -272,6 +272,8 @@ export interface Translations {
     levelLabel: (level: 1 | 2 | 3) => string
     roundProgress: (current: number, total: number) => string
     resultLabel: (correct: number, total: number) => string
+    weakPointFocusLabel: string
+    weakPointFocusDescription: string
   }
   tone: {
     title: string

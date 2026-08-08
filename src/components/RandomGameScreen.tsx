@@ -4,6 +4,7 @@ import { useCountdown } from '../hooks/useCountdown'
 import { useStepReveal } from '../hooks/useStepReveal'
 import { useSetCompletionRecorder } from '../hooks/useSetCompletionRecorder'
 import { buildRandomRounds } from '../lib/random'
+import { loadHistory } from '../lib/history'
 import {
   reverseDigits,
   sumDigits,
@@ -48,9 +49,25 @@ import { GameHeader } from './GameHeader'
 import { ResultBadge } from './ResultBadge'
 import { useTranslation } from '../contexts/LanguageContext'
 import type { Translations } from '../lib/i18n'
-import type { BaseGameScreenProps, RandomQuestionPhase, RandomRound } from '../types'
+import type {
+  BaseGameScreenProps,
+  Level,
+  RandomQuestionPhase,
+  RandomRound,
+} from '../types'
 
-type RandomGameScreenProps = BaseGameScreenProps
+type RandomGameScreenProps = BaseGameScreenProps & {
+  // ④-2: レベル選択画面の「弱点重視」トグルがオンの場合、各ラウンドの
+  // レベルを選択レベル固定ではなくモードごとの弱点レベルに差し替える
+  weakPointFocus?: boolean
+}
+
+function buildRounds(level: Level, weakPointFocus?: boolean) {
+  return buildRandomRounds(
+    level,
+    weakPointFocus ? { history: loadHistory() } : undefined,
+  )
+}
 
 interface RoundOutcome {
   round: RandomRound
@@ -96,9 +113,12 @@ export function RandomGameScreen({
   level,
   onExit,
   onSelectLevel,
+  weakPointFocus,
 }: RandomGameScreenProps) {
   const t = useTranslation()
-  const [rounds, setRounds] = useState<RandomRound[]>(() => buildRandomRounds(level))
+  const [rounds, setRounds] = useState<RandomRound[]>(() =>
+    buildRounds(level, weakPointFocus),
+  )
   const [currentIndex, setCurrentIndex] = useState(0)
   const [phase, setPhase] = useState<RandomQuestionPhase>('ready')
   const [typed, setTyped] = useState('')
@@ -261,7 +281,7 @@ export function RandomGameScreen({
   }
 
   function handleRetry() {
-    setRounds(buildRandomRounds(level))
+    setRounds(buildRounds(level, weakPointFocus))
     setCurrentIndex(0)
     setResults([])
     setCurrentOutcome(null)

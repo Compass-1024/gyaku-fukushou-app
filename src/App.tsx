@@ -80,7 +80,7 @@ type View =
   | { screen: 'tone-level' }
   | { screen: 'tone-game'; level: Level }
   | { screen: 'random-level' }
-  | { screen: 'random-game'; level: Level }
+  | { screen: 'random-game'; level: Level; weakPointFocus?: boolean }
   | { screen: 'settings' }
   | { screen: 'stats' }
   | { screen: 'privacy' }
@@ -404,7 +404,9 @@ function App() {
       content = (
         <RandomLevelSelect
           history={history}
-          onSelect={(level) => goTo({ screen: 'random-game', level })}
+          onSelect={(level, weakPointFocus) =>
+            goTo({ screen: 'random-game', level, weakPointFocus })
+          }
           onBack={() => goTo({ screen: 'top' })}
         />
       )
@@ -414,6 +416,7 @@ function App() {
         <RandomGameScreen
           key={view.level}
           level={view.level}
+          weakPointFocus={view.weakPointFocus}
           onExit={() => goTo({ screen: 'random-level' })}
           onSelectLevel={(level) => goTo({ screen: 'random-game', level })}
         />
