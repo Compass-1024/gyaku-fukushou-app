@@ -3,6 +3,7 @@ import {
   loadBucketStats,
   recordBucketAttempt,
   getBucketWeight,
+  getWeakestBucket,
   pickWeightedCandidate,
 } from './questionWeighting'
 
@@ -62,6 +63,39 @@ describe('getBucketWeight', () => {
   it('returns the standard weight for a perfect bucket', () => {
     const stats = { strong: { correct: 4, total: 4 } }
     expect(getBucketWeight(stats, 'strong')).toBe(1)
+  })
+})
+
+describe('getWeakestBucket', () => {
+  it('returns null when fewer than two buckets have enough attempts', () => {
+    expect(
+      getWeakestBucket({ '1:repeat': { correct: 1, total: 5 } }),
+    ).toBeNull()
+  })
+
+  it('returns null when the accuracy gap between buckets is small', () => {
+    const stats = {
+      '1:repeat': { correct: 9, total: 10 }, // 90%
+      '2:unique': { correct: 10, total: 10 }, // 100% -> gap 10pt < 15pt threshold
+    }
+    expect(getWeakestBucket(stats)).toBeNull()
+  })
+
+  it('aggregates across levels and returns the weakest bucket by name', () => {
+    const stats = {
+      '1:repeat': { correct: 0, total: 3 },
+      '2:repeat': { correct: 1, total: 3 },
+      '1:unique': { correct: 5, total: 5 },
+    }
+    expect(getWeakestBucket(stats)).toEqual({ bucket: 'repeat', accuracyPercent: 17 })
+  })
+
+  it('ignores buckets below the minimum attempt threshold', () => {
+    const stats = {
+      '1:repeat': { correct: 0, total: 2 }, // 3件未満のため無視される
+      '1:unique': { correct: 5, total: 5 },
+    }
+    expect(getWeakestBucket(stats)).toBeNull()
   })
 })
 

@@ -289,76 +289,10 @@ export function TopScreen({
         )}
       </div>
 
-      <button
-        type="button"
-        disabled={!missionClickable}
-        onClick={handleMissionClick}
-        className={`animate-pop touch-manipulation rounded-xl border px-4 py-3 text-left transition disabled:cursor-default ${
-          missionCompleted
-            ? 'border-emerald-300 bg-emerald-50 dark:border-emerald-700 dark:bg-emerald-900/20'
-            : 'border-gray-200 bg-white hover:enabled:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:hover:enabled:bg-gray-700/60'
-        }`}
-      >
-        <p className="text-xs font-semibold text-gray-500 dark:text-gray-400">
-          {t.missions.cardTitle}
-        </p>
-        <p className="mt-1 text-sm text-gray-700 dark:text-gray-200">{missionLabel}</p>
-        <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-          {missionCompleted
-            ? t.missions.completedBadge
-            : t.missions.xpReward(XP_PER_MISSION)}
-        </p>
-      </button>
-
-      {recap && (
-        <div className="animate-pop relative rounded-xl border border-sky-200 bg-sky-50 px-4 py-3 dark:border-sky-800 dark:bg-sky-900/20">
-          <button
-            type="button"
-            onClick={handleDismissRecap}
-            aria-label={t.top.dismissRecap}
-            className="absolute top-2 right-2 touch-manipulation rounded-full p-1 text-sky-400 hover:bg-sky-100 dark:text-sky-500 dark:hover:bg-sky-900/40"
-          >
-            ✕
-          </button>
-          <p className="text-xs font-semibold text-sky-600 dark:text-sky-300">
-            {t.top.recapTitle}
-          </p>
-          <p className="mt-1 text-sm text-gray-700 dark:text-gray-200">
-            {t.top.recapSummary(recap.totalSets, recap.accuracyPercent)}
-          </p>
-          {recap.previousWeekSets > 0 && (
-            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-              {recap.totalSets > recap.previousWeekSets &&
-                t.top.recapIncrease(recap.previousWeekSets)}
-              {recap.totalSets < recap.previousWeekSets &&
-                t.top.recapDecrease(recap.previousWeekSets)}
-              {recap.totalSets === recap.previousWeekSets && t.top.recapSame}
-            </p>
-          )}
-        </div>
-      )}
-
-      {recommended && (
-        <button
-          type="button"
-          onClick={() => {
-            if (loadSettings().soundEnabled) playButtonTap()
-            onStartRecommended(recommended)
-          }}
-          className="touch-manipulation rounded-xl border border-dashed border-indigo-300 bg-indigo-50/60 px-4 py-3 text-left transition hover:bg-indigo-50 dark:border-indigo-700 dark:bg-indigo-900/20 dark:hover:bg-indigo-900/30"
-        >
-          <p className="text-xs font-semibold text-indigo-500 dark:text-indigo-300">
-            {t.top.recommendedTitle}
-          </p>
-          <p className="mt-1 text-sm text-gray-700 dark:text-gray-200">
-            {t.top.recommendedSummary(
-              areaLabel(recommended),
-              recommended.stats.accuracy ?? 0,
-            )}
-          </p>
-        </button>
-      )}
-
+      {/* モード選択はアプリの主目的の操作なので、ゲーミフィケーション要素
+          （ミッション・週間振り返り・おすすめ）より先にファーストビューへ入るよう
+          このグリッドを上に配置する（③-10: 旧レイアウトはこの下に4つのカードが
+          積み上がりモード選択がスクロールしないと見えなかった） */}
       <div className="grid grid-cols-3 gap-2 sm:gap-3">
         {modeCards.map((card) => (
           <button
@@ -396,6 +330,76 @@ export function TopScreen({
           </button>
         ))}
       </div>
+
+      <button
+        type="button"
+        disabled={!missionClickable}
+        onClick={handleMissionClick}
+        className={`animate-pop touch-manipulation rounded-xl border px-4 py-3 text-left transition disabled:cursor-default ${
+          missionCompleted
+            ? 'border-emerald-300 bg-emerald-50 dark:border-emerald-700 dark:bg-emerald-900/20'
+            : 'border-gray-200 bg-white hover:enabled:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:hover:enabled:bg-gray-700/60'
+        }`}
+      >
+        <p className="text-xs font-semibold text-gray-500 dark:text-gray-400">
+          {t.missions.cardTitle}
+        </p>
+        <p className="mt-1 text-sm text-gray-700 dark:text-gray-200">{missionLabel}</p>
+        <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+          {missionCompleted
+            ? t.missions.completedBadge
+            : t.missions.xpReward(XP_PER_MISSION)}
+        </p>
+      </button>
+
+      {recommended && (
+        <button
+          type="button"
+          onClick={() => {
+            if (loadSettings().soundEnabled) playButtonTap()
+            onStartRecommended(recommended)
+          }}
+          className="touch-manipulation rounded-xl border border-dashed border-indigo-300 bg-indigo-50/60 px-4 py-3 text-left transition hover:bg-indigo-50 dark:border-indigo-700 dark:bg-indigo-900/20 dark:hover:bg-indigo-900/30"
+        >
+          <p className="text-xs font-semibold text-indigo-500 dark:text-indigo-300">
+            {t.top.recommendedTitle}
+          </p>
+          <p className="mt-1 text-sm text-gray-700 dark:text-gray-200">
+            {t.top.recommendedSummary(
+              areaLabel(recommended),
+              recommended.stats.accuracy ?? 0,
+            )}
+          </p>
+        </button>
+      )}
+
+      {recap && (
+        <div className="animate-pop relative rounded-xl border border-sky-200 bg-sky-50 px-4 py-3 dark:border-sky-800 dark:bg-sky-900/20">
+          <button
+            type="button"
+            onClick={handleDismissRecap}
+            aria-label={t.top.dismissRecap}
+            className="absolute top-2 right-2 touch-manipulation rounded-full p-1 text-sky-400 hover:bg-sky-100 dark:text-sky-500 dark:hover:bg-sky-900/40"
+          >
+            ✕
+          </button>
+          <p className="text-xs font-semibold text-sky-600 dark:text-sky-300">
+            {t.top.recapTitle}
+          </p>
+          <p className="mt-1 text-sm text-gray-700 dark:text-gray-200">
+            {t.top.recapSummary(recap.totalSets, recap.accuracyPercent)}
+          </p>
+          {recap.previousWeekSets > 0 && (
+            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+              {recap.totalSets > recap.previousWeekSets &&
+                t.top.recapIncrease(recap.previousWeekSets)}
+              {recap.totalSets < recap.previousWeekSets &&
+                t.top.recapDecrease(recap.previousWeekSets)}
+              {recap.totalSets === recap.previousWeekSets && t.top.recapSame}
+            </p>
+          )}
+        </div>
+      )}
     </div>
   )
 }

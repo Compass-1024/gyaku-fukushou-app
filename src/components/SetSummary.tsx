@@ -101,9 +101,15 @@ export function SetSummary({
         <p className="mt-1 text-4xl font-bold text-gray-900 dark:text-gray-100">
           {t.setSummary.scoreLabel(correctCount, items.length)}
         </p>
-        {!!xpGained && (
-          <p className="mt-1 text-sm font-semibold text-indigo-500 dark:text-indigo-300">
-            {t.setSummary.xpGained(xpGained)}
+        {xpGained !== undefined && (
+          <p
+            className={`mt-1 text-sm font-semibold ${
+              xpGained > 0
+                ? 'text-indigo-500 dark:text-indigo-300'
+                : 'text-gray-500 dark:text-gray-400'
+            }`}
+          >
+            {xpGained > 0 ? t.setSummary.xpGained(xpGained) : t.setSummary.xpGainedZero}
           </p>
         )}
         <button

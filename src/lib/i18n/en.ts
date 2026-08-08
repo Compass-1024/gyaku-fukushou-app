@@ -133,6 +133,7 @@ export const en: Translations = {
     retry: 'Try again at this level',
     changeLevel: 'Back to level select',
     xpGained: (xp) => `XP gained: +${xp}`,
+    xpGainedZero: 'No XP this time — aim for at least one correct next time',
     levelUp: (level) => `🎉 Level Up! Player Lv.${level}`,
   },
   settings: {
@@ -230,6 +231,20 @@ export const en: Translations = {
     weakPhrasesTitle: 'Word Mode: Phrases to review',
     weakPhraseStat: (accuracyPercent, total, correct) =>
       `${accuracyPercent}% (${correct}/${total} correct)`,
+    bucketWeaknessLabels: {
+      'digit:repeat': 'questions with repeated digits',
+      'digit:unique': 'questions with all-unique digits',
+      'spatial:adjacent': 'sequences that move to adjacent cells',
+      'spatial:scattered': 'sequences that jump to distant cells',
+      'pattern:clustered': 'patterns with clustered cells',
+      'pattern:scattered': 'patterns with scattered cells',
+      'tone:repeat': 'sequences with repeated pads',
+      'tone:unique': 'sequences with all-unique pads',
+    },
+    bucketWeaknessSummary: (label, accuracyPercent) =>
+      `You struggle with ${label} (${accuracyPercent}% correct)`,
+    modeTrendTitle: 'Accuracy trend by mode',
+    modeTrendNotEnoughData: 'Shown once you have more attempts',
   },
   privacy: {
     heading: 'Privacy Policy',

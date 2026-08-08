@@ -126,6 +126,7 @@ export const ja: Translations = {
     retry: '同じレベルでもう一度',
     changeLevel: 'レベル選択に戻る',
     xpGained: (xp) => `獲得XP: +${xp}`,
+    xpGainedZero: '今回は獲得XPなし。次は1問正解を目指そう',
     levelUp: (level) => `🎉 Level Up! プレイヤーLv.${level}`,
   },
   settings: {
@@ -222,6 +223,20 @@ export const ja: Translations = {
     weakPhrasesTitle: 'ことばモード: 苦手なフレーズ',
     weakPhraseStat: (accuracyPercent, total, correct) =>
       `${accuracyPercent}%（${total}回中${correct}回正解）`,
+    bucketWeaknessLabels: {
+      'digit:repeat': '同じ数字が重複する問題',
+      'digit:unique': '数字がすべて異なる問題',
+      'spatial:adjacent': '隣のマスへ連続して移動する問題',
+      'spatial:scattered': '離れたマスへ飛ぶ問題',
+      'pattern:clustered': 'マスがかたまって並ぶ模様',
+      'pattern:scattered': 'マスが散らばって並ぶ模様',
+      'tone:repeat': '同じパッドが重複する問題',
+      'tone:unique': 'パッドがすべて異なる問題',
+    },
+    bucketWeaknessSummary: (label, accuracyPercent) =>
+      `${label}が苦手（正答率${accuracyPercent}%）`,
+    modeTrendTitle: 'モード別の正答率推移',
+    modeTrendNotEnoughData: '挑戦回数が増えると表示されます',
   },
   privacy: {
     heading: 'プライバシーポリシー',

@@ -66,6 +66,7 @@ export interface Translations {
     retry: string
     changeLevel: string
     xpGained: (xp: number) => string
+    xpGainedZero: string
     levelUp: (level: number) => string
   }
   top: {
@@ -181,6 +182,12 @@ export interface Translations {
       total: number,
       correct: number,
     ) => string
+    // ④-3: 出題重み付け統計(バケット)から見える誤答パターンの質的フィードバック
+    bucketWeaknessLabels: Record<string, string>
+    bucketWeaknessSummary: (label: string, accuracyPercent: number) => string
+    // ④-6: モード別正答率の時系列グラフ
+    modeTrendTitle: string
+    modeTrendNotEnoughData: string
   }
   privacy: {
     heading: string

@@ -79,6 +79,46 @@ export function getBucketWeight(stats: BucketStats, bucket: string): number {
   return 1 + errorRate * WEAK_BUCKET_FACTOR
 }
 
+export interface WeakestBucket {
+  bucket: string
+  accuracyPercent: number
+}
+
+// バケット別の統計を出題重み付け（内部利用）だけでなく、ユーザー自身への
+// 「誤答パターンの質的フィードバック」（統計画面）にも二次利用する。
+// レベル横断でバケット名（'repeat'/'adjacent'等）ごとに正誤を集計し、
+// 最も正答率が低いバケットを返す。試行数が少ない、または他バケットとの
+// 差が僅少な場合は「意味のある傾向」とみなさずnullを返す
+const MIN_ATTEMPTS_FOR_WEAKNESS_SUMMARY = 3
+const MIN_ACCURACY_GAP_FOR_WEAKNESS_SUMMARY = 15
+
+export function getWeakestBucket(stats: BucketStats): WeakestBucket | null {
+  const byBucket = new Map<string, BucketStat>()
+  for (const [key, stat] of Object.entries(stats)) {
+    const bucket = key.split(':')[1]
+    if (!bucket) continue
+    const prev = byBucket.get(bucket) ?? { correct: 0, total: 0 }
+    byBucket.set(bucket, {
+      correct: prev.correct + stat.correct,
+      total: prev.total + stat.total,
+    })
+  }
+  const summarized = Array.from(byBucket.entries())
+    .filter(([, s]) => s.total >= MIN_ATTEMPTS_FOR_WEAKNESS_SUMMARY)
+    .map(([bucket, s]) => ({
+      bucket,
+      accuracyPercent: Math.round((s.correct / s.total) * 100),
+    }))
+  if (summarized.length < 2) return null
+  summarized.sort((a, b) => a.accuracyPercent - b.accuracyPercent)
+  const worst = summarized[0]
+  const best = summarized[summarized.length - 1]
+  if (best.accuracyPercent - worst.accuracyPercent < MIN_ACCURACY_GAP_FOR_WEAKNESS_SUMMARY) {
+    return null
+  }
+  return worst
+}
+
 // generateで候補を複数生成し、classifyで求めたバケットの重みに応じた
 // 重み付き抽選で1件を選ぶ
 export function pickWeightedCandidate<T>(
