@@ -189,6 +189,14 @@ export interface Translations {
     modeTrendTitle: string
     modeTrendNotEnoughData: string
   }
+  // ④-10(代替): 初回オンボーディングガイド
+  onboarding: {
+    steps: { title: string; body: string }[]
+    next: string
+    skip: string
+    start: string
+    stepProgress: (current: number, total: number) => string
+  }
   // ④-5: PWAインストール促進バナー(SetSummaryに表示)
   installBanner: {
     title: string

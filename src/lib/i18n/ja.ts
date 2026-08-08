@@ -126,7 +126,7 @@ export const ja: Translations = {
     retry: '同じレベルでもう一度',
     changeLevel: 'レベル選択に戻る',
     xpGained: (xp) => `獲得XP: +${xp}`,
-    xpGainedZero: '今回は獲得XPなし。次は1問正解を目指そう',
+    xpGainedZero: '今回の獲得XPはなし。次は1つ正解を目指そう',
     levelUp: (level) => `🎉 Level Up! プレイヤーLv.${level}`,
   },
   settings: {
@@ -237,6 +237,26 @@ export const ja: Translations = {
       `${label}が苦手（正答率${accuracyPercent}%）`,
     modeTrendTitle: 'モード別の正答率推移',
     modeTrendNotEnoughData: '挑戦回数が増えると表示されます',
+  },
+  onboarding: {
+    steps: [
+      {
+        title: 'ようこそ！',
+        body: '逆復唱トレーニングは、9種類のミニゲームでワーキングメモリ（作業記憶）を鍛えるアプリです。',
+      },
+      {
+        title: '遊び方はシンプル',
+        body: 'レベルを選んで出題を見る（聞く）→覚えた通りに答える、の繰り返し。1セットは数分で終わります。',
+      },
+      {
+        title: '続けるほど育つ',
+        body: '正解でXPを獲得してプレイヤーLvが上がり、実績やストリークも記録されます。まずは1つ試してみましょう！',
+      },
+    ],
+    next: '次へ',
+    skip: 'スキップ',
+    start: 'はじめる',
+    stepProgress: (current, total) => `${current} / ${total}`,
   },
   installBanner: {
     title: '📲 ホーム画面に追加しませんか？',

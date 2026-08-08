@@ -247,6 +247,26 @@ export const en: Translations = {
     modeTrendTitle: 'Accuracy trend by mode',
     modeTrendNotEnoughData: 'Shown once you have more attempts',
   },
+  onboarding: {
+    steps: [
+      {
+        title: 'Welcome!',
+        body: 'Working Memory Training is a set of 9 mini-games designed to train your working memory.',
+      },
+      {
+        title: 'How it works',
+        body: 'Pick a level, watch (or listen to) the question, then answer the way you memorized it. Each set takes just a few minutes.',
+      },
+      {
+        title: 'Keep going, grow stronger',
+        body: 'Correct answers earn XP and level up your player level, and achievements and streaks are tracked too. Try one mode to get started!',
+      },
+    ],
+    next: 'Next',
+    skip: 'Skip',
+    start: 'Get started',
+    stepProgress: (current, total) => `${current} / ${total}`,
+  },
   installBanner: {
     title: '📲 Add to your home screen?',
     body: 'Launch it like an app, and reminder notifications reach you more reliably',

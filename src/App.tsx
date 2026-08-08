@@ -1,5 +1,6 @@
 import { lazy, Suspense, useEffect, useRef, useState } from 'react'
 import { TopScreen } from './components/TopScreen'
+import { OnboardingGuide } from './components/OnboardingGuide'
 import { LevelSelect } from './components/LevelSelect'
 import { DigitLevelSelect } from './components/DigitLevelSelect'
 import { NBackLevelSelect } from './components/NBackLevelSelect'
@@ -17,6 +18,7 @@ import { useBackgroundMusic } from './hooks/useBackgroundMusic'
 import { useLanguage, useTranslation } from './contexts/LanguageContext'
 import { loadHistory } from './lib/history'
 import { loadSettings } from './lib/settings'
+import { hasSeenOnboarding, markOnboardingSeen } from './lib/onboarding'
 import { DEFAULT_TRIAL_COUNT } from './lib/nback'
 import { DEFAULT_TRIAL_COUNT as DUAL_NBACK_DEFAULT_TRIAL_COUNT } from './lib/dualNback'
 import type { AreaStats } from './lib/history'
@@ -126,6 +128,7 @@ function App() {
   const { supported: recognitionSupported } = useSpeechRecognition()
   const [view, setView] = useState<View>(() => getShortcutView() ?? TOP_VIEW)
   const [history, setHistory] = useState<HistoryEntry[]>(() => loadHistory())
+  const [showOnboarding, setShowOnboarding] = useState(() => !hasSeenOnboarding())
   const mainRef = useRef<HTMLElement>(null)
   const isFirstRender = useRef(true)
 
@@ -477,6 +480,14 @@ function App() {
           {content}
         </Suspense>
       </div>
+      {showOnboarding && view.screen === 'top' && (
+        <OnboardingGuide
+          onDismiss={() => {
+            markOnboardingSeen()
+            setShowOnboarding(false)
+          }}
+        />
+      )}
     </main>
   )
 }
