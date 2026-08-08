@@ -247,6 +247,14 @@ export const en: Translations = {
     modeTrendTitle: 'Accuracy trend by mode',
     modeTrendNotEnoughData: 'Shown once you have more attempts',
   },
+  installBanner: {
+    title: '📲 Add to your home screen?',
+    body: 'Launch it like an app, and reminder notifications reach you more reliably',
+    installButton: 'Add to home screen',
+    iosBody:
+      '📲 Tap the Share button, then "Add to Home Screen" to launch this like an app',
+    dismiss: 'Dismiss',
+  },
   privacy: {
     heading: 'Privacy Policy',
     dataLocationTitle: 'Where your data is stored',

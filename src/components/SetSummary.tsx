@@ -4,8 +4,14 @@ import { buildResultShareText, shareText } from '../lib/share'
 import { loadSettings } from '../lib/settings'
 import { rollLuckyBonus } from '../lib/luckyBonus'
 import { playAchievementUnlock } from '../lib/sound'
+import { isInstallBannerDismissed } from '../lib/installPrompt'
+import { InstallPromptBanner } from './InstallPromptBanner'
 import { useTranslation } from '../contexts/LanguageContext'
 import type { Achievement } from '../lib/achievements'
+
+// ④-5: エンゲージメントが高まったタイミング（一定セット数をこなした後）で
+// インストール促進バナーを表示する。毎回は出さない
+const MIN_TOTAL_SETS_FOR_INSTALL_BANNER = 3
 
 export interface SummaryItem {
   key: string
@@ -50,7 +56,11 @@ export function SetSummary({
   // 表示のたびにlocalStorageから読み直す（このセット自身の記録がまだ
   // 反映されていないタイミングで最初に描画されても、直後の再描画で正しい値になる）
   const dailyGoal = loadSettings().dailyGoal
-  const todayCount = getTodayCount(loadHistory())
+  const historySnapshot = loadHistory()
+  const todayCount = getTodayCount(historySnapshot)
+  const showInstallBanner =
+    historySnapshot.length >= MIN_TOTAL_SETS_FOR_INSTALL_BANNER &&
+    !isInstallBannerDismissed()
   const goalProgress =
     dailyGoal > 0 ? Math.min(100, Math.round((todayCount / dailyGoal) * 100)) : 0
   const goalReached = dailyGoal > 0 && todayCount >= dailyGoal
@@ -219,6 +229,8 @@ export function SetSummary({
           )}
         </div>
       )}
+
+      {showInstallBanner && <InstallPromptBanner />}
 
       <div className="flex flex-col gap-3">
         {suggestion && (

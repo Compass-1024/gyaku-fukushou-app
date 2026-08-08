@@ -238,6 +238,14 @@ export const ja: Translations = {
     modeTrendTitle: 'モード別の正答率推移',
     modeTrendNotEnoughData: '挑戦回数が増えると表示されます',
   },
+  installBanner: {
+    title: '📲 ホーム画面に追加しませんか？',
+    body: 'アプリのように起動でき、リマインド通知も届きやすくなります',
+    installButton: 'ホーム画面に追加',
+    iosBody:
+      '📲 共有ボタン（□に↑）から「ホーム画面に追加」を選ぶと、アプリのように起動できます',
+    dismiss: '閉じる',
+  },
   privacy: {
     heading: 'プライバシーポリシー',
     dataLocationTitle: 'データの保存先',

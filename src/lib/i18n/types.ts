@@ -189,6 +189,14 @@ export interface Translations {
     modeTrendTitle: string
     modeTrendNotEnoughData: string
   }
+  // ④-5: PWAインストール促進バナー(SetSummaryに表示)
+  installBanner: {
+    title: string
+    body: string
+    installButton: string
+    iosBody: string
+    dismiss: string
+  }
   privacy: {
     heading: string
     dataLocationTitle: string
