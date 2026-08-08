@@ -4,6 +4,11 @@
 
 ## [Unreleased]
 
+### Changed
+
+- 「Dual N-Back」モードの表記を日本語UIで「デュアルNバック」に統一（他モードが全て日本語表記である一方、このモードのみ英語表記が残っていたため。英語UIは"Dual N-Back"のまま、内部の`Mode`値`'dual-nback'`は変更なし）
+- デュアルNバックモードにも、Nバックモードと同様レベル選択画面で出題数を10/20/30問から選べるようにした（`src/lib/dualNback.ts`の固定値`DUAL_NBACK_SEQUENCE_LENGTH`を廃止）
+
 ## [0.7.0] - 2026-08-08
 
 ### Changed
