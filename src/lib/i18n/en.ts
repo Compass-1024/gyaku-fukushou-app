@@ -44,8 +44,7 @@ export const en: Translations = {
   },
   top: {
     heading: 'Working Memory Training',
-    subtitle:
-      'Train your working memory with 8 fun brain-training modes.',
+    subtitle: 'Train your working memory with 9 brain-training modes.',
     streakDays: (days) => `🔥 ${days}-day streak`,
     todayCount: (count) => `${count} session${count === 1 ? '' : 's'} today`,
     dailyGoal: (today, goal) => `Today's goal: ${today} / ${goal} sets`,
@@ -66,39 +65,39 @@ export const en: Translations = {
     modes: {
       word: {
         title: 'Word Mode',
-        description: 'Repeat words backward',
+        description: 'Words in reverse',
       },
       digitReverse: {
         title: 'Digit Mode (Reverse)',
-        description: 'Enter digits in reverse',
+        description: 'Digits in reverse',
       },
       digitSum: {
         title: 'Digit Mode (Sum)',
-        description: 'Enter the digit sum',
+        description: 'Sum the digits',
       },
       nback: {
         title: 'N-Back Mode',
-        description: 'Spot the matching position',
+        description: 'Spot the match',
       },
       spatial: {
         title: 'Spatial Mode',
-        description: 'Tap lit squares in reverse',
+        description: 'Tap squares in reverse',
       },
       pattern: {
         title: 'Change Detection Mode',
-        description: 'Spot the changed pattern',
+        description: 'Find the pattern',
       },
       tone: {
         title: 'Tone & Color Mode',
-        description: 'Repeat the tone sequence',
+        description: 'Repeat the tones',
       },
       dualNback: {
         title: 'Dual N-Back Mode',
-        description: 'Match position and sound',
+        description: 'Match position & sound',
       },
       random: {
         title: 'Random Mode',
-        description: 'Mixed 5-mode workout',
+        description: '5-mode mixed workout',
       },
     },
     playerLevel: (level) => `Player Lv.${level}`,
@@ -111,6 +110,7 @@ export const en: Translations = {
     xpReward: (xp) => `+${xp} XP on completion`,
     playCountLabel: (areaLabel, count) => `Play ${areaLabel} ${count} times`,
     accuracyLabel: (percent) => `Reach ${percent}%+ accuracy`,
+    chipLabel: 'Mission',
   },
   share: {
     resultLine: (correct, total) =>
@@ -257,12 +257,15 @@ export const en: Translations = {
     rememberPrompt: 'Try to remember it',
     inputPrompt: 'Enter it in reverse',
     completedBadge: (correct) => (correct ? '✅ Solved today' : '📝 Attempted today'),
+    chipLabel: 'Challenge',
   },
   program: {
     title: '🗓️ 7-Day Challenge',
     progressLabel: (daysPlayed, totalDays) =>
       `Played ${daysPlayed} / ${totalDays} days in the last week`,
     completeMessage: "🎉 You've played every day this week! Keep it up",
+    chipLabel: '7-Day',
+    chipProgress: (daysPlayed, totalDays) => `${daysPlayed}/${totalDays}d`,
   },
   onboarding: {
     steps: [

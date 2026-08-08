@@ -28,3 +28,30 @@ test('トップ画面が表示され、9つのモードカードが見える', a
   await expect(page.getByRole('button', { name: '統計' })).toBeVisible()
   await expect(page.getByRole('button', { name: '設定' })).toBeVisible()
 })
+
+test('トップ画面: ミッション・お題・7日間チャレンジがコンパクトなチップで表示され、タップで詳細が開閉する', async ({
+  page,
+}) => {
+  await page.goto('/')
+
+  const missionChip = page.getByRole('button', { name: '🎯 今日のミッション' })
+  const challengeChip = page.getByRole('button', { name: '🎯 本日のお題' })
+  const programChip = page.getByRole('button', { name: '🗓️ 7日間チャレンジ' })
+  await expect(missionChip).toBeVisible()
+  await expect(challengeChip).toBeVisible()
+  await expect(programChip).toBeVisible()
+
+  // 「今日のおすすめ」カードは廃止済み
+  await expect(page.getByText('今日のおすすめ')).toHaveCount(0)
+
+  // 展開前は詳細が表示されない
+  await expect(page.getByText('達成で +100XP')).toHaveCount(0)
+
+  await missionChip.click()
+  await expect(page.getByText('達成で +100XP')).toBeVisible()
+
+  // 別のチップを開くと前の詳細は閉じる
+  await challengeChip.click()
+  await expect(page.getByText('達成で +100XP')).toHaveCount(0)
+  await expect(page.getByRole('button', { name: '挑戦する' })).toBeVisible()
+})

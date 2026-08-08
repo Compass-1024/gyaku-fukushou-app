@@ -44,7 +44,7 @@ export const ja: Translations = {
   },
   top: {
     heading: 'ワーキングメモリトレーニング',
-    subtitle: '9種類のトレーニングで、脳のワーキングメモリを楽しく鍛えましょう',
+    subtitle: '9種類のトレーニングで、脳のワーキングメモリを鍛えましょう',
     streakDays: (days) => `🔥 ${days}日連続`,
     todayCount: (count) => `今日 ${count}回挑戦`,
     dailyGoal: (today, goal) => `今日の目標: ${today} / ${goal} セット`,
@@ -65,39 +65,39 @@ export const ja: Translations = {
     modes: {
       word: {
         title: 'ことばモード',
-        description: '聞いた言葉を逆から答える',
+        description: '言葉を逆から答える',
       },
       digitReverse: {
         title: 'すうじモード（逆から入力）',
-        description: '数字を逆から入力する',
+        description: '数字を逆から入力',
       },
       digitSum: {
         title: 'すうじモード（合計を入力）',
-        description: '数字の合計を入力する',
+        description: '数字の合計を入力',
       },
       nback: {
         title: 'Nバックモード',
-        description: 'N個前と同じ位置か判定',
+        description: 'N個前の位置を判定',
       },
       spatial: {
         title: '空間モード',
-        description: '光ったマスを逆順にタップ',
+        description: '逆順にマスをタップ',
       },
       pattern: {
         title: '変化検出モード',
-        description: '模様の変化を見分ける',
+        description: '模様の変化を発見',
       },
       tone: {
         title: '音・色モード',
-        description: '音の順番を再現する',
+        description: '音の順番を再現',
       },
       dualNback: {
         title: 'デュアルNバックモード',
-        description: '位置と音を同時に判定',
+        description: '位置と音を判定',
       },
       random: {
         title: 'ランダムモード',
-        description: '5モードを一気に練習',
+        description: '5モードを一気に',
       },
     },
     playerLevel: (level) => `プレイヤーLv.${level}`,
@@ -110,6 +110,7 @@ export const ja: Translations = {
     xpReward: (xp) => `達成で +${xp}XP`,
     playCountLabel: (areaLabel, count) => `${areaLabel}を${count}回プレイ`,
     accuracyLabel: (percent) => `正答率${percent}%以上を達成`,
+    chipLabel: 'ミッション',
   },
   share: JA_SHARE_TEMPLATES,
   setSummary: {
@@ -248,12 +249,15 @@ export const ja: Translations = {
     rememberPrompt: 'よく覚えてください',
     inputPrompt: '逆から入力してください',
     completedBadge: (correct) => (correct ? '✅ 今日は正解済み' : '📝 今日は挑戦済み'),
+    chipLabel: 'お題',
   },
   program: {
     title: '🗓️ 7日間チャレンジ',
     progressLabel: (daysPlayed, totalDays) =>
       `直近7日間で ${daysPlayed} / ${totalDays} 日プレイ`,
     completeMessage: '🎉 7日間すべてでプレイ達成！この調子で続けよう',
+    chipLabel: '7日間',
+    chipProgress: (daysPlayed, totalDays) => `${daysPlayed}/${totalDays}日`,
   },
   onboarding: {
     steps: [

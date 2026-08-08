@@ -16,6 +16,7 @@ import {
 } from '../lib/missions'
 import { computeTotalXp, getXpProgress, XP_PER_MISSION } from '../lib/xp'
 import { getRollingProgramProgress } from '../lib/program'
+import { hasCompletedTodayChallenge } from '../lib/dailyChallenge'
 import { DailyChallengeCard } from './DailyChallengeCard'
 import { getAllBenchmarks } from '../lib/benchmarks'
 import type { Benchmark } from '../lib/benchmarks'
@@ -143,12 +144,6 @@ export function TopScreen({
       .map((b) => BENCHMARK_MODE_TO_CARD_MODE[b.mode]),
   )
 
-  function areaLabel(area: AreaStats): string {
-    const key = area.gameType ? `${area.mode}-${area.gameType}` : area.mode
-    const label = t.common.areaLabels[key as keyof typeof t.common.areaLabels]
-    return t.stats.areaLabel(label, area.level)
-  }
-
   const streakDays = getStreakDays(history)
   const todayCount = getTodayCount(history)
   const dailyGoal = loadSettings().dailyGoal
@@ -221,6 +216,18 @@ export function TopScreen({
   // あるユーザーにのみ表示する
   const programProgress = getRollingProgramProgress(history)
   const showProgramCard = history.length > 0
+  const challengeCompleted = hasCompletedTodayChallenge()
+
+  // ⑥: 今日のミッション・デイリーチャレンジ・7日間チャレンジは常時全文表示
+  // すると縦に3枚積み上がり場所を取るため、コンパクトな横並びチップにまとめ、
+  // タップした項目だけその場で詳細を展開する
+  const [expandedCard, setExpandedCard] = useState<
+    'mission' | 'challenge' | 'program' | null
+  >(null)
+  function toggleExpandedCard(card: 'mission' | 'challenge' | 'program') {
+    if (loadSettings().soundEnabled) playButtonTap()
+    setExpandedCard((current) => (current === card ? null : card))
+  }
 
   return (
     <div className="mx-auto flex w-full max-w-md flex-col gap-6 px-4 py-6 sm:gap-8 sm:px-6 sm:py-10">
@@ -257,36 +264,38 @@ export function TopScreen({
           </div>
         )}
 
-        <div className="mt-4">
-          <div className="flex items-baseline justify-between">
-            <p className="text-xs font-semibold text-indigo-500 dark:text-indigo-300">
+        {/* ③: プレイヤーLv・今日の目標を縦積みの2ブロックから横並び2カラムの
+            1行にまとめ、高さを圧縮する。詳細（あと何XP等）はtitle属性に retain */}
+        <div className="mt-4 flex gap-3">
+          <div
+            className="min-w-0 flex-1"
+            title={t.top.xpToNextLevel(xpProgress.xpToNextLevel)}
+          >
+            <p className="truncate text-xs font-semibold text-indigo-500 dark:text-indigo-300">
               {t.top.playerLevel(xpProgress.level)}
             </p>
-            <p className="text-[11px] text-gray-500 dark:text-gray-400">
-              {t.top.xpToNextLevel(xpProgress.xpToNextLevel)}
-            </p>
-          </div>
-          <div className="mt-1 h-2 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
-            <div
-              className="h-full rounded-full bg-gradient-to-r from-indigo-500 to-fuchsia-500 transition-all"
-              style={{ width: `${xpBarPercent}%` }}
-            />
-          </div>
-        </div>
-
-        {dailyGoal > 0 && (
-          <div className="mt-4">
-            <p className="text-[11px] text-gray-500 dark:text-gray-400">
-              {t.top.dailyGoal(todayCount, dailyGoal)}
-            </p>
-            <div className="mt-1 h-2 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
+            <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
               <div
-                className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-sky-500 transition-all"
-                style={{ width: `${goalProgress}%` }}
+                className="h-full rounded-full bg-gradient-to-r from-indigo-500 to-fuchsia-500 transition-all"
+                style={{ width: `${xpBarPercent}%` }}
               />
             </div>
           </div>
-        )}
+
+          {dailyGoal > 0 && (
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+                {t.top.dailyGoal(todayCount, dailyGoal)}
+              </p>
+              <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
+                <div
+                  className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-sky-500 transition-all"
+                  style={{ width: `${goalProgress}%` }}
+                />
+              </div>
+            </div>
+          )}
+        </div>
         {streakAtRisk && (
           <p
             role="status"
@@ -332,38 +341,106 @@ export function TopScreen({
             <span className="text-[11px] leading-tight font-bold sm:text-xs">
               {card.title}
             </span>
-            <span className="line-clamp-2 text-[9px] leading-snug opacity-90 sm:text-[10px]">
+            <span className="line-clamp-1 w-full text-[9px] leading-snug opacity-90 sm:text-[10px]">
               {card.description}
             </span>
           </button>
         ))}
       </div>
 
-      <DailyChallengeCard />
+      <div className="grid grid-cols-3 gap-2">
+        <button
+          type="button"
+          onClick={() => toggleExpandedCard('mission')}
+          aria-expanded={expandedCard === 'mission'}
+          aria-label={t.missions.cardTitle}
+          className={`touch-manipulation flex flex-col items-center gap-0.5 rounded-xl border px-2 py-2 text-center transition ${
+            expandedCard === 'mission'
+              ? 'border-indigo-400 bg-indigo-50 dark:border-indigo-500 dark:bg-indigo-900/30'
+              : missionCompleted
+                ? 'border-emerald-300 bg-emerald-50 dark:border-emerald-700 dark:bg-emerald-900/20'
+                : 'border-gray-200 bg-white hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700/60'
+          }`}
+        >
+          <span aria-hidden="true" className="text-base">
+            {missionCompleted ? '✅' : '🎯'}
+          </span>
+          <span className="line-clamp-1 text-[10px] font-semibold text-gray-700 dark:text-gray-200">
+            {t.missions.chipLabel}
+          </span>
+        </button>
 
-      <button
-        type="button"
-        disabled={!missionClickable}
-        onClick={handleMissionClick}
-        className={`animate-pop touch-manipulation rounded-xl border px-4 py-3 text-left transition disabled:cursor-default ${
-          missionCompleted
-            ? 'border-emerald-300 bg-emerald-50 dark:border-emerald-700 dark:bg-emerald-900/20'
-            : 'border-gray-200 bg-white hover:enabled:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:hover:enabled:bg-gray-700/60'
-        }`}
-      >
-        <p className="text-xs font-semibold text-gray-500 dark:text-gray-400">
-          {t.missions.cardTitle}
-        </p>
-        <p className="mt-1 text-sm text-gray-700 dark:text-gray-200">{missionLabel}</p>
-        <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-          {missionCompleted
-            ? t.missions.completedBadge
-            : t.missions.xpReward(XP_PER_MISSION)}
-        </p>
-      </button>
+        <button
+          type="button"
+          onClick={() => toggleExpandedCard('challenge')}
+          aria-expanded={expandedCard === 'challenge'}
+          aria-label={t.dailyChallenge.title}
+          className={`touch-manipulation flex flex-col items-center gap-0.5 rounded-xl border px-2 py-2 text-center transition ${
+            expandedCard === 'challenge'
+              ? 'border-amber-400 bg-amber-50 dark:border-amber-500 dark:bg-amber-900/30'
+              : challengeCompleted
+                ? 'border-emerald-300 bg-emerald-50 dark:border-emerald-700 dark:bg-emerald-900/20'
+                : 'border-gray-200 bg-white hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700/60'
+          }`}
+        >
+          <span aria-hidden="true" className="text-base">
+            {challengeCompleted ? '✅' : '📅'}
+          </span>
+          <span className="line-clamp-1 text-[10px] font-semibold text-gray-700 dark:text-gray-200">
+            {t.dailyChallenge.chipLabel}
+          </span>
+        </button>
 
-      {showProgramCard && (
-        <div className="rounded-xl border border-gray-200 bg-white px-4 py-3 dark:border-gray-700 dark:bg-gray-800">
+        <button
+          type="button"
+          onClick={() => toggleExpandedCard('program')}
+          aria-expanded={expandedCard === 'program'}
+          aria-label={t.program.title}
+          disabled={!showProgramCard}
+          className={`touch-manipulation flex flex-col items-center gap-0.5 rounded-xl border px-2 py-2 text-center transition disabled:cursor-not-allowed disabled:opacity-40 ${
+            expandedCard === 'program'
+              ? 'border-fuchsia-400 bg-fuchsia-50 dark:border-fuchsia-500 dark:bg-fuchsia-900/30'
+              : 'border-gray-200 bg-white hover:enabled:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:hover:enabled:bg-gray-700/60'
+          }`}
+        >
+          <span aria-hidden="true" className="text-base">
+            🗓️
+          </span>
+          <span className="line-clamp-1 text-[10px] font-semibold text-gray-700 dark:text-gray-200">
+            {showProgramCard
+              ? t.program.chipProgress(programProgress.daysPlayed, programProgress.totalDays)
+              : t.program.chipLabel}
+          </span>
+        </button>
+      </div>
+
+      {expandedCard === 'mission' && (
+        <button
+          type="button"
+          disabled={!missionClickable}
+          onClick={handleMissionClick}
+          className={`animate-pop touch-manipulation rounded-xl border px-4 py-3 text-left transition disabled:cursor-default ${
+            missionCompleted
+              ? 'border-emerald-300 bg-emerald-50 dark:border-emerald-700 dark:bg-emerald-900/20'
+              : 'border-gray-200 bg-white hover:enabled:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:hover:enabled:bg-gray-700/60'
+          }`}
+        >
+          <p className="text-xs font-semibold text-gray-500 dark:text-gray-400">
+            {t.missions.cardTitle}
+          </p>
+          <p className="mt-1 text-sm text-gray-700 dark:text-gray-200">{missionLabel}</p>
+          <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+            {missionCompleted
+              ? t.missions.completedBadge
+              : t.missions.xpReward(XP_PER_MISSION)}
+          </p>
+        </button>
+      )}
+
+      {expandedCard === 'challenge' && <DailyChallengeCard />}
+
+      {expandedCard === 'program' && showProgramCard && (
+        <div className="animate-pop rounded-xl border border-gray-200 bg-white px-4 py-3 dark:border-gray-700 dark:bg-gray-800">
           <p className="text-xs font-semibold text-gray-500 dark:text-gray-400">
             {t.program.title}
           </p>
@@ -384,27 +461,6 @@ export function TopScreen({
             </p>
           )}
         </div>
-      )}
-
-      {recommended && (
-        <button
-          type="button"
-          onClick={() => {
-            if (loadSettings().soundEnabled) playButtonTap()
-            onStartRecommended(recommended)
-          }}
-          className="touch-manipulation rounded-xl border border-dashed border-indigo-300 bg-indigo-50/60 px-4 py-3 text-left transition hover:bg-indigo-50 dark:border-indigo-700 dark:bg-indigo-900/20 dark:hover:bg-indigo-900/30"
-        >
-          <p className="text-xs font-semibold text-indigo-500 dark:text-indigo-300">
-            {t.top.recommendedTitle}
-          </p>
-          <p className="mt-1 text-sm text-gray-700 dark:text-gray-200">
-            {t.top.recommendedSummary(
-              areaLabel(recommended),
-              recommended.stats.accuracy ?? 0,
-            )}
-          </p>
-        </button>
       )}
 
       {recap && (

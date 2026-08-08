@@ -111,6 +111,22 @@ function roundAreaLabel(t: Translations, round: RandomRound): string {
   return t.common.areaLabels[key as keyof typeof t.common.areaLabels]
 }
 
+// 回答フェーズの指示文。単体モード画面（DigitGameScreen等）と同じ文言を
+// ラウンド種別ごとに出し分ける（従来ランダムモードでは指示文が一切表示
+// されておらず、単体モード画面と挙動が異なっていたため揃える）
+function roundAnswerPrompt(t: Translations, round: RandomRound): string {
+  switch (round.mode) {
+    case 'digit':
+      return t.digit.answerPrompt[round.gameType]
+    case 'spatial':
+      return t.spatial.answerPrompt
+    case 'pattern':
+      return t.pattern.selectPrompt
+    case 'tone':
+      return t.tone.answerPrompt
+  }
+}
+
 export function RandomGameScreen({
   level,
   onExit,
@@ -360,9 +376,9 @@ export function RandomGameScreen({
           </p>
         )}
 
-        {phase !== 'ready' && phase !== 'result' && currentRound.mode === 'digit' && (
+        {(phase === 'ready' || phase === 'showing') && currentRound.mode === 'digit' && (
           <p aria-hidden="true" className="text-7xl font-bold tabular-nums text-indigo-500">
-            {phase === 'showing' && !isGap ? currentRound.question.digits[stepIndex] : ' '}
+            {phase === 'ready' || isGap ? ' ' : currentRound.question.digits[stepIndex]}
           </p>
         )}
 
@@ -473,7 +489,11 @@ export function RandomGameScreen({
 
         {phase === 'answering' && !paused && (
           <>
-            <div className="flex w-full items-center justify-end">
+            <div className="flex w-full items-center justify-between">
+              <span className="w-14" aria-hidden="true" />
+              <p className="text-lg font-medium text-gray-800 dark:text-gray-100">
+                {roundAnswerPrompt(t, currentRound)}
+              </p>
               <button
                 type="button"
                 onClick={pause}

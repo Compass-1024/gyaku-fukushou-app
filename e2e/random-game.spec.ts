@@ -28,3 +28,44 @@ test('ランダムモード: 5ラウンド完了までの一連の流れ', async
     page.getByRole('button', { name: '同じレベルでもう一度' }),
   ).toBeVisible()
 })
+
+test('ランダムモード: すうじラウンドで「よく覚えてください」の表示位置が数字の切り替わり中も動かない', async ({
+  page,
+}) => {
+  test.setTimeout(60_000)
+  await page.goto('/')
+  await page.getByRole('button', { name: /ランダムモード/ }).click()
+  await page.getByRole('button', { name: /レベル1/ }).click()
+
+  for (let round = 1; round <= 5; round++) {
+    await expect(page.getByText(`問題 ${round} / 5`)).toBeVisible({
+      timeout: 15_000,
+    })
+
+    if (await page.getByText(/^すうじ（/).isVisible()) {
+      const prompt = page.getByText('よく覚えてください')
+      await expect(prompt).toBeVisible()
+      const before = await prompt.boundingBox()
+      // 1桁あたり表示700ms+間隔250msの切り替わりを2回分またぐまで待つ
+      await page.waitForTimeout(1_900)
+      const after = await prompt.boundingBox()
+      expect(before).not.toBeNull()
+      expect(after).not.toBeNull()
+      expect(after!.y).toBe(before!.y)
+
+      // 回答フェーズの指示文（単体のすうじモード画面と同じ文言）も表示される
+      await expect(
+        page.getByText(/逆から入力してください|全部たすといくつ？/),
+      ).toBeVisible({ timeout: 15_000 })
+      return
+    }
+
+    await expect(page.getByText(/^(正解|不正解)$/)).toBeVisible({
+      timeout: 20_000,
+    })
+    const nextButton = page.getByRole('button', {
+      name: round === 5 ? '結果を見る' : '次へ',
+    })
+    await nextButton.click()
+  }
+})

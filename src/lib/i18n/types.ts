@@ -109,6 +109,8 @@ export interface Translations {
     xpReward: (xp: number) => string
     playCountLabel: (areaLabel: string, count: number) => string
     accuracyLabel: (percent: number) => string
+    // ホーム画面のコンパクトチップ表示用の短いラベル
+    chipLabel: string
   }
   settings: {
     heading: string
@@ -201,12 +203,15 @@ export interface Translations {
     rememberPrompt: string
     inputPrompt: string
     completedBadge: (correct: boolean) => string
+    chipLabel: string
   }
   // ④-4: 複数日にまたがる「7日間チャレンジ」プログラム
   program: {
     title: string
     progressLabel: (daysPlayed: number, totalDays: number) => string
     completeMessage: string
+    chipLabel: string
+    chipProgress: (daysPlayed: number, totalDays: number) => string
   }
   // ④-10(代替): 初回オンボーディングガイド
   onboarding: {
