@@ -238,6 +238,14 @@ export const ja: Translations = {
     modeTrendTitle: 'モード別の正答率推移',
     modeTrendNotEnoughData: '挑戦回数が増えると表示されます',
   },
+  dailyChallenge: {
+    title: '🎯 本日のお題',
+    description: '今日だけの数字4桁。逆から入力できるか挑戦しよう（1日1回）',
+    startButton: '挑戦する',
+    rememberPrompt: 'よく覚えてください',
+    inputPrompt: '逆から入力してください',
+    completedBadge: (correct) => (correct ? '✅ 今日は正解済み' : '📝 今日は挑戦済み'),
+  },
   program: {
     title: '🗓️ 7日間チャレンジ',
     progressLabel: (daysPlayed, totalDays) =>

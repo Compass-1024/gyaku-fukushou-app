@@ -247,6 +247,14 @@ export const en: Translations = {
     modeTrendTitle: 'Accuracy trend by mode',
     modeTrendNotEnoughData: 'Shown once you have more attempts',
   },
+  dailyChallenge: {
+    title: "🎯 Today's Challenge",
+    description: "One 4-digit number, unique to today. Can you reverse it? (once per day)",
+    startButton: 'Start',
+    rememberPrompt: 'Try to remember it',
+    inputPrompt: 'Enter it in reverse',
+    completedBadge: (correct) => (correct ? '✅ Solved today' : '📝 Attempted today'),
+  },
   program: {
     title: '🗓️ 7-Day Challenge',
     progressLabel: (daysPlayed, totalDays) =>

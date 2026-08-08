@@ -16,6 +16,7 @@ import {
 } from '../lib/missions'
 import { computeTotalXp, getXpProgress, XP_PER_MISSION } from '../lib/xp'
 import { getRollingProgramProgress } from '../lib/program'
+import { DailyChallengeCard } from './DailyChallengeCard'
 import { getAllBenchmarks } from '../lib/benchmarks'
 import type { Benchmark } from '../lib/benchmarks'
 import { useLanguage, useTranslation } from '../contexts/LanguageContext'
@@ -337,6 +338,8 @@ export function TopScreen({
           </button>
         ))}
       </div>
+
+      <DailyChallengeCard />
 
       <button
         type="button"

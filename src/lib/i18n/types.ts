@@ -189,6 +189,15 @@ export interface Translations {
     modeTrendTitle: string
     modeTrendNotEnoughData: string
   }
+  // ④-9: 日付シードの「デイリーチャレンジ」
+  dailyChallenge: {
+    title: string
+    description: string
+    startButton: string
+    rememberPrompt: string
+    inputPrompt: string
+    completedBadge: (correct: boolean) => string
+  }
   // ④-4: 複数日にまたがる「7日間チャレンジ」プログラム
   program: {
     title: string
