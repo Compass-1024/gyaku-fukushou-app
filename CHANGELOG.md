@@ -4,8 +4,37 @@
 
 ## [Unreleased]
 
+### Security
+
+- 通知API（`api/push/subscribe.ts`・`sync.ts`・`unsubscribe.ts`）に匿名POSTの大量リクエストによるコストDoSを防ぐレート制限を追加（`api/_lib/rateLimit.ts`、Redis固定ウィンドウ方式）。あわせて`sync.ts`の`lastPracticedDateKey`に日付形式バリデーションを追加
+
+### Added
+
+- Nバックモードにアダプティブ難易度モードを追加。直近3試行の正誤に応じてN値をリアルタイムで自動昇降させる階段法（`src/lib/nback.ts`）
+- ランダムモードに「弱点重視」オプションを追加。各ラウンドのレベルをモードごとの弱点レベルへ自動で合わせる（`src/lib/random.ts`）
+- 出題重み付け統計を活用した「誤答パターンの質的フィードバック」を統計画面のモード別正答率に追加（`src/lib/questionWeighting.ts`の`getWeakestBucket`）
+- 複数日にまたがる「7日間チャレンジ」進捗カードをホーム画面に追加（`src/lib/program.ts`、ローリングウィンドウ方式）
+- PWAインストール促進バナーを結果画面に追加（`src/lib/installPrompt.ts`、`beforeinstallprompt`のシングルトン購読）
+- 統計画面に「モード別正答率の時系列グラフ」を追加（`StatsModeTrendSection`）
+- 結果画面のシェア文言で自己ベスト更新を強調表示するようにした
+- デイリーチャレンジ（日付シードの共通お題、`src/lib/dailyChallenge.ts`）をホーム画面に追加
+- 初回起動時のオンボーディングガイド（3ステップの軽量モーダル）を追加（`src/lib/onboarding.ts`）
+- 回答フェーズ限定のセッション一時停止機能を、すうじ・空間・変化検出・音/色・ランダムの5モードに追加（`usePauseState`/`PauseOverlay`、`useCountdown`の`paused`引数）
+
+### Fixed
+
+- localStorage読み込み時のスキーマ検証を追加し、不正な形のデータが混入しても統計・XP計算が壊れないようにした（`src/lib/history.ts`の`isValidHistoryEntry`、`questionWeighting.ts`・`missions.ts`にも展開）
+- Cronリマインダーの購読者処理を`KEYS`全件スキャン+逐次awaitから`SCAN`カーソル走査+並列処理に変更
+- PWAマニフェストのホーム画面ショートカットにデュアルNバック・変化検出・音/色の3モードを追加
+- 全問不正解セットでも「今回の獲得XPはなし」を明示するフィードバックを結果画面に追加
+- ヘッダーのタップ領域を44px→48pxに拡大（WCAG推奨値に合わせる）
+- ホーム画面のモード選択グリッドをゲーミフィケーション要素より上に配置し、初回ユーザーがファーストビューでモードを選べるようレイアウトを変更
+- `src/lib/reminder.ts`と`api/_lib/reminder.ts`（意図的な複製ファイル）の実行ロジック差分をCIで検知する仕組みを追加（`scripts/check-reminder-sync.mjs`）
+
 ### Changed
 
+- 611行に肥大化していたStatsScreen.tsxを、SettingsScreenと同様のSection分割パターンで7ファイルに分割
+- リリース時のバージョン同期手順を`npm version`コマンド運用に変更（手動編集によるズレを防止）
 - 「Dual N-Back」モードの表記を日本語UIで「デュアルNバック」に統一（他モードが全て日本語表記である一方、このモードのみ英語表記が残っていたため。英語UIは"Dual N-Back"のまま、内部の`Mode`値`'dual-nback'`は変更なし）
 - デュアルNバックモードにも、Nバックモードと同様レベル選択画面で出題数を10/20/30問から選べるようにした（`src/lib/dualNback.ts`の固定値`DUAL_NBACK_SEQUENCE_LENGTH`を廃止）
 
