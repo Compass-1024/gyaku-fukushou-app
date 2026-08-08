@@ -20,6 +20,24 @@ describe('buildResultShareText', () => {
     expect(buildResultShareText({ correctCount: 1, total: 1, streakDays: 2, achievementLabels: [] })).toContain('2日連続')
   })
 
+  it('includes the personal-best line only when isNewBest is true', () => {
+    const withoutBest = buildResultShareText({
+      correctCount: 1,
+      total: 1,
+      streakDays: 0,
+      achievementLabels: [],
+    })
+    expect(withoutBest).not.toContain('自己ベスト')
+    const withBest = buildResultShareText({
+      correctCount: 1,
+      total: 1,
+      streakDays: 0,
+      achievementLabels: [],
+      isNewBest: true,
+    })
+    expect(withBest).toContain('自己ベストを更新しました')
+  })
+
   it('includes newly unlocked achievement labels', () => {
     const text = buildResultShareText({
       correctCount: 3,

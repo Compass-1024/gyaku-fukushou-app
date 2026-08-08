@@ -115,6 +115,7 @@ export const en: Translations = {
     streakLine: (days) => `🔥 On a ${days}-day streak`,
     achievementsLine: (labels) =>
       `🎉 New achievement${labels.length === 1 ? '' : 's'}: ${labels.join(', ')}`,
+    newBestLine: '🏅 New personal best!',
   },
   setSummary: {
     resultLabel: 'Result',

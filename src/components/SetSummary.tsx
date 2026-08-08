@@ -72,6 +72,7 @@ export function SetSummary({
       achievementLabels: (newAchievements ?? []).map(
         (a) => `${a.icon} ${t.achievements[a.id].label}`,
       ),
+      isNewBest,
     }, t.share)
     const outcome = await shareText(text)
     if (outcome === 'shared') setShareStatus('shared')
