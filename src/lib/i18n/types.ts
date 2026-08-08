@@ -189,6 +189,12 @@ export interface Translations {
     modeTrendTitle: string
     modeTrendNotEnoughData: string
   }
+  // ④-4: 複数日にまたがる「7日間チャレンジ」プログラム
+  program: {
+    title: string
+    progressLabel: (daysPlayed: number, totalDays: number) => string
+    completeMessage: string
+  }
   // ④-10(代替): 初回オンボーディングガイド
   onboarding: {
     steps: { title: string; body: string }[]

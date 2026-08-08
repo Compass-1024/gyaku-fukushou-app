@@ -238,6 +238,12 @@ export const ja: Translations = {
     modeTrendTitle: 'モード別の正答率推移',
     modeTrendNotEnoughData: '挑戦回数が増えると表示されます',
   },
+  program: {
+    title: '🗓️ 7日間チャレンジ',
+    progressLabel: (daysPlayed, totalDays) =>
+      `直近7日間で ${daysPlayed} / ${totalDays} 日プレイ`,
+    completeMessage: '🎉 7日間すべてでプレイ達成！この調子で続けよう',
+  },
   onboarding: {
     steps: [
       {

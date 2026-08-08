@@ -15,6 +15,7 @@ import {
   loadMissionCompletions,
 } from '../lib/missions'
 import { computeTotalXp, getXpProgress, XP_PER_MISSION } from '../lib/xp'
+import { getRollingProgramProgress } from '../lib/program'
 import { getAllBenchmarks } from '../lib/benchmarks'
 import type { Benchmark } from '../lib/benchmarks'
 import { useLanguage, useTranslation } from '../contexts/LanguageContext'
@@ -214,6 +215,12 @@ export function TopScreen({
     setRecap(null)
   }
 
+  // ④-4: 「今日のミッション」（単日完結）を補う、複数日にまたがる目標。
+  // データが無い新規ユーザーにいきなり「0/7」を見せないよう、履歴が
+  // あるユーザーにのみ表示する
+  const programProgress = getRollingProgramProgress(history)
+  const showProgramCard = history.length > 0
+
   return (
     <div className="mx-auto flex w-full max-w-md flex-col gap-6 px-4 py-6 sm:gap-8 sm:px-6 sm:py-10">
       <div className="flex justify-end gap-2">
@@ -351,6 +358,30 @@ export function TopScreen({
             : t.missions.xpReward(XP_PER_MISSION)}
         </p>
       </button>
+
+      {showProgramCard && (
+        <div className="rounded-xl border border-gray-200 bg-white px-4 py-3 dark:border-gray-700 dark:bg-gray-800">
+          <p className="text-xs font-semibold text-gray-500 dark:text-gray-400">
+            {t.program.title}
+          </p>
+          <p className="mt-1 text-sm text-gray-700 dark:text-gray-200">
+            {t.program.progressLabel(programProgress.daysPlayed, programProgress.totalDays)}
+          </p>
+          <div className="mt-1.5 h-2 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
+            <div
+              className="h-full rounded-full bg-gradient-to-r from-fuchsia-500 to-amber-500 transition-all"
+              style={{
+                width: `${Math.round((programProgress.daysPlayed / programProgress.totalDays) * 100)}%`,
+              }}
+            />
+          </div>
+          {programProgress.isComplete && (
+            <p className="mt-1.5 text-xs font-semibold text-fuchsia-600 dark:text-fuchsia-400">
+              {t.program.completeMessage}
+            </p>
+          )}
+        </div>
+      )}
 
       {recommended && (
         <button

@@ -247,6 +247,12 @@ export const en: Translations = {
     modeTrendTitle: 'Accuracy trend by mode',
     modeTrendNotEnoughData: 'Shown once you have more attempts',
   },
+  program: {
+    title: '🗓️ 7-Day Challenge',
+    progressLabel: (daysPlayed, totalDays) =>
+      `Played ${daysPlayed} / ${totalDays} days in the last week`,
+    completeMessage: "🎉 You've played every day this week! Keep it up",
+  },
   onboarding: {
     steps: [
       {
