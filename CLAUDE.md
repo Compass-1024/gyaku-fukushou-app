@@ -414,6 +414,7 @@ Web Audio APIによる完全プログラム生成のシンセサイザー方式�
 | `gyaku-fukushou:phraseStats` | ことばモードのフレーズ単位の正誤履歴（[ことばモード](#ことばモードsrclibreversets-srclibkanats-srclibphrasests-srclibphrasestatsts)参照。読み書きは`src/lib/phraseStats.ts`が単独で担う） | `Record<phraseId, { correct: number; total: number }>`のJSONオブジェクト |
 | `gyaku-fukushou:missionCompletions` | 今日のミッションの達成ログ（[今日のミッション](#今日のミッションsrclibmissionsts)参照。読み書きは`src/lib/missions.ts`が単独で担う。プレイヤーXP計算にも使う） | `{ dateKey: string; missionId: string }[]`のJSON配列（最大200件） |
 | `gyaku-fukushou:questionStats:<mode>` | すうじ/空間/変化検出/音・色モードの系列パターン単位の正誤統計（[出題重み付け](#出題重み付けすうじ空間変化検出音色srclibquestionweightingts)参照。`<mode>`は`digit`/`spatial`/`pattern`/`tone`。読み書きは`src/lib/questionWeighting.ts`が単独で担う） | `Record<"<level>:<bucket>", { correct: number; total: number }>`のJSONオブジェクト |
+| `gyaku-fukushou:dailyChallengeCompletions` | デイリーチャレンジの完了ログ（読み書きは`src/lib/dailyChallenge.ts`が単独で担う。バックアップ対象、`BACKUP_VERSION: 3`） | `{ dateKey: string; correct: boolean }[]`のJSON配列（最大60件） |
 
 プレイヤーのレベル・経験値は上記のどのキーにも直接保存しない。`src/lib/xp.ts`の`computeTotalXp(history, missionCompletions.length)`で履歴＋ミッション達成ログから都度計算する（実績と同じ「派生できるものは保存しない」哲学）。
 
@@ -455,7 +456,7 @@ interface AppSettings {
 
 `notificationsEnabled`はローカル設定であり、実際のプッシュ購読状態はサーバー側（Redisストレージ）が真実の情報源。両者がズレた場合（例: 別端末で解除した等）、次回`syncPushState()`やトグル操作時に自然に収束する設計だが、厳密な整合性は保証していない。
 
-`src/lib/backup.ts`のエクスポート/インポート対象は`history`・`settings`・`missionCompletions`（`BACKUP_VERSION: 2`）。`missionCompletions`が無いv1形式のバックアップも読み込め、その場合は空配列として扱う（後方互換）。`recap.ts`の表示済み週キー・`phraseStats.ts`のフレーズ統計はバックアップ対象外（キャッシュ的な性質のため）。
+`src/lib/backup.ts`のエクスポート/インポート対象は`history`・`settings`・`missionCompletions`・`dailyChallengeCompletions`（`BACKUP_VERSION: 3`）。`missionCompletions`が無いv1形式・`dailyChallengeCompletions`が無いv2以前形式のバックアップも読み込め、その場合は空配列として扱う（後方互換）。`recap.ts`の表示済み週キー・`phraseStats.ts`のフレーズ統計はバックアップ対象外（キャッシュ的な性質のため）。
 
 ## Non-functional requirements
 

@@ -22,7 +22,7 @@ const SAMPLE_HISTORY: HistoryEntry[] = [
 
 describe('createBackup / serializeBackup / parseBackupJson roundtrip', () => {
   it('parses back exactly what was exported', () => {
-    const backup = createBackup(SAMPLE_HISTORY, DEFAULT_SETTINGS, [])
+    const backup = createBackup(SAMPLE_HISTORY, DEFAULT_SETTINGS, [], [])
     const json = serializeBackup(backup)
     const result = parseBackupJson(json)
     expect(result.ok).toBe(true)
@@ -41,7 +41,7 @@ describe('createBackup / serializeBackup / parseBackupJson roundtrip（新3モ�
       { mode: 'tone', level: 3, correct: 1, total: 3, timestamp: '2026-08-01T02:00:00.000Z' },
     ]
     const result = parseBackupJson(
-      serializeBackup(createBackup(history, DEFAULT_SETTINGS, [])),
+      serializeBackup(createBackup(history, DEFAULT_SETTINGS, [], [])),
     )
     expect(result.ok).toBe(true)
     if (result.ok) expect(result.data.history).toEqual(history)
@@ -55,7 +55,7 @@ describe('createBackup / serializeBackup / parseBackupJson roundtrip（DualN-Bac
       { mode: 'random', level: 3, correct: 4, total: 5, timestamp: '2026-08-01T02:00:00.000Z' },
     ]
     const result = parseBackupJson(
-      serializeBackup(createBackup(history, DEFAULT_SETTINGS, [])),
+      serializeBackup(createBackup(history, DEFAULT_SETTINGS, [], [])),
     )
     expect(result.ok).toBe(true)
     if (result.ok) expect(result.data.history).toEqual(history)
@@ -66,7 +66,7 @@ describe('missionCompletions往復', () => {
   it('missionCompletionsを含めて往復できる', () => {
     const completions = [{ dateKey: '2026-08-01', missionId: 'digit-2' }]
     const result = parseBackupJson(
-      serializeBackup(createBackup([], DEFAULT_SETTINGS, completions)),
+      serializeBackup(createBackup([], DEFAULT_SETTINGS, completions, [])),
     )
     expect(result.ok).toBe(true)
     if (result.ok) expect(result.data.missionCompletions).toEqual(completions)
@@ -77,6 +77,26 @@ describe('missionCompletions往復', () => {
     const result = parseBackupJson(raw)
     expect(result.ok).toBe(true)
     if (result.ok) expect(result.data.missionCompletions).toEqual([])
+  })
+})
+
+describe('dailyChallengeCompletions往復', () => {
+  it('dailyChallengeCompletionsを含めて往復できる', () => {
+    const completions = [{ dateKey: '2026-08-01', correct: true }]
+    const result = parseBackupJson(
+      serializeBackup(createBackup([], DEFAULT_SETTINGS, [], completions)),
+    )
+    expect(result.ok).toBe(true)
+    if (result.ok) {
+      expect(result.data.dailyChallengeCompletions).toEqual(completions)
+    }
+  })
+
+  it('v2以前のバックアップ(dailyChallengeCompletionsフィールド無し)は空配列として扱う', () => {
+    const raw = JSON.stringify({ history: [], settings: DEFAULT_SETTINGS })
+    const result = parseBackupJson(raw)
+    expect(result.ok).toBe(true)
+    if (result.ok) expect(result.data.dailyChallengeCompletions).toEqual([])
   })
 })
 

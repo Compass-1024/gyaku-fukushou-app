@@ -3,6 +3,10 @@ import { loadSettings, saveSettings } from '../lib/settings'
 import { clearHistory, loadHistory, replaceHistory } from '../lib/history'
 import { loadMissionCompletions, replaceMissionCompletions } from '../lib/missions'
 import {
+  loadDailyChallengeCompletions,
+  replaceDailyChallengeCompletions,
+} from '../lib/dailyChallenge'
+import {
   backupFileName,
   createBackup,
   parseBackupJson,
@@ -37,6 +41,7 @@ export function SettingsDataSection({ onImported }: SettingsDataSectionProps) {
       loadHistory(),
       loadSettings(),
       loadMissionCompletions(),
+      loadDailyChallengeCompletions(),
     )
     const blob = new Blob([serializeBackup(backup)], {
       type: 'application/json',
@@ -77,6 +82,7 @@ export function SettingsDataSection({ onImported }: SettingsDataSectionProps) {
 
     replaceHistory(result.data.history)
     replaceMissionCompletions(result.data.missionCompletions)
+    replaceDailyChallengeCompletions(result.data.dailyChallengeCompletions)
     saveSettings(result.data.settings)
     onImported(result.data.settings)
     setHistoryCleared(false)

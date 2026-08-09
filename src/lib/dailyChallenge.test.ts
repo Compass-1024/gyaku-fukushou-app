@@ -5,6 +5,7 @@ import {
   hasCompletedTodayChallenge,
   recordTodayChallengeCompletion,
   loadDailyChallengeCompletions,
+  replaceDailyChallengeCompletions,
   DAILY_CHALLENGE_DIGIT_COUNT,
 } from './dailyChallenge'
 
@@ -86,5 +87,23 @@ describe('daily challenge completion tracking', () => {
   it('is not completed on a different day', () => {
     recordTodayChallengeCompletion(true, new Date(2026, 2, 5, 9, 0, 0))
     expect(hasCompletedTodayChallenge(new Date(2026, 2, 6, 9, 0, 0))).toBe(false)
+  })
+})
+
+describe('replaceDailyChallengeCompletions (③-8: バックアップ復元用)', () => {
+  it('replaces the stored completion log wholesale', () => {
+    recordTodayChallengeCompletion(true, new Date(2026, 2, 5, 9, 0, 0))
+    const restored = [
+      { dateKey: '2026-01-01', correct: true },
+      { dateKey: '2026-01-02', correct: false },
+    ]
+    replaceDailyChallengeCompletions(restored)
+    expect(loadDailyChallengeCompletions()).toEqual(restored)
+  })
+
+  it('filters out invalid entries', () => {
+    // @ts-expect-error 意図的に不正な形の配列を渡す
+    replaceDailyChallengeCompletions([{ dateKey: '2026-01-01' }, { correct: true }])
+    expect(loadDailyChallengeCompletions()).toEqual([])
   })
 })

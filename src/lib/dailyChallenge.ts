@@ -72,6 +72,18 @@ export function hasCompletedTodayChallenge(now: Date = new Date()): boolean {
   return loadDailyChallengeCompletions().some((c) => c.dateKey === todayKey)
 }
 
+// バックアップからのインポートなど、完了ログ全体を丸ごと置き換える用途向け
+export function replaceDailyChallengeCompletions(
+  entries: DailyChallengeCompletion[],
+): void {
+  try {
+    const valid = entries.filter(isValidCompletion)
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(valid.slice(-MAX_ENTRIES)))
+  } catch {
+    /* localStorage unavailable (private mode, quota, etc.) */
+  }
+}
+
 export function recordTodayChallengeCompletion(
   correct: boolean,
   now: Date = new Date(),

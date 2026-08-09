@@ -1,9 +1,10 @@
 import { DEFAULT_SETTINGS } from './settings'
 import { isValidHistoryEntry } from './history'
 import type { MissionCompletion } from './missions'
+import type { DailyChallengeCompletion } from './dailyChallenge'
 import type { AppSettings, HistoryEntry } from '../types'
 
-const BACKUP_VERSION = 2
+const BACKUP_VERSION = 3
 
 export interface BackupData {
   version: number
@@ -12,6 +13,8 @@ export interface BackupData {
   settings: AppSettings
   // v1のバックアップには存在しないため、復元時は空配列として扱う
   missionCompletions: MissionCompletion[]
+  // v2以前のバックアップには存在しないため、復元時は空配列として扱う
+  dailyChallengeCompletions: DailyChallengeCompletion[]
 }
 
 function isValidMissionCompletion(value: unknown): value is MissionCompletion {
@@ -20,10 +23,19 @@ function isValidMissionCompletion(value: unknown): value is MissionCompletion {
   return typeof c.dateKey === 'string' && typeof c.missionId === 'string'
 }
 
+function isValidDailyChallengeCompletion(
+  value: unknown,
+): value is DailyChallengeCompletion {
+  if (typeof value !== 'object' || value === null) return false
+  const c = value as Record<string, unknown>
+  return typeof c.dateKey === 'string' && typeof c.correct === 'boolean'
+}
+
 export function createBackup(
   history: HistoryEntry[],
   settings: AppSettings,
   missionCompletions: MissionCompletion[],
+  dailyChallengeCompletions: DailyChallengeCompletion[],
 ): BackupData {
   return {
     version: BACKUP_VERSION,
@@ -31,6 +43,7 @@ export function createBackup(
     history,
     settings,
     missionCompletions,
+    dailyChallengeCompletions,
   }
 }
 
@@ -90,6 +103,14 @@ export function parseBackupJson(raw: string): ParseBackupResult {
       ? obj.missionCompletions
       : []
 
+  // v2以前のバックアップにはdailyChallengeCompletionsが存在しないため、
+  // 無い/不正な場合は空配列として扱う（バックアップ全体を拒否しない）
+  const dailyChallengeCompletions =
+    Array.isArray(obj.dailyChallengeCompletions) &&
+    obj.dailyChallengeCompletions.every(isValidDailyChallengeCompletion)
+      ? obj.dailyChallengeCompletions
+      : []
+
   return {
     ok: true,
     data: {
@@ -101,6 +122,7 @@ export function parseBackupJson(raw: string): ParseBackupResult {
       history: obj.history,
       settings,
       missionCompletions,
+      dailyChallengeCompletions,
     },
   }
 }
