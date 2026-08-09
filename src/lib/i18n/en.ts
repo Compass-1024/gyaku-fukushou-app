@@ -179,6 +179,7 @@ export const en: Translations = {
       description:
         'Your training history, achievements, and settings are stored only on this device/browser. We recommend backing up regularly in case you switch devices or clear browser data.',
       exportButton: '⬇️ Export backup',
+      csvExportButton: '📊 Export history as CSV',
       importButton: '⬆️ Restore from backup',
       clearHistoryButton: 'Delete all training history',
       clearHistoryConfirm:
@@ -252,7 +253,9 @@ export const en: Translations = {
   },
   dailyChallenge: {
     title: "🎯 Today's Challenge",
-    description: "One 4-digit number, unique to today. Can you reverse it? (once per day)",
+    description: "A number unique to today. Can you reverse it? (once per day)",
+    difficultyLabel: (level) =>
+      ({ 1: 'Level 1 (3 digits)', 2: 'Level 2 (4 digits)', 3: 'Level 3 (5 digits)' })[level],
     startButton: 'Start',
     rememberPrompt: 'Try to remember it',
     inputPrompt: 'Enter it in reverse',

@@ -42,6 +42,16 @@ test('設定画面: BGMと効果音の音量スライダーが独立して切り
   await expect(soundSection.getByText('オン')).toBeVisible()
 })
 
+test('設定画面: 履歴をCSVで書き出せる（④-3）', async ({ page }) => {
+  await page.goto('/')
+  await page.getByRole('button', { name: '設定' }).click()
+
+  const downloadPromise = page.waitForEvent('download')
+  await page.getByRole('button', { name: '📊 履歴をCSVで書き出す' }).click()
+  const download = await downloadPromise
+  expect(download.suggestedFilename()).toMatch(/^gyaku-fukushou-history-\d{8}\.csv$/)
+})
+
 test('設定画面: リマインド通知セクションが表示される', async ({ page }) => {
   await page.goto('/')
   await page.getByRole('button', { name: '設定' }).click()

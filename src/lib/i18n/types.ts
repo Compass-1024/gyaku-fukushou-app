@@ -145,6 +145,7 @@ export interface Translations {
       title: string
       description: string
       exportButton: string
+      csvExportButton: string
       importButton: string
       clearHistoryButton: string
       clearHistoryConfirm: string
@@ -199,6 +200,7 @@ export interface Translations {
   dailyChallenge: {
     title: string
     description: string
+    difficultyLabel: (level: 1 | 2 | 3) => string
     startButton: string
     rememberPrompt: string
     inputPrompt: string

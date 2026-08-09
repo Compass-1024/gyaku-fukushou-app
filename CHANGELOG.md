@@ -33,6 +33,9 @@
 - デイリーチャレンジ（日付シードの共通お題、`src/lib/dailyChallenge.ts`）をホーム画面に追加
 - 初回起動時のオンボーディングガイド（3ステップの軽量モーダル）を追加（`src/lib/onboarding.ts`）
 - 回答フェーズ限定のセッション一時停止機能を、すうじ・空間・変化検出・音/色・ランダムの5モードに追加（`usePauseState`/`PauseOverlay`、`useCountdown`の`paused`引数）
+- デュアルNバックモードにもアダプティブ難易度モードを追加。位置・音の両チャンネルが揃って正解した場合のみN値を上げる基準で、判定ロジック（`computeAdaptiveN`）はNバックモードと共有（`src/lib/dualNback.ts`）
+- 学習履歴をCSV形式で書き出せるようにした（設定画面の「📊 履歴をCSVで書き出す」、`src/lib/csvExport.ts`）。バックアップ（JSON）とは別の読み取り専用エクスポート
+- デイリーチャレンジに、すうじモードと同じ3段階の難易度選択（3桁/4桁/5桁）を追加（`src/lib/dailyChallenge.ts`の`getDailyChallengeDigits`）
 
 ### Fixed
 

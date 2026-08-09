@@ -171,6 +171,7 @@ export const ja: Translations = {
       description:
         '学習履歴・実績・設定はこの端末のブラウザ内にのみ保存されています。機種変更やブラウザデータの削除に備えて、定期的にバックアップすることをおすすめします。',
       exportButton: '⬇️ バックアップを書き出す',
+      csvExportButton: '📊 履歴をCSVで書き出す',
       importButton: '⬆️ バックアップから復元',
       clearHistoryButton: '学習履歴をすべて削除',
       clearHistoryConfirm:
@@ -244,7 +245,9 @@ export const ja: Translations = {
   },
   dailyChallenge: {
     title: '🎯 本日のお題',
-    description: '今日だけの数字4桁。逆から入力できるか挑戦しよう（1日1回）',
+    description: '今日だけの数字。逆から入力できるか挑戦しよう（1日1回）',
+    difficultyLabel: (level) =>
+      ({ 1: 'レベル1（3桁）', 2: 'レベル2（4桁）', 3: 'レベル3（5桁）' })[level],
     startButton: '挑戦する',
     rememberPrompt: 'よく覚えてください',
     inputPrompt: '逆から入力してください',

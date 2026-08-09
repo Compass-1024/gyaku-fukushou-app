@@ -12,6 +12,7 @@ import {
   parseBackupJson,
   serializeBackup,
 } from '../lib/backup'
+import { buildHistoryCsv, historyCsvFileName } from '../lib/csvExport'
 import { useTranslation } from '../contexts/LanguageContext'
 import type { AppSettings } from '../types'
 
@@ -50,6 +51,17 @@ export function SettingsDataSection({ onImported }: SettingsDataSectionProps) {
     const a = document.createElement('a')
     a.href = url
     a.download = backupFileName()
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
+  function handleCsvExport() {
+    const csv = buildHistoryCsv(loadHistory())
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = historyCsvFileName()
     a.click()
     URL.revokeObjectURL(url)
   }
@@ -107,6 +119,13 @@ export function SettingsDataSection({ onImported }: SettingsDataSectionProps) {
           className="touch-manipulation rounded-lg border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 transition hover:bg-gray-50 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-800"
         >
           {t.settings.data.exportButton}
+        </button>
+        <button
+          type="button"
+          onClick={handleCsvExport}
+          className="touch-manipulation rounded-lg border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 transition hover:bg-gray-50 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-800"
+        >
+          {t.settings.data.csvExportButton}
         </button>
         <button
           type="button"
