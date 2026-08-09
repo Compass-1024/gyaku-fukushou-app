@@ -295,6 +295,30 @@ export function getBestSetAccuracy(
   return best
 }
 
+// ④-5: 指定モード・レベルにおける「今日」の1セットあたりの最高正答率（%）。
+// getBestSetAccuracy（全期間）とは別に、同日内での複数回挑戦（周回プレイ）を
+// 動機づけるための短期的な自己記録比較に使う。今日の記録が無ければnull
+export function getTodayBestSetAccuracy(
+  history: HistoryEntry[],
+  mode: Mode,
+  level: Level,
+  gameType?: DigitGameType,
+  now: Date = new Date(),
+): number | null {
+  const todayKey = localDateKey(now)
+  let best: number | null = null
+  for (const e of history) {
+    if (e.mode !== mode || e.level !== level || e.gameType !== gameType) {
+      continue
+    }
+    if (localDateKey(new Date(e.timestamp)) !== todayKey) continue
+    if (e.total <= 0) continue
+    const accuracy = Math.round((e.correct / e.total) * 100)
+    if (best === null || accuracy > best) best = accuracy
+  }
+  return best
+}
+
 export interface DailyAccuracy {
   dateKey: string
   accuracy: number | null

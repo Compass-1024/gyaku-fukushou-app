@@ -68,6 +68,8 @@ export interface Translations {
     shareStatusError: string
     luckyBonus: string
     newBest: string
+    // ④-5: 全期間の自己ベストとは別の、同日内での自己記録更新演出
+    newTodayBest: string
     newAchievementsTitle: string
     questionLabel: (index: number) => string
     dailyGoal: (today: number, goal: number) => string

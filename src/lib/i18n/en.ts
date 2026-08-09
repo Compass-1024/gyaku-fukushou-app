@@ -140,6 +140,7 @@ export const en: Translations = {
       'Sharing is not supported here. Please select and copy the text instead.',
     luckyBonus: "🍀 Lucky day! Looks like today's your lucky day",
     newBest: '🏅 New personal best!',
+    newTodayBest: "📈 Today's best so far!",
     newAchievementsTitle: '🎉 New achievement unlocked!',
     questionLabel: (index) => `Question ${index}: `,
     dailyGoal: (today, goal) => `Today's goal: ${today} / ${goal} sets`,

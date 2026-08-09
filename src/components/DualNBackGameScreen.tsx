@@ -173,7 +173,7 @@ export function DualNBackGameScreen({
     score.position.correctRejections +
     score.sound.hits +
     score.sound.correctRejections
-  const { newAchievements, isNewBest, xpGained, leveledUp, newLevel } = useSetCompletionRecorder({
+  const { newAchievements, isNewBest, isNewTodayBest, xpGained, leveledUp, newLevel } = useSetCompletionRecorder({
     trigger: phase === 'result',
     mode: 'dual-nback',
     level: recordedLevel,
@@ -225,6 +225,7 @@ export function DualNBackGameScreen({
         onChangeLevel={onExit}
         newAchievements={newAchievements}
         isNewBest={isNewBest}
+        isNewTodayBest={isNewTodayBest}
         xpGained={xpGained}
         leveledUp={leveledUp}
         newLevel={newLevel}

@@ -9,6 +9,7 @@ import {
   getAllAreaStats,
   getWeakestAreas,
   getBestSetAccuracy,
+  getTodayBestSetAccuracy,
   getDailyAccuracyTrend,
   getActivityCalendar,
 } from './history'
@@ -351,6 +352,28 @@ describe('getBestSetAccuracy', () => {
     ]
     expect(getBestSetAccuracy(history, 'digit', 1, 'sum')).toBe(0)
     expect(getBestSetAccuracy(history, 'digit', 1, 'reverse')).toBe(100)
+  })
+})
+
+describe('getTodayBestSetAccuracy (④-5: 本日の自己記録比較)', () => {
+  it('returns the highest accuracy among only today\'s matching entries', () => {
+    const now = new Date(2026, 2, 5, 12, 0, 0)
+    const yesterday = new Date(2026, 2, 4, 12, 0, 0)
+    const history: HistoryEntry[] = [
+      { mode: 'word', level: 1, correct: 3, total: 3, timestamp: yesterday.toISOString() },
+      { mode: 'word', level: 1, correct: 1, total: 3, timestamp: now.toISOString() },
+      { mode: 'word', level: 1, correct: 2, total: 3, timestamp: now.toISOString() },
+    ]
+    expect(getTodayBestSetAccuracy(history, 'word', 1, undefined, now)).toBe(67)
+  })
+
+  it('returns null when there is no attempt today', () => {
+    const now = new Date(2026, 2, 5, 12, 0, 0)
+    const yesterday = new Date(2026, 2, 4, 12, 0, 0)
+    const history: HistoryEntry[] = [
+      { mode: 'word', level: 1, correct: 3, total: 3, timestamp: yesterday.toISOString() },
+    ]
+    expect(getTodayBestSetAccuracy(history, 'word', 1, undefined, now)).toBeNull()
   })
 })
 

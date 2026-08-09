@@ -129,7 +129,7 @@ export function PatternGameScreen({
   }
 
   // 3問セットが完了するたびに結果を記録し、新規実績の解除やレベルアップを演出する
-  const { newAchievements, isNewBest, xpGained, leveledUp, newLevel } = useSetCompletionRecorder({
+  const { newAchievements, isNewBest, isNewTodayBest, xpGained, leveledUp, newLevel } = useSetCompletionRecorder({
     trigger: finished,
     mode: 'pattern',
     level,
@@ -173,6 +173,7 @@ export function PatternGameScreen({
         onChangeLevel={onExit}
         newAchievements={newAchievements}
         isNewBest={isNewBest}
+        isNewTodayBest={isNewTodayBest}
         xpGained={xpGained}
         leveledUp={leveledUp}
         newLevel={newLevel}

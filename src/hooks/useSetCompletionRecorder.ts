@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import {
   appendHistoryEntry,
   getBestSetAccuracy,
+  getTodayBestSetAccuracy,
   loadHistory,
 } from '../lib/history'
 import { getSuggestedLevel } from '../lib/difficulty'
@@ -37,6 +38,10 @@ interface UseSetCompletionRecorderOptions {
 interface SetCompletionRecorderResult {
   newAchievements: Achievement[]
   isNewBest: boolean
+  // ④-5: 全期間の自己ベスト(isNewBest)とは別に、同日内での複数回挑戦を
+  // 動機づける短期的な比較。今日すでに挑戦済みかつ今回がその中で最高の
+  // 場合のみtrue（今日の初挑戦では比較対象が無いためfalse）
+  isNewTodayBest: boolean
   xpGained: number
   leveledUp: boolean
   newLevel: number
@@ -55,6 +60,7 @@ export function useSetCompletionRecorder({
 }: UseSetCompletionRecorderOptions): SetCompletionRecorderResult {
   const [newAchievements, setNewAchievements] = useState<Achievement[]>([])
   const [isNewBest, setIsNewBest] = useState(false)
+  const [isNewTodayBest, setIsNewTodayBest] = useState(false)
   const [xpGained, setXpGained] = useState(0)
   const [leveledUp, setLeveledUp] = useState(false)
   const [newLevel, setNewLevel] = useState(1)
@@ -63,6 +69,7 @@ export function useSetCompletionRecorder({
     if (!trigger) return
     const before = loadHistory()
     const previousBest = getBestSetAccuracy(before, mode, level, gameType)
+    const previousTodayBest = getTodayBestSetAccuracy(before, mode, level, gameType)
     const completionsBefore = loadMissionCompletions()
     const language = loadSettings().language
     const xpBefore = computeTotalXp(before, completionsBefore.length)
@@ -92,6 +99,7 @@ export function useSetCompletionRecorder({
 
     const accuracyPercent = total > 0 ? Math.round((correctCount / total) * 100) : 0
     setIsNewBest(previousBest !== null && accuracyPercent > previousBest)
+    setIsNewTodayBest(previousTodayBest !== null && accuracyPercent > previousTodayBest)
 
     if (loadSettings().soundEnabled) {
       if (playAccuracySound) {
@@ -108,5 +116,5 @@ export function useSetCompletionRecorder({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [trigger, mode, level, gameType, correctCount, total, playAccuracySound])
 
-  return { newAchievements, isNewBest, xpGained, leveledUp, newLevel }
+  return { newAchievements, isNewBest, isNewTodayBest, xpGained, leveledUp, newLevel }
 }

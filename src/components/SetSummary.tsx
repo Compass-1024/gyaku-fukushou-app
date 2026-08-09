@@ -32,6 +32,10 @@ interface SetSummaryProps {
   suggestion?: LevelSuggestion
   newAchievements?: Achievement[]
   isNewBest?: boolean
+  // ④-5: 全期間の自己ベスト(isNewBest)とは別に、同日内の周回プレイを
+  // 動機づける短期的な比較演出。isNewBestがtrueの場合はより強い演出が
+  // 出るため、二重表示を避けるためisNewBest未成立時のみ表示する
+  isNewTodayBest?: boolean
   xpGained?: number
   leveledUp?: boolean
   newLevel?: number
@@ -47,6 +51,7 @@ export function SetSummary({
   suggestion,
   newAchievements,
   isNewBest,
+  isNewTodayBest,
   xpGained,
   leveledUp,
   newLevel,
@@ -168,6 +173,14 @@ export function SetSummary({
         <div className="animate-pop rounded-lg border border-sky-300 bg-sky-50 px-4 py-3 text-center dark:border-sky-700 dark:bg-sky-900/30">
           <p className="text-sm font-semibold text-sky-700 dark:text-sky-300">
             {t.setSummary.newBest}
+          </p>
+        </div>
+      )}
+
+      {!isNewBest && isNewTodayBest && (
+        <div className="animate-pop rounded-lg border border-teal-300 bg-teal-50 px-4 py-3 text-center dark:border-teal-700 dark:bg-teal-900/30">
+          <p className="text-sm font-semibold text-teal-700 dark:text-teal-300">
+            {t.setSummary.newTodayBest}
           </p>
         </div>
       )}

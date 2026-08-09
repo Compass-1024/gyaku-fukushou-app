@@ -133,6 +133,7 @@ export const ja: Translations = {
       'シェアに対応していない環境です。テキストを選択してコピーしてください。',
     luckyBonus: '🍀 ラッキーデー！ たまたま今日は運が良いようです',
     newBest: '🏅 自己ベスト更新！',
+    newTodayBest: '📈 本日の自己ベストを更新！',
     newAchievementsTitle: '🎉 新しい実績を獲得しました！',
     questionLabel: (index) => `問題${index}: `,
     dailyGoal: (today, goal) => `今日の目標: ${today} / ${goal} セット`,
