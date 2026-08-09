@@ -354,6 +354,7 @@ export function TopScreen({
           onClick={() => toggleExpandedCard('mission')}
           aria-expanded={expandedCard === 'mission'}
           aria-label={t.missions.cardTitle}
+          aria-controls="engagement-panel-mission"
           className={`touch-manipulation flex flex-col items-center gap-0.5 rounded-xl border px-2 py-2 text-center transition ${
             expandedCard === 'mission'
               ? 'border-indigo-400 bg-indigo-50 dark:border-indigo-500 dark:bg-indigo-900/30'
@@ -375,6 +376,7 @@ export function TopScreen({
           onClick={() => toggleExpandedCard('challenge')}
           aria-expanded={expandedCard === 'challenge'}
           aria-label={t.dailyChallenge.title}
+          aria-controls="engagement-panel-challenge"
           className={`touch-manipulation flex flex-col items-center gap-0.5 rounded-xl border px-2 py-2 text-center transition ${
             expandedCard === 'challenge'
               ? 'border-amber-400 bg-amber-50 dark:border-amber-500 dark:bg-amber-900/30'
@@ -396,6 +398,7 @@ export function TopScreen({
           onClick={() => toggleExpandedCard('program')}
           aria-expanded={expandedCard === 'program'}
           aria-label={t.program.title}
+          aria-controls="engagement-panel-program"
           disabled={!showProgramCard}
           className={`touch-manipulation flex flex-col items-center gap-0.5 rounded-xl border px-2 py-2 text-center transition disabled:cursor-not-allowed disabled:opacity-40 ${
             expandedCard === 'program'
@@ -417,6 +420,7 @@ export function TopScreen({
       {expandedCard === 'mission' && (
         <button
           type="button"
+          id="engagement-panel-mission"
           disabled={!missionClickable}
           onClick={handleMissionClick}
           className={`animate-pop touch-manipulation rounded-xl border px-4 py-3 text-left transition disabled:cursor-default ${
@@ -437,10 +441,17 @@ export function TopScreen({
         </button>
       )}
 
-      {expandedCard === 'challenge' && <DailyChallengeCard />}
+      {expandedCard === 'challenge' && (
+        <div id="engagement-panel-challenge">
+          <DailyChallengeCard />
+        </div>
+      )}
 
       {expandedCard === 'program' && showProgramCard && (
-        <div className="animate-pop rounded-xl border border-gray-200 bg-white px-4 py-3 dark:border-gray-700 dark:bg-gray-800">
+        <div
+          id="engagement-panel-program"
+          className="animate-pop rounded-xl border border-gray-200 bg-white px-4 py-3 dark:border-gray-700 dark:bg-gray-800"
+        >
           <p className="text-xs font-semibold text-gray-500 dark:text-gray-400">
             {t.program.title}
           </p>

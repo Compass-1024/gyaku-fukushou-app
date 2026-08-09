@@ -60,6 +60,24 @@ test('ランダムモード: すうじラウンドで「よく覚えてくださ
       return
     }
 
+    if (round === 1) {
+      // 一時停止機能はどのラウンド種別でも共通のため、1ラウンド目の回答
+      // フェーズが始まった時点で検証する（すうじラウンドだった場合は
+      // 上のブロックで既にreturnしているため、ここに来るのは非すうじラウンド）
+      await page.getByRole('button', { name: '⏸ 一時停止' }).click()
+      await expect(
+        page.getByText('一時停止中です。準備ができたら再開してください'),
+      ).toBeVisible()
+      // レベル1の各ラウンドの回答タイムアウトは最大でも9秒
+      // (空間/音・色: base3000ms+3×2000ms)。10秒待っても一時停止画面の
+      // ままであることを確認する
+      await page.waitForTimeout(10_000)
+      await expect(
+        page.getByText('一時停止中です。準備ができたら再開してください'),
+      ).toBeVisible()
+      await page.getByRole('button', { name: '▶ 再開する' }).click()
+    }
+
     await expect(page.getByText(/^(正解|不正解)$/)).toBeVisible({
       timeout: 20_000,
     })

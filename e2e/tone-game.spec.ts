@@ -18,3 +18,34 @@ test('音・色モード: 出題が始まりパッドをタップして回答で
     '1',
   )
 })
+
+test('音・色モード: 回答フェーズを一時停止すると残り時間が保持される', async ({
+  page,
+}) => {
+  await page.goto('/')
+  await page.getByRole('button', { name: /音・色モード/ }).click()
+  await page.getByRole('button', { name: /レベル1（3音）/ }).click()
+
+  await expect(
+    page.getByText('同じ順番でパッドをタップしてください'),
+  ).toBeVisible({ timeout: 10_000 })
+
+  await page.getByRole('button', { name: '⏸ 一時停止' }).click()
+  await expect(
+    page.getByText('一時停止中です。準備ができたら再開してください'),
+  ).toBeVisible()
+
+  // レベル1の回答タイムアウトは9秒(base3000ms+3音×2000ms)。
+  // 一時停止せずに待てば自動採点されるはずだが、10秒待っても
+  // 一時停止画面のままであることを確認する
+  await page.waitForTimeout(10_000)
+  await expect(
+    page.getByText('一時停止中です。準備ができたら再開してください'),
+  ).toBeVisible()
+
+  await page.getByRole('button', { name: '▶ 再開する' }).click()
+  await page.getByRole('button', { name: '赤のパッド' }).click()
+  await expect(page.getByRole('button', { name: '赤のパッド' })).toContainText(
+    '1',
+  )
+})
