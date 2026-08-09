@@ -16,6 +16,7 @@ import { StatsAreaAccuracySection } from './StatsAreaAccuracySection'
 import { StatsModeTrendSection } from './StatsModeTrendSection'
 import { StatsBenchmarkSection } from './StatsBenchmarkSection'
 import { StatsWeakPhrasesSection } from './StatsWeakPhrasesSection'
+import { StatsSummaryImageSection } from './StatsSummaryImageSection'
 import { useLanguage, useTranslation } from '../contexts/LanguageContext'
 import type { AreaStats } from '../lib/history'
 import type { DigitGameType, HistoryEntry, Mode } from '../types'
@@ -119,6 +120,7 @@ export function StatsScreen({ history, onBack }: StatsScreenProps) {
           <StatsModeTrendSection history={history} days={TREND_DAYS} />
           <StatsBenchmarkSection benchmarks={benchmarks} />
           <StatsWeakPhrasesSection weakPhrases={weakPhrases} />
+          <StatsSummaryImageSection history={history} />
         </>
       )}
     </div>

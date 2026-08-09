@@ -109,3 +109,27 @@ test('統計画面: 十分な記録があると「ワーキングメモリの伸
     page.getByText('医学的な診断や公式な認知機能評価ではなく', { exact: false }),
   ).toBeVisible()
 })
+
+test('統計画面: 週間/月間の学習サマリーを画像で保存できる（④-4）', async ({ page }) => {
+  await page.addInitScript(() => {
+    const history = [
+      { mode: 'digit', gameType: 'reverse', level: 2, correct: 4, total: 5, timestamp: new Date().toISOString() },
+    ]
+    window.localStorage.setItem('gyaku-fukushou:history', JSON.stringify(history))
+  })
+  await page.goto('/')
+  await page.getByRole('button', { name: '統計' }).click()
+
+  await expect(page.getByRole('heading', { name: '📸 学習サマリーを画像で保存' })).toBeVisible()
+
+  const downloadPromise = page.waitForEvent('download')
+  await page.getByRole('button', { name: '画像を保存' }).click()
+  const download = await downloadPromise
+  expect(download.suggestedFilename()).toMatch(/^gyaku-fukushou-summary-week-\d{8}\.png$/)
+
+  await page.getByRole('button', { name: '月間' }).click()
+  const monthDownloadPromise = page.waitForEvent('download')
+  await page.getByRole('button', { name: '画像を保存' }).click()
+  const monthDownload = await monthDownloadPromise
+  expect(monthDownload.suggestedFilename()).toMatch(/^gyaku-fukushou-summary-month-\d{8}\.png$/)
+})

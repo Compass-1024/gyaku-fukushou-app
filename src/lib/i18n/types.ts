@@ -52,6 +52,11 @@ export interface Translations {
       tone: string
       random: string
     }
+    // gameTypeを区別しないモード単位のラベル（④-4のサマリー画像で使用）
+    modeLabels: Record<
+      'word' | 'digit' | 'nback' | 'dual-nback' | 'spatial' | 'pattern' | 'tone' | 'random',
+      string
+    >
   }
   share: ShareTemplates
   setSummary: {
@@ -195,6 +200,21 @@ export interface Translations {
     // ④-6: モード別正答率の時系列グラフ
     modeTrendTitle: string
     modeTrendNotEnoughData: string
+    // ④-4: 週間/月間の学習サマリー画像エクスポート
+    summaryImage: {
+      title: string
+      periodWeek: string
+      periodMonth: string
+      downloadButton: string
+      noDataMessage: string
+      appTitle: string
+      dateRangeLabel: (rangeLabel: string) => string
+      setsLabel: (sets: number) => string
+      accuracyLabel: (accuracyPercent: number) => string
+      accuracyNoDataLabel: string
+      streakLabel: (days: number) => string
+      topModeLabel: (modeLabel: string, sets: number) => string
+    }
   }
   // ④-9: 日付シードの「デイリーチャレンジ」
   dailyChallenge: {
