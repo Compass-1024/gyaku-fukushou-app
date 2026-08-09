@@ -108,7 +108,7 @@ export function StatsScreen({ history, onBack }: StatsScreenProps) {
         </p>
       ) : (
         <>
-          <StatsCalendarSection calendar={activityCalendar} />
+          <StatsCalendarSection calendar={activityCalendar} history={history} />
           <StatsTrendSection trend={trend} days={TREND_DAYS} />
           <StatsAchievementsSection
             history={history}

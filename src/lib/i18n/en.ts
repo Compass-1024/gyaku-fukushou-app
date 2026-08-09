@@ -235,6 +235,11 @@ export const en: Translations = {
       'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
     ],
     dayCellTooltip: (dateKey, count) => `${dateKey}: ${count} set${count === 1 ? '' : 's'}`,
+    dayDetailTitle: (dateKey) => `Records for ${dateKey}`,
+    dayDetailNoRecords: 'No records for this day',
+    dayDetailEntry: (label, level, correct, total, accuracyPercent) =>
+      `${label} Lv.${level} — ${correct}/${total} correct (${accuracyPercent}%)`,
+    dayDetailCloseButton: 'Close',
     trendTitle: (days) => `Accuracy trend (last ${days} days)`,
     trendAriaLabel: (days) => `Accuracy trend over the last ${days} days`,
     trendNoRecord: (dateKey) => `${dateKey}: no record`,

@@ -40,6 +40,7 @@
 - 全期間の自己ベスト（`isNewBest`）とは別に、同日内での複数回挑戦（周回プレイ）を動機づける「本日の自己ベスト」比較演出を結果画面に追加（`src/lib/history.ts`の`getTodayBestSetAccuracy`、全期間の自己ベスト更新時は二重表示を避けそちらを優先）
 - 設定画面に「集中モード」を追加。回答中の背景装飾（カラフルなグラデーション・ぼかし円）を非表示にする没入UIテーマ（`src/hooks/useFocusMode.ts`、`themeMode`/`bgmEnabled`と同じread-modify-writeパターン）
 - 設定画面に「チップの自動展開」を追加。「今日のミッション」「本日のお題」「7日間チャレンジ」のうち選んだ1件を、ホーム画面表示のたびに自動で展開表示できるようにした（`AppSettings.autoExpandChip`）
+- 統計画面の学習カレンダー（GitHub風ヒートマップ）のマスをタップすると、その日に挑戦したモード・レベル・正誤内訳をドリルダウン表示できるようにした（`src/components/StatsCalendarSection.tsx`）
 
 ### Fixed
 

@@ -182,6 +182,17 @@ export interface Translations {
     weekdayLabels: string[]
     monthLabels: string[]
     dayCellTooltip: (dateKey: string, count: number) => string
+    // ④-8: 学習カレンダーの日別ドリルダウン（マスをタップしてその日の内訳を表示）
+    dayDetailTitle: (dateKey: string) => string
+    dayDetailNoRecords: string
+    dayDetailEntry: (
+      label: string,
+      level: number,
+      correct: number,
+      total: number,
+      accuracyPercent: number,
+    ) => string
+    dayDetailCloseButton: string
     trendTitle: (days: number) => string
     trendAriaLabel: (days: number) => string
     trendNoRecord: (dateKey: string) => string

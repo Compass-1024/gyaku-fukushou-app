@@ -135,6 +135,40 @@ test('統計画面: 十分な記録があると「ワーキングメモリの伸
   ).toBeVisible()
 })
 
+test('統計画面: 学習カレンダーのマスをタップするとその日の内訳が表示される（④-8）', async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    const now = new Date()
+    const y = now.getFullYear()
+    const m = String(now.getMonth() + 1).padStart(2, '0')
+    const d = String(now.getDate()).padStart(2, '0')
+    const todayKey = `${y}-${m}-${d}`
+    const history = [
+      {
+        mode: 'digit',
+        gameType: 'reverse',
+        level: 2,
+        correct: 4,
+        total: 5,
+        timestamp: new Date(`${todayKey}T09:00:00`).toISOString(),
+      },
+    ]
+    window.localStorage.setItem('gyaku-fukushou:history', JSON.stringify(history))
+  })
+  await page.goto('/')
+  await page.getByRole('button', { name: '統計' }).click()
+
+  const todayCell = page.getByRole('button', { name: /: 1セット$/ })
+  await expect(todayCell).toBeVisible()
+  await todayCell.click()
+
+  await expect(page.getByText('すうじ（逆から） Lv.2 — 4/5問正解（80%）')).toBeVisible()
+
+  await page.getByRole('button', { name: '閉じる' }).click()
+  await expect(page.getByText('すうじ（逆から） Lv.2 — 4/5問正解（80%）')).toHaveCount(0)
+})
+
 test('統計画面: 週間/月間の学習サマリーを画像で保存できる（④-4）', async ({ page }) => {
   await page.addInitScript(() => {
     const history = [

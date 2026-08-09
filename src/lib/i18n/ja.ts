@@ -227,6 +227,11 @@ export const ja: Translations = {
       '7月', '8月', '9月', '10月', '11月', '12月',
     ],
     dayCellTooltip: (dateKey, count) => `${dateKey}: ${count}セット`,
+    dayDetailTitle: (dateKey) => `${dateKey}の記録`,
+    dayDetailNoRecords: 'この日の記録はありません',
+    dayDetailEntry: (label, level, correct, total, accuracyPercent) =>
+      `${label} Lv.${level} — ${correct}/${total}問正解（${accuracyPercent}%）`,
+    dayDetailCloseButton: '閉じる',
     trendTitle: (days) => `正答率の推移（直近${days}日間）`,
     trendAriaLabel: (days) => `直近${days}日間の正答率の推移`,
     trendNoRecord: (dateKey) => `${dateKey}: 記録なし`,
