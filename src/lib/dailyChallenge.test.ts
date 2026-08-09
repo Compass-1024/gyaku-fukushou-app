@@ -6,7 +6,7 @@ import {
   recordTodayChallengeCompletion,
   loadDailyChallengeCompletions,
   replaceDailyChallengeCompletions,
-  DAILY_CHALLENGE_DIGIT_COUNT,
+  DAILY_CHALLENGE_DIGIT_COUNT_BY_LEVEL,
 } from './dailyChallenge'
 
 function createMemoryStorage(): Storage {
@@ -40,22 +40,29 @@ describe('getDailyChallengeDigits', () => {
   it('returns the same digits for the same day (deterministic)', () => {
     const day = new Date(2026, 2, 5, 9, 0, 0)
     const dayLater = new Date(2026, 2, 5, 21, 0, 0)
-    expect(getDailyChallengeDigits(day)).toEqual(getDailyChallengeDigits(dayLater))
+    expect(getDailyChallengeDigits(2, day)).toEqual(getDailyChallengeDigits(2, dayLater))
   })
 
-  it('returns digits of the configured length, each a single digit', () => {
-    const digits = getDailyChallengeDigits(new Date(2026, 2, 5, 9, 0, 0))
-    expect(digits).toHaveLength(DAILY_CHALLENGE_DIGIT_COUNT)
-    for (const d of digits) {
-      expect(d).toBeGreaterThanOrEqual(0)
-      expect(d).toBeLessThanOrEqual(9)
+  it('returns digits of the configured length for each difficulty, each a single digit', () => {
+    for (const level of [1, 2, 3] as const) {
+      const digits = getDailyChallengeDigits(level, new Date(2026, 2, 5, 9, 0, 0))
+      expect(digits).toHaveLength(DAILY_CHALLENGE_DIGIT_COUNT_BY_LEVEL[level])
+      for (const d of digits) {
+        expect(d).toBeGreaterThanOrEqual(0)
+        expect(d).toBeLessThanOrEqual(9)
+      }
     }
   })
 
   it('differs across different days (in the vast majority of cases)', () => {
-    const a = getDailyChallengeDigits(new Date(2026, 2, 5, 9, 0, 0))
-    const b = getDailyChallengeDigits(new Date(2026, 2, 6, 9, 0, 0))
+    const a = getDailyChallengeDigits(2, new Date(2026, 2, 5, 9, 0, 0))
+    const b = getDailyChallengeDigits(2, new Date(2026, 2, 6, 9, 0, 0))
     expect(a).not.toEqual(b)
+  })
+
+  it('defaults to level 2 when no difficulty is given', () => {
+    const now = new Date(2026, 2, 5, 9, 0, 0)
+    expect(getDailyChallengeDigits(undefined, now)).toEqual(getDailyChallengeDigits(2, now))
   })
 })
 

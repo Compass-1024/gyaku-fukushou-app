@@ -55,3 +55,21 @@ test('トップ画面: ミッション・お題・7日間チャレンジがコ�
   await expect(page.getByText('達成で +100XP')).toHaveCount(0)
   await expect(page.getByRole('button', { name: '挑戦する' })).toBeVisible()
 })
+
+test('トップ画面: 本日のお題は開始前に難易度を選べる（④-9）', async ({ page }) => {
+  await page.goto('/')
+
+  await page.getByRole('button', { name: '🎯 本日のお題' }).click()
+  const lv1 = page.getByRole('button', { name: 'レベル1（3桁）' })
+  const lv3 = page.getByRole('button', { name: 'レベル3（5桁）' })
+  await expect(lv1).toBeVisible()
+  await expect(lv3).toBeVisible()
+
+  await lv3.click()
+  await expect(lv3).toHaveAttribute('aria-pressed', 'true')
+
+  await page.getByRole('button', { name: '挑戦する' }).click()
+  await expect(page.getByText('よく覚えてください')).toBeVisible()
+  // レベル3=5桁の数字が表示される
+  await expect(page.locator('p.text-4xl.font-bold.tabular-nums')).toHaveText(/^\d{5}$/)
+})

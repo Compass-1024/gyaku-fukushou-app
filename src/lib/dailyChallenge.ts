@@ -1,4 +1,5 @@
 import { localDateKey } from './history'
+import type { Level } from '../types'
 
 // ④-9: 日付をシードにした「今日だけの共通お題」。既存の各モードは毎回
 // 乱数生成のため「今日は特別」という感覚が生まれにくい。日替わりパズル
@@ -27,14 +28,30 @@ function seedFromDateKey(dateKey: string): number {
   return hash
 }
 
-export const DAILY_CHALLENGE_DIGIT_COUNT = 4
+// ④-9: 桁数固定だと得意な人には物足りず苦手な人にはハードルが高いままなので、
+// すうじモードと同じ3段階のLevelで難易度を選べるようにする。桁数を
+// シード文字列に含めることで、同じ日でも難易度ごとに異なる数字列になる
+// （さもないと桁数を後ろから切り出すだけの構造が見えてしまう）
+export const DAILY_CHALLENGE_DIGIT_COUNT_BY_LEVEL: Record<Level, number> = {
+  1: 3,
+  2: 4,
+  3: 5,
+}
 
-// 今日のお題の数字列を決定的に生成する（4桁固定、すうじモードのレベル2相当）
-export function getDailyChallengeDigits(now: Date = new Date()): number[] {
-  const rng = mulberry32(seedFromDateKey(localDateKey(now)))
-  return Array.from({ length: DAILY_CHALLENGE_DIGIT_COUNT }, () =>
-    Math.floor(rng() * 10),
+// 後方互換用（既存コードや過去バージョンからの参照向けにレベル2の値を残す）
+export const DAILY_CHALLENGE_DIGIT_COUNT =
+  DAILY_CHALLENGE_DIGIT_COUNT_BY_LEVEL[2]
+
+// 今日のお題の数字列を決定的に生成する（難易度=すうじモードのレベル相当、既定レベル2）
+export function getDailyChallengeDigits(
+  difficulty: Level = 2,
+  now: Date = new Date(),
+): number[] {
+  const digitCount = DAILY_CHALLENGE_DIGIT_COUNT_BY_LEVEL[difficulty]
+  const rng = mulberry32(
+    seedFromDateKey(`${localDateKey(now)}:${digitCount}`),
   )
+  return Array.from({ length: digitCount }, () => Math.floor(rng() * 10))
 }
 
 export function reverseDigitsToString(digits: number[]): string {

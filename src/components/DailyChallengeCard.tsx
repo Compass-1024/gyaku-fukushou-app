@@ -12,6 +12,7 @@ import { loadSettings } from '../lib/settings'
 import { playCorrectSound, playIncorrectSound, playButtonTap } from '../lib/sound'
 import { NumpadInput } from './NumpadInput'
 import { useTranslation } from '../contexts/LanguageContext'
+import type { Level } from '../types'
 
 const SHOWING_MS = 2500
 
@@ -19,15 +20,17 @@ type ChallengePhase = 'idle' | 'showing' | 'answering' | 'result'
 
 // ④-9: 話題性・習慣化のためのデイリーチャレンジ。既存モードの出題ロジック
 // (重み付き抽選)には手を入れず、日付シードの決定的な数字列を使う独立した
-// ミニチャレンジとしてホーム画面に埋め込む
+// ミニチャレンジとしてホーム画面に埋め込む。難易度は開始前のみ選択可能
+// （挑戦は1日1回のため、開始後に変えると別問題にすり替わってしまう）
 export function DailyChallengeCard() {
   const t = useTranslation()
   const [phase, setPhase] = useState<ChallengePhase>('idle')
+  const [difficulty, setDifficulty] = useState<Level>(2)
   const [typed, setTyped] = useState('')
   const [correct, setCorrect] = useState(false)
   const [alreadyDone, setAlreadyDone] = useState(() => hasCompletedTodayChallenge())
 
-  const digits = getDailyChallengeDigits()
+  const digits = getDailyChallengeDigits(difficulty)
   const expected = reverseDigitsToString(digits)
 
   useEffect(() => {
@@ -92,13 +95,32 @@ export function DailyChallengeCard() {
               {t.dailyChallenge.completedBadge(previousResult?.correct ?? false)}
             </p>
           ) : (
-            <button
-              type="button"
-              onClick={handleStart}
-              className="mt-2 touch-manipulation rounded-lg bg-amber-500 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-amber-400"
-            >
-              {t.dailyChallenge.startButton}
-            </button>
+            <>
+              <div className="mt-2 flex gap-1" role="group" aria-label={t.dailyChallenge.difficultyLabel(difficulty)}>
+                {([1, 2, 3] as const).map((lv) => (
+                  <button
+                    key={lv}
+                    type="button"
+                    onClick={() => setDifficulty(lv)}
+                    aria-pressed={difficulty === lv}
+                    className={`touch-manipulation flex-1 rounded-lg border px-2 py-1 text-xs font-semibold transition ${
+                      difficulty === lv
+                        ? 'border-amber-500 bg-amber-500 text-white'
+                        : 'border-amber-300 bg-white text-amber-700 hover:bg-amber-50 dark:border-amber-700 dark:bg-transparent dark:text-amber-300 dark:hover:bg-amber-900/30'
+                    }`}
+                  >
+                    {t.dailyChallenge.difficultyLabel(lv)}
+                  </button>
+                ))}
+              </div>
+              <button
+                type="button"
+                onClick={handleStart}
+                className="mt-2 touch-manipulation rounded-lg bg-amber-500 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-amber-400"
+              >
+                {t.dailyChallenge.startButton}
+              </button>
+            </>
           )}
         </>
       )}
