@@ -33,7 +33,6 @@ import {
   TONE_SHOWN_MS,
   TONE_GAP_MS,
   getAnswerTimeoutMs as getToneAnswerTimeoutMs,
-  PAD_COUNT,
 } from '../lib/tone'
 import { confirmExit } from '../lib/confirmExit'
 import { getSuggestedLevel } from '../lib/difficulty'
@@ -49,6 +48,9 @@ import { SetSummary } from './SetSummary'
 import { GameHeader } from './GameHeader'
 import { ResultBadge } from './ResultBadge'
 import { PausableAnswering } from './PausableAnswering'
+import { RandomSpatialGrid } from './RandomSpatialGrid'
+import { RandomPatternGrid } from './RandomPatternGrid'
+import { RandomToneGrid } from './RandomToneGrid'
 import { useTranslation } from '../contexts/LanguageContext'
 import type { Translations } from '../lib/i18n'
 import type {
@@ -383,106 +385,38 @@ export function RandomGameScreen({
         )}
 
         {phase !== 'result' && currentRound.mode === 'spatial' && (
-          <div
-            className="grid gap-2"
-            style={{
-              gridTemplateColumns: `repeat(${currentRound.question.gridSize}, minmax(0, 1fr))`,
-              width: currentRound.question.gridSize * 48,
-              maxWidth: '100%',
-            }}
-          >
-            {Array.from(
-              { length: currentRound.question.gridSize * currentRound.question.gridSize },
-              (_, cell) => {
-                const isLit =
-                  phase === 'showing' &&
-                  !isGap &&
-                  currentRound.question.sequence[stepIndex] === cell
-                const tapOrder = arrayValue.indexOf(cell)
-                const isTapped = tapOrder !== -1
-                return (
-                  <button
-                    key={cell}
-                    type="button"
-                    disabled={phase !== 'answering' || paused}
-                    onClick={() => handleOrderedTap(cell)}
-                    className={`aspect-square touch-manipulation rounded-lg text-sm font-bold transition disabled:cursor-not-allowed ${
-                      isLit
-                        ? 'bg-indigo-500 text-white'
-                        : isTapped
-                          ? 'bg-emerald-400 text-white'
-                          : 'bg-gray-100 text-gray-400 dark:bg-gray-700 dark:text-gray-500'
-                    }`}
-                  >
-                    {isTapped ? tapOrder + 1 : ''}
-                  </button>
-                )
-              },
-            )}
-          </div>
+          <RandomSpatialGrid
+            round={currentRound}
+            phase={phase}
+            isGap={isGap}
+            stepIndex={stepIndex}
+            arrayValue={arrayValue}
+            paused={paused}
+            onTap={handleOrderedTap}
+          />
         )}
 
         {phase !== 'result' && currentRound.mode === 'pattern' && (
-          <div
-            className="grid gap-2"
-            style={{
-              gridTemplateColumns: `repeat(${currentRound.question.gridSize}, minmax(0, 1fr))`,
-              width: currentRound.question.gridSize * 48,
-              maxWidth: '100%',
-            }}
-          >
-            {Array.from(
-              { length: currentRound.question.gridSize * currentRound.question.gridSize },
-              (_, cell) => {
-                const isShown =
-                  phase === 'showing' &&
-                  !isGap &&
-                  currentRound.question.filledCells.includes(cell)
-                const isSelected = arrayValue.includes(cell)
-                return (
-                  <button
-                    key={cell}
-                    type="button"
-                    disabled={phase !== 'answering' || paused}
-                    onClick={() => handlePatternToggle(cell)}
-                    className={`aspect-square touch-manipulation rounded-lg transition disabled:cursor-not-allowed ${
-                      isShown || isSelected
-                        ? 'bg-indigo-500'
-                        : 'bg-gray-100 dark:bg-gray-700'
-                    }`}
-                  />
-                )
-              },
-            )}
-          </div>
+          <RandomPatternGrid
+            round={currentRound}
+            phase={phase}
+            isGap={isGap}
+            arrayValue={arrayValue}
+            paused={paused}
+            onToggle={handlePatternToggle}
+          />
         )}
 
         {phase !== 'result' && currentRound.mode === 'tone' && (
-          <div className="grid grid-cols-2 gap-3" style={{ width: 176 }}>
-            {Array.from({ length: PAD_COUNT }, (_, pad) => {
-              const isLit =
-                phase === 'showing' &&
-                !isGap &&
-                currentRound.question.sequence[stepIndex] === pad
-              const tapOrder = arrayValue.indexOf(pad)
-              return (
-                <button
-                  key={pad}
-                  type="button"
-                  disabled={phase !== 'answering' || paused}
-                  onClick={() => handleOrderedTap(pad)}
-                  aria-label={t.tone.padAriaLabel(t.tone.padColors[pad])}
-                  className={`aspect-square touch-manipulation rounded-xl text-white shadow-sm transition disabled:cursor-not-allowed ${
-                    isLit ? 'bg-indigo-300' : 'bg-indigo-500'
-                  }`}
-                >
-                  {tapOrder !== -1 && (
-                    <span className="text-sm font-bold">{tapOrder + 1}</span>
-                  )}
-                </button>
-              )
-            })}
-          </div>
+          <RandomToneGrid
+            round={currentRound}
+            phase={phase}
+            isGap={isGap}
+            stepIndex={stepIndex}
+            arrayValue={arrayValue}
+            paused={paused}
+            onTap={handleOrderedTap}
+          />
         )}
 
         {phase === 'answering' && (
