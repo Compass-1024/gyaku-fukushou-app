@@ -48,7 +48,7 @@ import { NumpadInput } from './NumpadInput'
 import { SetSummary } from './SetSummary'
 import { GameHeader } from './GameHeader'
 import { ResultBadge } from './ResultBadge'
-import { PauseOverlay } from './PauseOverlay'
+import { PausableAnswering } from './PausableAnswering'
 import { useTranslation } from '../contexts/LanguageContext'
 import type { Translations } from '../lib/i18n'
 import type {
@@ -485,26 +485,14 @@ export function RandomGameScreen({
           </div>
         )}
 
-        {phase === 'answering' && paused && <PauseOverlay onResume={resume} />}
-
-        {phase === 'answering' && !paused && (
-          <>
-            <div className="flex w-full items-center justify-between">
-              <span className="w-14" aria-hidden="true" />
-              <p className="text-lg font-medium text-gray-800 dark:text-gray-100">
-                {roundAnswerPrompt(t, currentRound)}
-              </p>
-              <button
-                type="button"
-                onClick={pause}
-                className="touch-manipulation rounded-full px-2 py-1 text-xs font-semibold text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700"
-              >
-                {t.common.pauseButton}
-              </button>
-            </div>
-            <p aria-hidden="true" className="text-2xl font-bold text-rose-500">
-              {answerRemaining}
-            </p>
+        {phase === 'answering' && (
+          <PausableAnswering
+            paused={paused}
+            onPause={pause}
+            onResume={resume}
+            prompt={roundAnswerPrompt(t, currentRound)}
+            remainingSeconds={answerRemaining}
+          >
             {currentRound.mode === 'digit' && (
               <NumpadInput
                 value={typed}
@@ -523,7 +511,7 @@ export function RandomGameScreen({
                 {t.pattern.submitButton}
               </button>
             )}
-          </>
+          </PausableAnswering>
         )}
 
         {phase === 'result' && currentOutcome && (
