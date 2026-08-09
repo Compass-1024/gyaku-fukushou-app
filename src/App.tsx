@@ -74,7 +74,12 @@ type View =
   | { screen: 'nback-level' }
   | { screen: 'nback-game'; level: Level; trialCount: number; adaptive?: boolean }
   | { screen: 'dual-nback-level' }
-  | { screen: 'dual-nback-game'; level: Level; trialCount: number }
+  | {
+      screen: 'dual-nback-game'
+      level: Level
+      trialCount: number
+      adaptive?: boolean
+    }
   | { screen: 'spatial-level' }
   | { screen: 'spatial-game'; level: Level }
   | { screen: 'pattern-level' }
@@ -328,8 +333,8 @@ function App() {
       content = (
         <DualNBackLevelSelect
           history={history}
-          onSelect={(level, trialCount) =>
-            goTo({ screen: 'dual-nback-game', level, trialCount })
+          onSelect={(level, trialCount, adaptive) =>
+            goTo({ screen: 'dual-nback-game', level, trialCount, adaptive })
           }
           onBack={() => goTo({ screen: 'top' })}
         />
@@ -338,15 +343,17 @@ function App() {
     case 'dual-nback-game':
       content = (
         <DualNBackGameScreen
-          key={`${view.level}-${view.trialCount}`}
+          key={`${view.level}-${view.trialCount}-${view.adaptive}`}
           level={view.level}
           trialCount={view.trialCount}
+          adaptive={view.adaptive}
           onExit={() => goTo({ screen: 'dual-nback-level' })}
           onSelectLevel={(level) =>
             goTo({
               screen: 'dual-nback-game',
               level,
               trialCount: view.trialCount,
+              adaptive: view.adaptive,
             })
           }
         />

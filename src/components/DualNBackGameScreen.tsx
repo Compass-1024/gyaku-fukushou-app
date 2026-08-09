@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useStepReveal } from '../hooks/useStepReveal'
 import { useSetCompletionRecorder } from '../hooks/useSetCompletionRecorder'
 import {
@@ -9,7 +9,11 @@ import {
   STIMULUS_MS,
   GAP_MS,
   READY_MS,
+  createAdaptiveDualNState,
+  generateNextAdaptiveDualTrial,
+  advanceAdaptiveDualState,
 } from '../lib/dualNback'
+import type { AdaptiveDualNState } from '../lib/dualNback'
 import { confirmExit } from '../lib/confirmExit'
 import { getSuggestedLevel } from '../lib/difficulty'
 import { loadSettings } from '../lib/settings'
@@ -17,21 +21,49 @@ import { playButtonTap, playDualNBackTone } from '../lib/sound'
 import { SetSummary } from './SetSummary'
 import { GameHeader } from './GameHeader'
 import { useTranslation } from '../contexts/LanguageContext'
-import type { BaseGameScreenProps, DualNBackPhase, DualNBackTrial } from '../types'
+import type {
+  BaseGameScreenProps,
+  DualNBackPhase,
+  DualNBackTrial,
+  Level,
+} from '../types'
 
-type DualNBackGameScreenProps = BaseGameScreenProps & { trialCount: number }
+type DualNBackGameScreenProps = BaseGameScreenProps & {
+  trialCount: number
+  // ④-1: オンの場合、levelは開始N値としてのみ使い、セッション中は位置・音
+  // 両方の正誤に応じてN値が自動で上下する（アダプティブ階段法）
+  adaptive?: boolean
+}
+
+// 音を鳴らすタイミング(onItemShown)がtrials[i]を即座に参照するため、
+// 非アダプティブ時と異なり1試行先読みで2件同時に生成しておく
+function initialAdaptiveDualTrials(startN: number): {
+  trials: DualNBackTrial[]
+  engine: AdaptiveDualNState
+} {
+  const first = generateNextAdaptiveDualTrial(createAdaptiveDualNState(startN))
+  const second = generateNextAdaptiveDualTrial(first.state)
+  return { trials: [first.trial, second.trial], engine: second.state }
+}
 
 export function DualNBackGameScreen({
   level,
   trialCount,
+  adaptive = false,
   onExit,
   onSelectLevel,
 }: DualNBackGameScreenProps) {
   const t = useTranslation()
-  const n = getDualNValue(level)
-  const [trials, setTrials] = useState<DualNBackTrial[]>(() =>
-    generateDualNBackSequence(level, trialCount),
-  )
+  const startN = getDualNValue(level)
+  const engineRef = useRef<AdaptiveDualNState>(createAdaptiveDualNState(startN))
+  const [trials, setTrials] = useState<DualNBackTrial[]>(() => {
+    if (!adaptive) return generateDualNBackSequence(level, trialCount)
+    const { trials: initialTrials, engine } = initialAdaptiveDualTrials(startN)
+    engineRef.current = engine
+    return initialTrials
+  })
+  const [currentN, setCurrentN] = useState(startN)
+  const [maxNReached, setMaxNReached] = useState(startN)
   const [phase, setPhase] = useState<DualNBackPhase>('ready')
   const [positionPressed, setPositionPressed] = useState<boolean[]>(() =>
     new Array(trialCount).fill(false),
@@ -39,6 +71,10 @@ export function DualNBackGameScreen({
   const [soundPressed, setSoundPressed] = useState<boolean[]>(() =>
     new Array(trialCount).fill(false),
   )
+  const positionPressedRef = useRef(positionPressed)
+  positionPressedRef.current = positionPressed
+  const soundPressedRef = useRef(soundPressed)
+  soundPressedRef.current = soundPressed
 
   // 準備フェーズ: 少し間を置いてから開始する
   useEffect(() => {
@@ -47,20 +83,50 @@ export function DualNBackGameScreen({
     return () => clearTimeout(timeout)
   }, [phase])
 
-  // 各試行を「表示→空白」の順に一定時間ずつ進め、表示のたびに音を鳴らす
+  // 各試行を「表示→空白」の順に一定時間ずつ進め、表示のたびに音を鳴らす。
+  // itemCountは常にセッション全体の試行数(trialCount)で固定する
   const { index: trialIndex, isGap } = useStepReveal({
     active: phase === 'showing',
-    itemCount: trials.length,
+    itemCount: trialCount,
     shownMs: STIMULUS_MS,
     gapMs: GAP_MS,
     onItemShown: (i) => {
-      if (loadSettings().soundEnabled) playDualNBackTone(trials[i].sound)
+      if (loadSettings().soundEnabled) playDualNBackTone(trials[i]?.sound ?? 0)
     },
     onComplete: () => setPhase('result'),
   })
 
+  // アダプティブモード: onItemShownが「表示された瞬間」に trials[i] を
+  // 参照するため、非アダプティブ時と違い1試行先読みで生成しておく必要が
+  // ある（生成が後追いだと音が鳴らせない）。そのため初期状態でtrials[0]と
+  // trials[1]を両方生成し、以降はtrialIndexが進むたびに「1つ前の試行の
+  // 正誤を反映してNを更新し、trialIndex+1（まだ無ければ）を生成する」
+  useEffect(() => {
+    if (!adaptive) return
+    if (trialIndex === 0 || trialIndex >= trialCount) return
+    const nextIndexToGenerate = trialIndex + 1
+    if (trials.length > nextIndexToGenerate) return // 既に生成済み
+    const prevTrial = trials[trialIndex - 1]
+    const posCorrect =
+      (prevTrial.positionMatch && positionPressedRef.current[trialIndex - 1]) ||
+      (!prevTrial.positionMatch && !positionPressedRef.current[trialIndex - 1])
+    const soundCorrect =
+      (prevTrial.soundMatch && soundPressedRef.current[trialIndex - 1]) ||
+      (!prevTrial.soundMatch && !soundPressedRef.current[trialIndex - 1])
+    const advanced = advanceAdaptiveDualState(engineRef.current, posCorrect && soundCorrect)
+    engineRef.current = advanced
+    setCurrentN(advanced.n)
+    setMaxNReached((m) => Math.max(m, advanced.n))
+    if (nextIndexToGenerate < trialCount) {
+      const { trial, state } = generateNextAdaptiveDualTrial(advanced)
+      engineRef.current = state
+      setTrials([...trials, trial])
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [adaptive, trialIndex, trialCount])
+
   function handlePositionMatchPress() {
-    if (phase !== 'showing' || trialIndex >= trials.length) return
+    if (phase !== 'showing' || trialIndex >= trialCount || !trials[trialIndex]) return
     setPositionPressed((prev) => {
       if (prev[trialIndex]) return prev
       const next = [...prev]
@@ -71,7 +137,7 @@ export function DualNBackGameScreen({
   }
 
   function handleSoundMatchPress() {
-    if (phase !== 'showing' || trialIndex >= trials.length) return
+    if (phase !== 'showing' || trialIndex >= trialCount || !trials[trialIndex]) return
     setSoundPressed((prev) => {
       if (prev[trialIndex]) return prev
       const next = [...prev]
@@ -96,6 +162,10 @@ export function DualNBackGameScreen({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phase, trialIndex])
 
+  // 修正①: アダプティブモードでは、開始レベルではなく実際に到達したN値を
+  // 履歴・統計・実績の判定に使う
+  const recordedLevel = (adaptive ? maxNReached : level) as Level
+
   // 結果が確定するたびに、履歴の記録・効果音の再生・新規実績の解除演出を行う
   const score = scoreDualNBackTrials(trials, positionPressed, soundPressed)
   const correctCount =
@@ -106,14 +176,22 @@ export function DualNBackGameScreen({
   const { newAchievements, isNewBest, xpGained, leveledUp, newLevel } = useSetCompletionRecorder({
     trigger: phase === 'result',
     mode: 'dual-nback',
-    level,
+    level: recordedLevel,
     correctCount,
     total: trials.length * 2,
     playAccuracySound: true,
   })
 
   function handleRetry() {
-    setTrials(generateDualNBackSequence(level, trialCount))
+    if (adaptive) {
+      const { trials: initialTrials, engine } = initialAdaptiveDualTrials(startN)
+      engineRef.current = engine
+      setTrials(initialTrials)
+      setCurrentN(startN)
+      setMaxNReached(startN)
+    } else {
+      setTrials(generateDualNBackSequence(level, trialCount))
+    }
     setPositionPressed(new Array(trialCount).fill(false))
     setSoundPressed(new Array(trialCount).fill(false))
     setPhase('ready')
@@ -124,7 +202,7 @@ export function DualNBackGameScreen({
       trials.length > 0
         ? Math.round((correctCount / (trials.length * 2)) * 100)
         : 0
-    const suggestedLevel = getSuggestedLevel(level, accuracyPercent)
+    const suggestedLevel = getSuggestedLevel(recordedLevel, accuracyPercent)
     return (
       <SetSummary
         items={trials.flatMap((trial, i) => [
@@ -154,7 +232,7 @@ export function DualNBackGameScreen({
           suggestedLevel
             ? {
                 label:
-                  suggestedLevel > level
+                  suggestedLevel > recordedLevel
                     ? t.common.suggestionUp(t.dualNback.levelLabel(suggestedLevel))
                     : t.common.suggestionDown(
                         t.dualNback.levelLabel(suggestedLevel),
@@ -163,7 +241,13 @@ export function DualNBackGameScreen({
               }
             : undefined
         }
-      />
+      >
+        {adaptive && (
+          <p className="text-center text-xs font-medium text-indigo-500 dark:text-indigo-300">
+            {t.dualNback.maxNReachedLabel(maxNReached)}
+          </p>
+        )}
+      </SetSummary>
     )
   }
 
@@ -178,7 +262,7 @@ export function DualNBackGameScreen({
           confirmExit(trialIndex > 0, onExit, t.common.confirmExitMessage)
         }
         currentIndex={trialIndex}
-        total={trials.length}
+        total={trialCount}
       />
 
       <div
@@ -187,8 +271,13 @@ export function DualNBackGameScreen({
         className="flex min-h-56 flex-col items-center justify-center gap-4 rounded-2xl border border-gray-200 bg-white px-4 py-8 text-center shadow-sm sm:min-h-64 sm:px-6 sm:py-10 dark:border-gray-700 dark:bg-gray-800"
       >
         <p className="text-lg font-medium text-gray-800 dark:text-gray-100">
-          {t.dualNback.matchPrompt(n)}
+          {t.dualNback.matchPrompt(currentN)}
         </p>
+        {adaptive && (
+          <p className="text-xs font-semibold text-indigo-500 dark:text-indigo-300">
+            {t.dualNback.currentNLabel(currentN)}
+          </p>
+        )}
 
         <div
           className="grid gap-2"

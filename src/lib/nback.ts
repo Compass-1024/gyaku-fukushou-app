@@ -56,7 +56,19 @@ export function generateNBackSequence(
 export const ADAPTIVE_MIN_N = 1
 export const ADAPTIVE_MAX_N = 3
 // この件数分の直近試行がすべて正解ならN+1、2件以上不正解ならN-1する
-const ADAPTIVE_WINDOW = 3
+export const ADAPTIVE_WINDOW = 3
+
+// 直近の正誤ウィンドウからN値の昇降を判定する部分だけを切り出した純粋関数。
+// デュアルNバック（dualNback.ts）とアダプティブ判定ロジックを共有するために
+// 公開している（位置・音それぞれの刺激生成はモードごとに異なるため、
+// 生成部分までは共通化していない）
+export function computeAdaptiveN(currentN: number, recentResults: readonly boolean[]): number {
+  if (recentResults.length < ADAPTIVE_WINDOW) return currentN
+  const wrongCount = recentResults.filter((r) => !r).length
+  if (wrongCount === 0) return Math.min(ADAPTIVE_MAX_N, currentN + 1)
+  if (wrongCount >= 2) return Math.max(ADAPTIVE_MIN_N, currentN - 1)
+  return currentN
+}
 
 export interface AdaptiveNState {
   n: number
@@ -98,10 +110,7 @@ export function advanceAdaptiveState(
   if (recentResults.length < ADAPTIVE_WINDOW) {
     return { ...state, recentResults }
   }
-  const wrongCount = recentResults.filter((r) => !r).length
-  let n = state.n
-  if (wrongCount === 0) n = Math.min(ADAPTIVE_MAX_N, state.n + 1)
-  else if (wrongCount >= 2) n = Math.max(ADAPTIVE_MIN_N, state.n - 1)
+  const n = computeAdaptiveN(state.n, recentResults)
   if (n !== state.n) {
     return { ...state, n, recentResults: [] }
   }

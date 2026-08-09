@@ -293,6 +293,11 @@ export interface Translations {
     soundMatchButton: string
     soundMatchButtonPressed: string
     resultLabel: (channel: 'position' | 'sound', isMatch: boolean) => string
+    // ④-1: アダプティブ難易度モード
+    adaptiveLabel: string
+    adaptiveDescription: string
+    currentNLabel: (n: number) => string
+    maxNReachedLabel: (n: number) => string
   }
   spatial: {
     title: string

@@ -475,6 +475,11 @@ export const en: Translations = {
     soundMatchButtonPressed: '✓ Sound Match',
     resultLabel: (channel, isMatch) =>
       `${channel === 'position' ? 'Position' : 'Sound'}${isMatch ? ' (match)' : ''}`,
+    adaptiveLabel: 'Adaptive (recommended)',
+    adaptiveDescription:
+      'N automatically increases when both position and sound stay correct, and decreases after mistakes.',
+    currentNLabel: (n) => `Now: ${n} step${n === 1 ? '' : 's'} back`,
+    maxNReachedLabel: (n) => `Highest N reached: ${n} step${n === 1 ? '' : 's'} back`,
   },
   spatial: {
     title: 'Spatial Mode',

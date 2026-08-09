@@ -21,7 +21,7 @@ import { playButtonTap } from '../lib/sound'
 import { SetSummary } from './SetSummary'
 import { GameHeader } from './GameHeader'
 import { useTranslation } from '../contexts/LanguageContext'
-import type { BaseGameScreenProps, NBackPhase, NBackTrial } from '../types'
+import type { BaseGameScreenProps, Level, NBackPhase, NBackTrial } from '../types'
 
 type NBackGameScreenProps = BaseGameScreenProps & {
   trialCount: number
@@ -129,12 +129,17 @@ export function NBackGameScreen({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phase, trialIndex])
 
+  // 修正①: アダプティブモードでは、開始レベルではなく実際に到達したN値を
+  // 履歴・統計・実績の判定に使う。NバックのLevelはN値と1:1対応する（getNValue）
+  // ため、maxNReachedをそのままLevelとして記録できる（範囲は常に1〜3に収まる）
+  const recordedLevel = (adaptive ? maxNReached : level) as Level
+
   // 結果が確定するたびに、履歴の記録・効果音の再生・新規実績の解除演出を行う
   const score = scoreNBackTrials(trials, pressed)
   const { newAchievements, isNewBest, xpGained, leveledUp, newLevel } = useSetCompletionRecorder({
     trigger: phase === 'result',
     mode: 'nback',
-    level,
+    level: recordedLevel,
     correctCount: score.hits + score.correctRejections,
     total: trials.length,
     playAccuracySound: true,
@@ -155,7 +160,7 @@ export function NBackGameScreen({
   }
 
   if (phase === 'result') {
-    const suggestedLevel = getSuggestedLevel(level, score.accuracy)
+    const suggestedLevel = getSuggestedLevel(recordedLevel, score.accuracy)
     return (
       <SetSummary
         items={trials.map((trial, i) => ({
@@ -175,7 +180,7 @@ export function NBackGameScreen({
           suggestedLevel
             ? {
                 label:
-                  suggestedLevel > level
+                  suggestedLevel > recordedLevel
                     ? t.common.suggestionUp(t.nback.levelLabel(suggestedLevel))
                     : t.common.suggestionDown(t.nback.levelLabel(suggestedLevel)),
                 onSelect: () => onSelectLevel(suggestedLevel),

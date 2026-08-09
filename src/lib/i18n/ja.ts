@@ -446,6 +446,11 @@ export const ja: Translations = {
     soundMatchButtonPressed: '✓ 音一致',
     resultLabel: (channel, isMatch) =>
       `${channel === 'position' ? '位置' : '音'}${isMatch ? '（一致）' : ''}`,
+    adaptiveLabel: 'アダプティブ（おすすめ）',
+    adaptiveDescription:
+      '位置・音の両方が正解し続けるとN値が自動で上がり、間違いが続くと下がります',
+    currentNLabel: (n) => `現在: ${n}個前`,
+    maxNReachedLabel: (n) => `到達した最大N: ${n}個前`,
   },
   spatial: {
     title: '空間モード',

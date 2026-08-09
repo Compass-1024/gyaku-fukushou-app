@@ -1,4 +1,4 @@
-import { scoreMatchTrials } from './nback'
+import { scoreMatchTrials, computeAdaptiveN, ADAPTIVE_WINDOW } from './nback'
 import type { NBackScore } from './nback'
 import type { Level, DualNBackTrial } from '../types'
 
@@ -51,6 +51,61 @@ export function generateDualNBackSequence(
     trials.push({ position, sound, positionMatch, soundMatch })
   }
   return trials
+}
+
+// ④-1: デュアルNバックへのアダプティブ難易度拡張。通常Nバック（nback.ts）の
+// 階段法と同じ判定ロジック（computeAdaptiveN）を共有しつつ、位置・音の
+// 2チャンネル分の履歴を保持する専用の状態型を使う。1試行の正誤は
+// 「位置・音の両方が正しく判定できた場合のみ正解」という厳しめの基準にする
+// （デュアル課題の難しさに合わせ、片方だけ合っていてもN値は上げない）
+export interface AdaptiveDualNState {
+  n: number
+  positions: number[]
+  sounds: number[]
+  recentResults: boolean[]
+}
+
+export function createAdaptiveDualNState(startN: number): AdaptiveDualNState {
+  return { n: startN, positions: [], sounds: [], recentResults: [] }
+}
+
+export function generateNextAdaptiveDualTrial(
+  state: AdaptiveDualNState,
+): { trial: DualNBackTrial; state: AdaptiveDualNState } {
+  const { n, positions, sounds } = state
+  const position =
+    positions.length >= n && Math.random() < MATCH_PROBABILITY
+      ? positions[positions.length - n]
+      : Math.floor(Math.random() * (GRID_SIZE * GRID_SIZE))
+  const sound =
+    sounds.length >= n && Math.random() < MATCH_PROBABILITY
+      ? sounds[sounds.length - n]
+      : Math.floor(Math.random() * SOUND_COUNT)
+  const positionMatch = positions.length >= n && position === positions[positions.length - n]
+  const soundMatch = sounds.length >= n && sound === sounds[sounds.length - n]
+  return {
+    trial: { position, sound, positionMatch, soundMatch },
+    state: {
+      ...state,
+      positions: [...positions, position],
+      sounds: [...sounds, sound],
+    },
+  }
+}
+
+export function advanceAdaptiveDualState(
+  state: AdaptiveDualNState,
+  correct: boolean,
+): AdaptiveDualNState {
+  const recentResults = [...state.recentResults, correct].slice(-ADAPTIVE_WINDOW)
+  if (recentResults.length < ADAPTIVE_WINDOW) {
+    return { ...state, recentResults }
+  }
+  const n = computeAdaptiveN(state.n, recentResults)
+  if (n !== state.n) {
+    return { ...state, n, recentResults: [] }
+  }
+  return { ...state, recentResults }
 }
 
 export interface DualNBackScore {
