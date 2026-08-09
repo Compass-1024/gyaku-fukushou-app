@@ -14,6 +14,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   dailyGoal: 3,
   notificationsEnabled: false,
   focusModeEnabled: false,
+  autoExpandChip: 'none',
 }
 
 export function loadSettings(): AppSettings {

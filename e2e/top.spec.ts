@@ -56,6 +56,22 @@ test('トップ画面: ミッション・お題・7日間チャレンジがコ�
   await expect(page.getByRole('button', { name: '挑戦する' })).toBeVisible()
 })
 
+test('設定でチップの自動展開を選ぶと、ホーム画面表示時に自動で展開される（④-7）', async ({
+  page,
+}) => {
+  await page.goto('/')
+  await page.getByRole('button', { name: '設定' }).click()
+  const section = page.locator('section', { has: page.getByText('チップの自動展開') })
+  await section.getByRole('button', { name: 'お題', exact: true }).click()
+  await page.getByRole('button', { name: '← 戻る' }).click()
+
+  // ホーム画面に戻ると、設定で選んだ「本日のお題」が自動的に展開されている
+  await expect(page.getByRole('button', { name: '挑戦する' })).toBeVisible()
+  await expect(
+    page.getByRole('button', { name: '🎯 本日のお題' }),
+  ).toHaveAttribute('aria-expanded', 'true')
+})
+
 test('トップ画面: 本日のお題は開始前に難易度を選べる（④-9）', async ({ page }) => {
   await page.goto('/')
 

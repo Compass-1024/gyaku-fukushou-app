@@ -175,6 +175,10 @@ export const en: Translations = {
     focusModeTitle: '🎯 Focus mode',
     focusModeDescription:
       'Hides the colorful background gradient and decorative blur shapes while answering, so there’s less to distract you',
+    autoExpandChipTitle: 'Auto-expand a chip',
+    autoExpandChipDescription:
+      'Automatically opens the chosen item’s details whenever you open the home screen',
+    autoExpandChipNone: 'None',
     notifications: {
       title: 'Reminder notifications',
       unsupported:

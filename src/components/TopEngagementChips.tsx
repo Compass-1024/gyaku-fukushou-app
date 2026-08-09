@@ -31,7 +31,15 @@ export function TopEngagementChips({
   programProgress,
 }: TopEngagementChipsProps) {
   const t = useTranslation()
-  const [expandedCard, setExpandedCard] = useState<ExpandedCard>(null)
+  // ④-7: 毎回タップする手間を省くため、設定で選んだチップをホーム画面表示時に
+  // 自動展開できるようにする。「7日間チャレンジ」は履歴が無いと展開できないため
+  // showProgramCardがfalseの場合は自動展開しない
+  const [expandedCard, setExpandedCard] = useState<ExpandedCard>(() => {
+    const preferred = loadSettings().autoExpandChip
+    if (preferred === 'none') return null
+    if (preferred === 'program' && !showProgramCard) return null
+    return preferred
+  })
 
   function toggleExpandedCard(card: Exclude<ExpandedCard, null>) {
     if (loadSettings().soundEnabled) playButtonTap()
