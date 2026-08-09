@@ -265,6 +265,11 @@ export const ja: Translations = {
       `${label}が苦手（正答率${accuracyPercent}%）`,
     modeTrendTitle: 'モード別の正答率推移',
     modeTrendNotEnoughData: '挑戦回数が増えると表示されます',
+    notificationCenterTitle: '🔔 実績・達成の通知センター',
+    notificationCenterEmpty: 'まだ実績やミッション達成の記録がありません',
+    notificationAchievementLabel: (icon, label) => `🏆 実績解除: ${icon} ${label}`,
+    notificationMissionLabel: (missionLabel) => `🎯 ミッション達成: ${missionLabel}`,
+    notificationShowMoreButton: 'もっと見る',
     summaryImage: {
       title: '📸 学習サマリーを画像で保存',
       periodWeek: '週間',

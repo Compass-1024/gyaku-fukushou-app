@@ -135,6 +135,32 @@ test('統計画面: 十分な記録があると「ワーキングメモリの伸
   ).toBeVisible()
 })
 
+test('統計画面: 実績・達成の通知センターに実績解除とミッション達成が新しい順に表示される（④-10）', async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    const history = [
+      { mode: 'word', level: 1, correct: 1, total: 3, timestamp: '2026-01-01T00:00:00.000Z' },
+    ]
+    window.localStorage.setItem('gyaku-fukushou:history', JSON.stringify(history))
+    window.localStorage.setItem(
+      'gyaku-fukushou:missionCompletions',
+      JSON.stringify([{ dateKey: '2026-01-05', missionId: 'digit-2' }]),
+    )
+  })
+  await page.goto('/')
+  await page.getByRole('button', { name: '統計' }).click()
+
+  const section = page.locator('section', {
+    has: page.getByRole('heading', { name: '🔔 実績・達成の通知センター' }),
+  })
+  await expect(section).toBeVisible()
+  // ミッション達成(2026-01-05)の方が実績解除(2026-01-01)より新しいため先に表示される
+  const items = section.locator('li')
+  await expect(items.first()).toContainText('🎯 ミッション達成')
+  await expect(items.nth(1)).toContainText('🏆 実績解除')
+})
+
 test('統計画面: 学習カレンダーのマスをタップするとその日の内訳が表示される（④-8）', async ({
   page,
 }) => {

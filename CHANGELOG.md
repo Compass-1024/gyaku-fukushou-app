@@ -41,6 +41,7 @@
 - 設定画面に「集中モード」を追加。回答中の背景装飾（カラフルなグラデーション・ぼかし円）を非表示にする没入UIテーマ（`src/hooks/useFocusMode.ts`、`themeMode`/`bgmEnabled`と同じread-modify-writeパターン）
 - 設定画面に「チップの自動展開」を追加。「今日のミッション」「本日のお題」「7日間チャレンジ」のうち選んだ1件を、ホーム画面表示のたびに自動で展開表示できるようにした（`AppSettings.autoExpandChip`）
 - 統計画面の学習カレンダー（GitHub風ヒートマップ）のマスをタップすると、その日に挑戦したモード・レベル・正誤内訳をドリルダウン表示できるようにした（`src/components/StatsCalendarSection.tsx`）
+- 統計画面に「実績・達成の通知センター」を追加。実績解除・ミッション達成を新しい順に一覧表示する。解除済みフラグを保存しない設計のため、履歴を古い順に再生しながら`isUnlocked`が初めてtrueになった時点を解除日として近似する（`src/lib/notifications.ts`）
 
 ### Fixed
 

@@ -273,6 +273,11 @@ export const en: Translations = {
       `You struggle with ${label} (${accuracyPercent}% correct)`,
     modeTrendTitle: 'Accuracy trend by mode',
     modeTrendNotEnoughData: 'Shown once you have more attempts',
+    notificationCenterTitle: '🔔 Achievement & mission log',
+    notificationCenterEmpty: 'No achievements or mission completions yet',
+    notificationAchievementLabel: (icon, label) => `🏆 Achievement unlocked: ${icon} ${label}`,
+    notificationMissionLabel: (missionLabel) => `🎯 Mission completed: ${missionLabel}`,
+    notificationShowMoreButton: 'Show more',
     summaryImage: {
       title: '📸 Save learning summary as image',
       periodWeek: 'Weekly',

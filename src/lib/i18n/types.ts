@@ -220,6 +220,12 @@ export interface Translations {
     // ④-6: モード別正答率の時系列グラフ
     modeTrendTitle: string
     modeTrendNotEnoughData: string
+    // ④-10: 実績・達成の通知センター
+    notificationCenterTitle: string
+    notificationCenterEmpty: string
+    notificationAchievementLabel: (icon: string, label: string) => string
+    notificationMissionLabel: (missionLabel: string) => string
+    notificationShowMoreButton: string
     // ④-4: 週間/月間の学習サマリー画像エクスポート
     summaryImage: {
       title: string

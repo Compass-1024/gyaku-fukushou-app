@@ -17,6 +17,7 @@ import { StatsModeTrendSection } from './StatsModeTrendSection'
 import { StatsBenchmarkSection } from './StatsBenchmarkSection'
 import { StatsWeakPhrasesSection } from './StatsWeakPhrasesSection'
 import { StatsSummaryImageSection } from './StatsSummaryImageSection'
+import { StatsNotificationCenterSection } from './StatsNotificationCenterSection'
 import { useLanguage, useTranslation } from '../contexts/LanguageContext'
 import type { AreaStats } from '../lib/history'
 import type { DigitGameType, HistoryEntry, Mode } from '../types'
@@ -108,6 +109,10 @@ export function StatsScreen({ history, onBack }: StatsScreenProps) {
         </p>
       ) : (
         <>
+          <StatsNotificationCenterSection
+            history={history}
+            missionCompletionCount={missionCompletionCount}
+          />
           <StatsCalendarSection calendar={activityCalendar} history={history} />
           <StatsTrendSection trend={trend} days={TREND_DAYS} />
           <StatsAchievementsSection
