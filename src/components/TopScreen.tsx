@@ -14,21 +14,21 @@ import {
   isTodayMissionComplete,
   loadMissionCompletions,
 } from '../lib/missions'
-import { computeTotalXp, getXpProgress, XP_PER_MISSION } from '../lib/xp'
+import { computeTotalXp, getXpProgress } from '../lib/xp'
 import { getRollingProgramProgress } from '../lib/program'
 import {
   hasCompletedTodayChallenge,
   loadDailyChallengeCompletions,
 } from '../lib/dailyChallenge'
-import { DailyChallengeCard } from './DailyChallengeCard'
 import { getAllBenchmarks } from '../lib/benchmarks'
 import type { Benchmark } from '../lib/benchmarks'
+import { getModeCards } from '../lib/modeCardsConfig'
+import type { TopModeSelection } from '../lib/modeCardsConfig'
+import { TopEngagementChips } from './TopEngagementChips'
 import { useLanguage, useTranslation } from '../contexts/LanguageContext'
-import type { HistoryEntry, Mode } from '../types'
+import type { HistoryEntry } from '../types'
 
-// ホームの3×3グリッド用の選択キー。すうじモードは「逆から入力」「合計を入力」を
-// 独立したカードとして扱うため、Mode型の'digit'ではなくこの拡張キーを使う
-export type TopModeSelection = Exclude<Mode, 'digit'> | 'digit-reverse' | 'digit-sum'
+export type { TopModeSelection } from '../lib/modeCardsConfig'
 
 // ベンチマークのモードキーとホームカードの選択キーの対応
 // （すうじの逆から入力のみキーが異なる: 'digit' → 'digit-reverse'）
@@ -62,80 +62,9 @@ export function TopScreen({
   const t = useTranslation()
   const { language } = useLanguage()
 
-  // ホーム画面の3×3グリッドに表示するモードカードのメタデータ。
-  // ことばモードのみ英語版では選択できないため対象外にする
-  const allModeCards: Array<{
-    mode: TopModeSelection
-    icon: string
-    gradient: string
-    title: string
-    description: string
-  }> = [
-    {
-      mode: 'word',
-      icon: '🗣️',
-      gradient: 'from-emerald-500 to-teal-500',
-      title: t.top.modes.word.title,
-      description: t.top.modes.word.description,
-    },
-    {
-      mode: 'digit-reverse',
-      icon: '🔢',
-      gradient: 'from-indigo-500 to-fuchsia-500',
-      title: t.top.modes.digitReverse.title,
-      description: t.top.modes.digitReverse.description,
-    },
-    {
-      mode: 'digit-sum',
-      icon: '➕',
-      gradient: 'from-teal-500 to-sky-500',
-      title: t.top.modes.digitSum.title,
-      description: t.top.modes.digitSum.description,
-    },
-    {
-      mode: 'nback',
-      icon: '🧠',
-      gradient: 'from-rose-500 to-orange-500',
-      title: t.top.modes.nback.title,
-      description: t.top.modes.nback.description,
-    },
-    {
-      mode: 'dual-nback',
-      icon: '🧠🧠',
-      gradient: 'from-purple-500 to-rose-500',
-      title: t.top.modes.dualNback.title,
-      description: t.top.modes.dualNback.description,
-    },
-    {
-      mode: 'spatial',
-      icon: '🧩',
-      gradient: 'from-cyan-500 to-blue-500',
-      title: t.top.modes.spatial.title,
-      description: t.top.modes.spatial.description,
-    },
-    {
-      mode: 'pattern',
-      icon: '👀',
-      gradient: 'from-amber-500 to-yellow-500',
-      title: t.top.modes.pattern.title,
-      description: t.top.modes.pattern.description,
-    },
-    {
-      mode: 'tone',
-      icon: '🎵',
-      gradient: 'from-violet-500 to-pink-500',
-      title: t.top.modes.tone.title,
-      description: t.top.modes.tone.description,
-    },
-    {
-      mode: 'random',
-      icon: '🎲',
-      gradient: 'from-fuchsia-500 to-orange-400',
-      title: t.top.modes.random.title,
-      description: t.top.modes.random.description,
-    },
-  ]
-  const modeCards = allModeCards.filter(
+  // ホーム画面の3×3グリッドに表示するモードカード。ことばモードのみ
+  // 英語版では選択できないため対象外にする
+  const modeCards = getModeCards(t).filter(
     (card) => card.mode !== 'word' || language === 'ja',
   )
 
@@ -232,17 +161,6 @@ export function TopScreen({
     dailyChallengeDateKeys,
   )
   const showProgramCard = history.length > 0 || dailyChallengeDateKeys.size > 0
-
-  // ⑥: 今日のミッション・デイリーチャレンジ・7日間チャレンジは常時全文表示
-  // すると縦に3枚積み上がり場所を取るため、コンパクトな横並びチップにまとめ、
-  // タップした項目だけその場で詳細を展開する
-  const [expandedCard, setExpandedCard] = useState<
-    'mission' | 'challenge' | 'program' | null
-  >(null)
-  function toggleExpandedCard(card: 'mission' | 'challenge' | 'program') {
-    if (loadSettings().soundEnabled) playButtonTap()
-    setExpandedCard((current) => (current === card ? null : card))
-  }
 
   return (
     <div className="mx-auto flex w-full max-w-md flex-col gap-6 px-4 py-6 sm:gap-8 sm:px-6 sm:py-10">
@@ -363,131 +281,15 @@ export function TopScreen({
         ))}
       </div>
 
-      <div className="grid grid-cols-3 gap-2">
-        <button
-          type="button"
-          onClick={() => toggleExpandedCard('mission')}
-          aria-expanded={expandedCard === 'mission'}
-          aria-label={t.missions.cardTitle}
-          aria-controls="engagement-panel-mission"
-          className={`touch-manipulation flex flex-col items-center gap-0.5 rounded-xl border px-2 py-2 text-center transition ${
-            expandedCard === 'mission'
-              ? 'border-indigo-400 bg-indigo-50 dark:border-indigo-500 dark:bg-indigo-900/30'
-              : missionCompleted
-                ? 'border-emerald-300 bg-emerald-50 dark:border-emerald-700 dark:bg-emerald-900/20'
-                : 'border-gray-200 bg-white hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700/60'
-          }`}
-        >
-          <span aria-hidden="true" className="text-base">
-            {missionCompleted ? '✅' : '🎯'}
-          </span>
-          <span className="line-clamp-1 text-[10px] font-semibold text-gray-700 dark:text-gray-200">
-            {t.missions.chipLabel}
-          </span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => toggleExpandedCard('challenge')}
-          aria-expanded={expandedCard === 'challenge'}
-          aria-label={t.dailyChallenge.title}
-          aria-controls="engagement-panel-challenge"
-          className={`touch-manipulation flex flex-col items-center gap-0.5 rounded-xl border px-2 py-2 text-center transition ${
-            expandedCard === 'challenge'
-              ? 'border-amber-400 bg-amber-50 dark:border-amber-500 dark:bg-amber-900/30'
-              : challengeCompletedToday
-                ? 'border-emerald-300 bg-emerald-50 dark:border-emerald-700 dark:bg-emerald-900/20'
-                : 'border-gray-200 bg-white hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700/60'
-          }`}
-        >
-          <span aria-hidden="true" className="text-base">
-            {challengeCompletedToday ? '✅' : '📅'}
-          </span>
-          <span className="line-clamp-1 text-[10px] font-semibold text-gray-700 dark:text-gray-200">
-            {t.dailyChallenge.chipLabel}
-          </span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => toggleExpandedCard('program')}
-          aria-expanded={expandedCard === 'program'}
-          aria-label={t.program.title}
-          aria-controls="engagement-panel-program"
-          disabled={!showProgramCard}
-          className={`touch-manipulation flex flex-col items-center gap-0.5 rounded-xl border px-2 py-2 text-center transition disabled:cursor-not-allowed disabled:opacity-40 ${
-            expandedCard === 'program'
-              ? 'border-fuchsia-400 bg-fuchsia-50 dark:border-fuchsia-500 dark:bg-fuchsia-900/30'
-              : 'border-gray-200 bg-white hover:enabled:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:hover:enabled:bg-gray-700/60'
-          }`}
-        >
-          <span aria-hidden="true" className="text-base">
-            🗓️
-          </span>
-          <span className="line-clamp-1 text-[10px] font-semibold text-gray-700 dark:text-gray-200">
-            {showProgramCard
-              ? t.program.chipProgress(programProgress.daysPlayed, programProgress.totalDays)
-              : t.program.chipLabel}
-          </span>
-        </button>
-      </div>
-
-      {expandedCard === 'mission' && (
-        <button
-          type="button"
-          id="engagement-panel-mission"
-          disabled={!missionClickable}
-          onClick={handleMissionClick}
-          className={`animate-pop touch-manipulation rounded-xl border px-4 py-3 text-left transition disabled:cursor-default ${
-            missionCompleted
-              ? 'border-emerald-300 bg-emerald-50 dark:border-emerald-700 dark:bg-emerald-900/20'
-              : 'border-gray-200 bg-white hover:enabled:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:hover:enabled:bg-gray-700/60'
-          }`}
-        >
-          <p className="text-xs font-semibold text-gray-500 dark:text-gray-400">
-            {t.missions.cardTitle}
-          </p>
-          <p className="mt-1 text-sm text-gray-700 dark:text-gray-200">{missionLabel}</p>
-          <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-            {missionCompleted
-              ? t.missions.completedBadge
-              : t.missions.xpReward(XP_PER_MISSION)}
-          </p>
-        </button>
-      )}
-
-      {expandedCard === 'challenge' && (
-        <div id="engagement-panel-challenge">
-          <DailyChallengeCard />
-        </div>
-      )}
-
-      {expandedCard === 'program' && showProgramCard && (
-        <div
-          id="engagement-panel-program"
-          className="animate-pop rounded-xl border border-gray-200 bg-white px-4 py-3 dark:border-gray-700 dark:bg-gray-800"
-        >
-          <p className="text-xs font-semibold text-gray-500 dark:text-gray-400">
-            {t.program.title}
-          </p>
-          <p className="mt-1 text-sm text-gray-700 dark:text-gray-200">
-            {t.program.progressLabel(programProgress.daysPlayed, programProgress.totalDays)}
-          </p>
-          <div className="mt-1.5 h-2 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
-            <div
-              className="h-full rounded-full bg-gradient-to-r from-fuchsia-500 to-amber-500 transition-all"
-              style={{
-                width: `${Math.round((programProgress.daysPlayed / programProgress.totalDays) * 100)}%`,
-              }}
-            />
-          </div>
-          {programProgress.isComplete && (
-            <p className="mt-1.5 text-xs font-semibold text-fuchsia-600 dark:text-fuchsia-400">
-              {t.program.completeMessage}
-            </p>
-          )}
-        </div>
-      )}
+      <TopEngagementChips
+        missionLabel={missionLabel}
+        missionCompleted={missionCompleted}
+        missionClickable={missionClickable}
+        onMissionClick={handleMissionClick}
+        challengeCompletedToday={challengeCompletedToday}
+        showProgramCard={showProgramCard}
+        programProgress={programProgress}
+      />
 
       {recap && (
         <div className="animate-pop relative rounded-xl border border-sky-200 bg-sky-50 px-4 py-3 dark:border-sky-800 dark:bg-sky-900/20">
