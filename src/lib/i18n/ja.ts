@@ -165,6 +165,9 @@ export const ja: Translations = {
     sfxTestButton: '🔊 テスト再生',
     bgmTitle: 'BGM',
     bgmVolumeTitle: 'BGMの音量',
+    focusModeTitle: '🎯 集中モード',
+    focusModeDescription:
+      '回答中の背景装飾（カラフルなグラデーション・ぼかし円）を非表示にし、気を散らさず集中しやすくします',
     notifications: {
       title: 'リマインド通知',
       unsupported:

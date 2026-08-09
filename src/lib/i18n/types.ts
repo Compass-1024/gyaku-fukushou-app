@@ -140,6 +140,9 @@ export interface Translations {
     sfxTestButton: string
     bgmTitle: string
     bgmVolumeTitle: string
+    // ④-6: 集中モード（没入UIテーマ）
+    focusModeTitle: string
+    focusModeDescription: string
     notifications: {
       title: string
       unsupported: string

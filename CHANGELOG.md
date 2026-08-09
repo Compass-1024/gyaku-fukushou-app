@@ -38,6 +38,7 @@
 - デイリーチャレンジに、すうじモードと同じ3段階の難易度選択（3桁/4桁/5桁）を追加（`src/lib/dailyChallenge.ts`の`getDailyChallengeDigits`）
 - 統計画面に、週間/月間の学習サマリー（挑戦セット数・正答率・連続日数・よく挑戦したモード）をPNG画像として保存できる機能を追加（`src/lib/summaryStats.ts`・`src/lib/summaryImage.ts`、SNSシェア向け）
 - 全期間の自己ベスト（`isNewBest`）とは別に、同日内での複数回挑戦（周回プレイ）を動機づける「本日の自己ベスト」比較演出を結果画面に追加（`src/lib/history.ts`の`getTodayBestSetAccuracy`、全期間の自己ベスト更新時は二重表示を避けそちらを優先）
+- 設定画面に「集中モード」を追加。回答中の背景装飾（カラフルなグラデーション・ぼかし円）を非表示にする没入UIテーマ（`src/hooks/useFocusMode.ts`、`themeMode`/`bgmEnabled`と同じread-modify-writeパターン）
 
 ### Fixed
 

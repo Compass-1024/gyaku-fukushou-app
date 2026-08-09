@@ -42,6 +42,31 @@ test('設定画面: BGMと効果音の音量スライダーが独立して切り
   await expect(soundSection.getByText('オン')).toBeVisible()
 })
 
+test('設定画面: 集中モードをオンにするとゲーム画面の背景装飾が非表示になる（④-6）', async ({
+  page,
+}) => {
+  await page.goto('/')
+  await page.getByRole('button', { name: /すうじモード（逆から入力）/ }).click()
+  await page.getByRole('button', { name: /レベル1（3桁）/ }).click()
+  await expect(page.getByText('逆から入力してください')).toBeVisible({ timeout: 15_000 })
+  // 集中モードOFF（既定）ではゲーム画面にも背景装飾のぼかし円が3つ表示される
+  await expect(page.locator('div.blur-3xl')).toHaveCount(3)
+
+  await page.getByRole('button', { name: '← レベル選択' }).click()
+  await page.getByRole('button', { name: '← モード選択' }).click()
+  await page.getByRole('button', { name: '設定' }).click()
+  const focusModeSection = page.locator('section', { has: page.getByText('🎯 集中モード') })
+  await focusModeSection.getByRole('button', { name: 'オフ' }).click()
+  await expect(focusModeSection.getByRole('button', { name: 'オン' })).toBeVisible()
+  await page.getByRole('button', { name: '← 戻る' }).click()
+
+  await page.getByRole('button', { name: /すうじモード（逆から入力）/ }).click()
+  await page.getByRole('button', { name: /レベル1（3桁）/ }).click()
+  await expect(page.getByText('逆から入力してください')).toBeVisible({ timeout: 15_000 })
+  // 集中モードONではゲーム画面の背景装飾が非表示になる
+  await expect(page.locator('div.blur-3xl')).toHaveCount(0)
+})
+
 test('設定画面: 履歴をCSVで書き出せる（④-3）', async ({ page }) => {
   await page.goto('/')
   await page.getByRole('button', { name: '設定' }).click()

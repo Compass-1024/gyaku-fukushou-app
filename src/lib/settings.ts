@@ -13,6 +13,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   bgmVolume: 50,
   dailyGoal: 3,
   notificationsEnabled: false,
+  focusModeEnabled: false,
 }
 
 export function loadSettings(): AppSettings {

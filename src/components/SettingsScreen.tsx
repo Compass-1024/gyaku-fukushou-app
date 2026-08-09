@@ -6,6 +6,7 @@ import { SettingsVoiceSection } from './SettingsVoiceSection'
 import { SettingsDailyGoalSection } from './SettingsDailyGoalSection'
 import { SettingsSoundSection } from './SettingsSoundSection'
 import { SettingsBgmSection } from './SettingsBgmSection'
+import { SettingsFocusModeSection } from './SettingsFocusModeSection'
 import { SettingsNotificationSection } from './SettingsNotificationSection'
 import { SettingsDataSection } from './SettingsDataSection'
 import { useLanguage, useTranslation } from '../contexts/LanguageContext'
@@ -18,6 +19,8 @@ interface SettingsScreenProps {
   onChangeBgmEnabled: (enabled: boolean) => void
   bgmVolume: number
   onChangeBgmVolume: (volume: number) => void
+  focusModeEnabled: boolean
+  onChangeFocusModeEnabled: (enabled: boolean) => void
   onBack: () => void
   onOpenPrivacy: () => void
 }
@@ -29,6 +32,8 @@ export function SettingsScreen({
   onChangeBgmEnabled,
   bgmVolume,
   onChangeBgmVolume,
+  focusModeEnabled,
+  onChangeFocusModeEnabled,
   onBack,
   onOpenPrivacy,
 }: SettingsScreenProps) {
@@ -36,18 +41,19 @@ export function SettingsScreen({
   const { language, setLanguage } = useLanguage()
   const [settings, setSettings] = useState<AppSettings>(() => loadSettings())
 
-  // themeMode/bgmEnabled/bgmVolume は App 側（useThemeMode/useBackgroundMusic）が
-  // 別途 saveSettings しているため、ここでのローカル state が古いままに
-  // ならないよう常に同期しておく
+  // themeMode/bgmEnabled/bgmVolume/focusModeEnabled は App 側
+  // （useThemeMode/useBackgroundMusic/useFocusMode）が別途 saveSettings しているため、
+  // ここでのローカル state が古いままにならないよう常に同期しておく
   useEffect(() => {
     setSettings((prev) =>
       prev.themeMode === themeMode &&
       prev.bgmEnabled === bgmEnabled &&
-      prev.bgmVolume === bgmVolume
+      prev.bgmVolume === bgmVolume &&
+      prev.focusModeEnabled === focusModeEnabled
         ? prev
-        : { ...prev, themeMode, bgmEnabled, bgmVolume },
+        : { ...prev, themeMode, bgmEnabled, bgmVolume, focusModeEnabled },
     )
-  }, [themeMode, bgmEnabled, bgmVolume])
+  }, [themeMode, bgmEnabled, bgmVolume, focusModeEnabled])
 
   function updateSettings(partial: Partial<AppSettings>) {
     // 保存直前に最新の設定を読み直してからマージする。ローカル state だけを
@@ -104,6 +110,11 @@ export function SettingsScreen({
         onChangeVolume={onChangeBgmVolume}
       />
 
+      <SettingsFocusModeSection
+        focusModeEnabled={focusModeEnabled}
+        onToggle={() => onChangeFocusModeEnabled(!focusModeEnabled)}
+      />
+
       <SettingsNotificationSection
         notificationsEnabled={settings.notificationsEnabled}
         onChange={(notificationsEnabled) =>
@@ -117,6 +128,7 @@ export function SettingsScreen({
           onChangeTheme(imported.themeMode)
           onChangeBgmEnabled(imported.bgmEnabled)
           onChangeBgmVolume(imported.bgmVolume)
+          onChangeFocusModeEnabled(imported.focusModeEnabled)
         }}
       />
 

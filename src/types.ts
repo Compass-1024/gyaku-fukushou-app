@@ -71,6 +71,8 @@ export interface AppSettings {
   bgmVolume: number
   dailyGoal: number
   notificationsEnabled: boolean
+  // ④-6: 回答中の背景装飾を非表示にする集中モード
+  focusModeEnabled: boolean
 }
 
 export interface NBackTrial {

@@ -172,6 +172,9 @@ export const en: Translations = {
     sfxTestButton: '🔊 Test sound',
     bgmTitle: 'Background music',
     bgmVolumeTitle: 'Background music volume',
+    focusModeTitle: '🎯 Focus mode',
+    focusModeDescription:
+      'Hides the colorful background gradient and decorative blur shapes while answering, so there’s less to distract you',
     notifications: {
       title: 'Reminder notifications',
       unsupported:

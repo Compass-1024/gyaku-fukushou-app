@@ -15,6 +15,7 @@ import { PrivacyScreen } from './components/PrivacyScreen'
 import { useSpeechRecognition } from './hooks/useSpeechRecognition'
 import { useThemeMode } from './hooks/useThemeMode'
 import { useBackgroundMusic } from './hooks/useBackgroundMusic'
+import { useFocusMode } from './hooks/useFocusMode'
 import { useLanguage, useTranslation } from './contexts/LanguageContext'
 import { loadHistory } from './lib/history'
 import { loadSettings } from './lib/settings'
@@ -128,6 +129,7 @@ function App() {
   const { themeMode, setThemeMode } = useThemeMode()
   const { bgmEnabled, bgmVolume, setBgmEnabled, setBgmVolume, setGameplayActive } =
     useBackgroundMusic()
+  const { focusModeEnabled, setFocusModeEnabled } = useFocusMode()
   const { language } = useLanguage()
   const t = useTranslation()
   const { supported: recognitionSupported } = useSpeechRecognition()
@@ -447,6 +449,8 @@ function App() {
           onChangeBgmEnabled={setBgmEnabled}
           bgmVolume={bgmVolume}
           onChangeBgmVolume={setBgmVolume}
+          focusModeEnabled={focusModeEnabled}
+          onChangeFocusModeEnabled={setFocusModeEnabled}
           onBack={() => goTo({ screen: 'top' })}
           onOpenPrivacy={() => goTo({ screen: 'privacy' })}
         />
@@ -464,24 +468,37 @@ function App() {
       break
   }
 
+  // ④-6: 集中モード。回答中は視覚的な気を散らす要素（カラフルな背景グラデーション・
+  // 装飾のぼかし円）を非表示にし、ニュートラルな単色背景にする没入UIテーマ
+  const isGameScreen = view.screen.endsWith('-game')
+  const isFocusModeActive = focusModeEnabled && isGameScreen
+
   return (
     <main
       ref={mainRef}
       tabIndex={-1}
-      className="relative min-h-full overflow-hidden bg-gradient-to-br from-emerald-50 via-sky-50 to-fuchsia-50 pt-[env(safe-area-inset-top)] pr-[env(safe-area-inset-right)] pb-[env(safe-area-inset-bottom)] pl-[env(safe-area-inset-left)] outline-none dark:from-gray-950 dark:via-indigo-950 dark:to-gray-900"
+      className={
+        isFocusModeActive
+          ? 'relative min-h-full overflow-hidden bg-gray-100 pt-[env(safe-area-inset-top)] pr-[env(safe-area-inset-right)] pb-[env(safe-area-inset-bottom)] pl-[env(safe-area-inset-left)] outline-none dark:bg-gray-950'
+          : 'relative min-h-full overflow-hidden bg-gradient-to-br from-emerald-50 via-sky-50 to-fuchsia-50 pt-[env(safe-area-inset-top)] pr-[env(safe-area-inset-right)] pb-[env(safe-area-inset-bottom)] pl-[env(safe-area-inset-left)] outline-none dark:from-gray-950 dark:via-indigo-950 dark:to-gray-900'
+      }
     >
-      <div
-        aria-hidden
-        className="pointer-events-none absolute -top-24 -left-24 h-72 w-72 rounded-full bg-emerald-300/40 blur-3xl dark:bg-emerald-600/15"
-      />
-      <div
-        aria-hidden
-        className="pointer-events-none absolute top-1/3 -right-24 h-80 w-80 rounded-full bg-amber-300/30 blur-3xl dark:bg-amber-500/10"
-      />
-      <div
-        aria-hidden
-        className="pointer-events-none absolute -bottom-24 left-1/4 h-72 w-72 rounded-full bg-indigo-300/30 blur-3xl dark:bg-indigo-600/15"
-      />
+      {!isFocusModeActive && (
+        <>
+          <div
+            aria-hidden
+            className="pointer-events-none absolute -top-24 -left-24 h-72 w-72 rounded-full bg-emerald-300/40 blur-3xl dark:bg-emerald-600/15"
+          />
+          <div
+            aria-hidden
+            className="pointer-events-none absolute top-1/3 -right-24 h-80 w-80 rounded-full bg-amber-300/30 blur-3xl dark:bg-amber-500/10"
+          />
+          <div
+            aria-hidden
+            className="pointer-events-none absolute -bottom-24 left-1/4 h-72 w-72 rounded-full bg-indigo-300/30 blur-3xl dark:bg-indigo-600/15"
+          />
+        </>
+      )}
       <div className="relative">
         <Suspense
           fallback={
