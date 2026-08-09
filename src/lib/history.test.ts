@@ -143,6 +143,18 @@ describe('getStreakDays', () => {
     expect(getStreakDays([])).toBe(0)
   })
 
+  it('fix③-5: counts extraPlayedDateKeys (e.g. daily challenge) toward the streak', () => {
+    const extra = new Set([localKeyDaysAgo(0)])
+    // historyには何も無いが、デイリーチャレンジのみ今日取り組んだ場合
+    expect(getStreakDays([], new Date(), extra)).toBe(1)
+  })
+
+  it('fix③-5: merges history days and extraPlayedDateKeys into one continuous streak', () => {
+    const history = [entryOn(daysAgo(1)), entryOn(daysAgo(2))]
+    const extra = new Set([localKeyDaysAgo(0)]) // 今日はデイリーチャレンジのみ
+    expect(getStreakDays(history, new Date(), extra)).toBe(3)
+  })
+
   it('bridges a single missed day using a streak freeze', () => {
     // day0, day1 プレイ、day2 欠落、day3 プレイ
     const history = [entryOn(daysAgo(0)), entryOn(daysAgo(1)), entryOn(daysAgo(3))]

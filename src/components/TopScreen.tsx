@@ -16,7 +16,10 @@ import {
 } from '../lib/missions'
 import { computeTotalXp, getXpProgress, XP_PER_MISSION } from '../lib/xp'
 import { getRollingProgramProgress } from '../lib/program'
-import { hasCompletedTodayChallenge } from '../lib/dailyChallenge'
+import {
+  hasCompletedTodayChallenge,
+  loadDailyChallengeCompletions,
+} from '../lib/dailyChallenge'
 import { DailyChallengeCard } from './DailyChallengeCard'
 import { getAllBenchmarks } from '../lib/benchmarks'
 import type { Benchmark } from '../lib/benchmarks'
@@ -144,8 +147,16 @@ export function TopScreen({
       .map((b) => BENCHMARK_MODE_TO_CARD_MODE[b.mode]),
   )
 
-  const streakDays = getStreakDays(history)
+  // fix③-5: デイリーチャレンジはhistoryに記録しない（4桁固定という出題
+  // 特性上、既存モードの正答率統計に混ぜると数値が歪むため）が、その分
+  // 「プレイした日」としてはストリーク・7日間チャレンジに反映されるべき
+  // なので、日付キーの集合として別経路で連携する
+  const dailyChallengeDateKeys = new Set(
+    loadDailyChallengeCompletions().map((c) => c.dateKey),
+  )
+  const streakDays = getStreakDays(history, new Date(), dailyChallengeDateKeys)
   const todayCount = getTodayCount(history)
+  const challengeCompletedToday = hasCompletedTodayChallenge()
   const dailyGoal = loadSettings().dailyGoal
   const goalProgress =
     dailyGoal > 0 ? Math.min(100, Math.round((todayCount / dailyGoal) * 100)) : 0
@@ -154,7 +165,8 @@ export function TopScreen({
   const recommended = getWeakestAreas(history, language === 'en' ? 8 : 1).find(
     (area) => language === 'ja' || area.mode !== 'word',
   )
-  const streakAtRisk = streakDays > 0 && todayCount === 0
+  const streakAtRisk =
+    streakDays > 0 && todayCount === 0 && !challengeCompletedToday
 
   // プレイヤーレベル/経験値は履歴＋ミッション達成ログから都度計算する
   // （実績と同じ哲学。専用の可変ストアは持たない）
@@ -214,9 +226,12 @@ export function TopScreen({
   // ④-4: 「今日のミッション」（単日完結）を補う、複数日にまたがる目標。
   // データが無い新規ユーザーにいきなり「0/7」を見せないよう、履歴が
   // あるユーザーにのみ表示する
-  const programProgress = getRollingProgramProgress(history)
-  const showProgramCard = history.length > 0
-  const challengeCompleted = hasCompletedTodayChallenge()
+  const programProgress = getRollingProgramProgress(
+    history,
+    new Date(),
+    dailyChallengeDateKeys,
+  )
+  const showProgramCard = history.length > 0 || dailyChallengeDateKeys.size > 0
 
   // ⑥: 今日のミッション・デイリーチャレンジ・7日間チャレンジは常時全文表示
   // すると縦に3枚積み上がり場所を取るため、コンパクトな横並びチップにまとめ、
@@ -380,13 +395,13 @@ export function TopScreen({
           className={`touch-manipulation flex flex-col items-center gap-0.5 rounded-xl border px-2 py-2 text-center transition ${
             expandedCard === 'challenge'
               ? 'border-amber-400 bg-amber-50 dark:border-amber-500 dark:bg-amber-900/30'
-              : challengeCompleted
+              : challengeCompletedToday
                 ? 'border-emerald-300 bg-emerald-50 dark:border-emerald-700 dark:bg-emerald-900/20'
                 : 'border-gray-200 bg-white hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700/60'
           }`}
         >
           <span aria-hidden="true" className="text-base">
-            {challengeCompleted ? '✅' : '📅'}
+            {challengeCompletedToday ? '✅' : '📅'}
           </span>
           <span className="line-clamp-1 text-[10px] font-semibold text-gray-700 dark:text-gray-200">
             {t.dailyChallenge.chipLabel}

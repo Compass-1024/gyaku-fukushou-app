@@ -18,6 +18,9 @@ export interface ProgramProgress {
 export function getRollingProgramProgress(
   history: HistoryEntry[],
   now: Date = new Date(),
+  // fix③-5: デイリーチャレンジ等、historyには記録されないが「その日に
+  // 取り組んだ」とみなしたい日付キーの集合
+  extraPlayedDateKeys: ReadonlySet<string> = new Set(),
 ): ProgramProgress {
   const windowKeys = new Set<string>()
   for (let i = 0; i < PROGRAM_LENGTH_DAYS; i++) {
@@ -28,6 +31,9 @@ export function getRollingProgramProgress(
   const playedDays = new Set<string>()
   for (const entry of history) {
     const key = localDateKey(new Date(entry.timestamp))
+    if (windowKeys.has(key)) playedDays.add(key)
+  }
+  for (const key of extraPlayedDateKeys) {
     if (windowKeys.has(key)) playedDays.add(key)
   }
   return {

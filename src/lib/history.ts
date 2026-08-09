@@ -144,9 +144,14 @@ const MAX_STREAK_FREEZES_PER_MONTH = 2
 export function getStreakDays(
   history: HistoryEntry[],
   now: Date = new Date(),
+  // fix③-5: デイリーチャレンジ等、historyには記録されないが「その日に
+  // 取り組んだ」とみなしたい日付キーの集合。history本体を汚さずに
+  // ストリーク判定にだけ反映する
+  extraPlayedDateKeys: ReadonlySet<string> = new Set(),
 ): number {
-  if (history.length === 0) return 0
+  if (history.length === 0 && extraPlayedDateKeys.size === 0) return 0
   const days = new Set(history.map((e) => localDateKey(new Date(e.timestamp))))
+  for (const key of extraPlayedDateKeys) days.add(key)
   const cursor = new Date(now)
   if (!days.has(localDateKey(cursor))) {
     cursor.setDate(cursor.getDate() - 1)
