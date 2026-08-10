@@ -83,6 +83,8 @@ export interface Translations {
   top: {
     heading: string
     subtitle: string
+    // Android実装を見据えたオフラインインジケータ
+    offlineBanner: string
     streakDays: (days: number) => string
     todayCount: (count: number) => string
     dailyGoal: (today: number, goal: number) => string

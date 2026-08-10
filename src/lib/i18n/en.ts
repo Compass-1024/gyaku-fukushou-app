@@ -55,6 +55,7 @@ export const en: Translations = {
   top: {
     heading: 'Working Memory Training',
     subtitle: 'Train your working memory with 9 brain-training modes.',
+    offlineBanner: "📶 You're offline. Your training history is still being recorded.",
     streakDays: (days) => `🔥 ${days}-day streak`,
     todayCount: (count) => `${count} session${count === 1 ? '' : 's'} today`,
     dailyGoal: (today, goal) => `Today's goal: ${today} / ${goal} sets`,

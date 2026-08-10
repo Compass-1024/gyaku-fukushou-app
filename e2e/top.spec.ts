@@ -56,6 +56,20 @@ test('トップ画面: ミッション・お題・7日間チャレンジがコ�
   await expect(page.getByRole('button', { name: '挑戦する' })).toBeVisible()
 })
 
+test('トップ画面: オフラインになるとオフラインバナーが表示される（Android対応⑥）', async ({
+  page,
+  context,
+}) => {
+  await page.goto('/')
+  await expect(page.getByText('📶 オフラインです')).toHaveCount(0)
+
+  await context.setOffline(true)
+  await expect(page.getByText('📶 オフラインです', { exact: false })).toBeVisible()
+
+  await context.setOffline(false)
+  await expect(page.getByText('📶 オフラインです', { exact: false })).toHaveCount(0)
+})
+
 test('設定でチップの自動展開を選ぶと、ホーム画面表示時に自動で展開される（④-7）', async ({
   page,
 }) => {

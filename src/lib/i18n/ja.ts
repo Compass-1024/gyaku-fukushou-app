@@ -55,6 +55,7 @@ export const ja: Translations = {
   top: {
     heading: 'ワーキングメモリトレーニング',
     subtitle: '9種類のトレーニングで、脳のワーキングメモリを鍛えましょう',
+    offlineBanner: '📶 オフラインです。学習履歴はこのまま記録できます',
     streakDays: (days) => `🔥 ${days}日連続`,
     todayCount: (count) => `今日 ${count}回挑戦`,
     dailyGoal: (today, goal) => `今日の目標: ${today} / ${goal} セット`,

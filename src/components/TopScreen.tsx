@@ -25,6 +25,7 @@ import type { Benchmark } from '../lib/benchmarks'
 import { getModeCards } from '../lib/modeCardsConfig'
 import type { TopModeSelection } from '../lib/modeCardsConfig'
 import { TopEngagementChips } from './TopEngagementChips'
+import { useOnlineStatus } from '../hooks/useOnlineStatus'
 import { useLanguage, useTranslation } from '../contexts/LanguageContext'
 import type { HistoryEntry } from '../types'
 
@@ -61,6 +62,7 @@ export function TopScreen({
 }: TopScreenProps) {
   const t = useTranslation()
   const { language } = useLanguage()
+  const isOnline = useOnlineStatus()
 
   // ホーム画面の3×3グリッドに表示するモードカード。ことばモードのみ
   // 英語版では選択できないため対象外にする
@@ -164,6 +166,14 @@ export function TopScreen({
 
   return (
     <div className="mx-auto flex w-full max-w-md flex-col gap-6 px-4 py-6 sm:gap-8 sm:px-6 sm:py-10">
+      {!isOnline && (
+        <p
+          role="status"
+          className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-center text-xs font-semibold text-amber-700 dark:border-amber-700 dark:bg-amber-900/30 dark:text-amber-300"
+        >
+          {t.top.offlineBanner}
+        </p>
+      )}
       <div className="flex justify-end gap-2">
         <button
           type="button"
