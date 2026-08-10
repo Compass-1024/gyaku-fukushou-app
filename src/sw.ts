@@ -21,7 +21,9 @@ self.addEventListener('push', (event) => {
     self.registration.showNotification(data.title ?? '逆復唱トレーニング', {
       body: data.body ?? '',
       icon: '/icon-192.png',
-      badge: '/icon-192.png',
+      // Android通知シェードのバッジはOSが単色にティントするため、
+      // フルカラーアイコンではなく透過シルエット画像(badge-96.png)を使う
+      badge: '/badge-96.png',
       tag: 'daily-reminder',
     }),
   )

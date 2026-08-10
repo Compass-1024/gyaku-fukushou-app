@@ -13,6 +13,11 @@ export default defineConfig({
       strategies: 'injectManifest',
       srcDir: 'src',
       filename: 'sw.ts',
+      // Androidアプリ化(TWA)を見据え、npm run dev中もmanifest/Service Workerの
+      // 挙動を確認できるようにする（既定ではビルド時のみ注入される）
+      devOptions: {
+        enabled: true,
+      },
       injectManifest: {
         globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
       },
@@ -25,7 +30,13 @@ export default defineConfig({
         theme_color: '#0ea5e9',
         background_color: '#ffffff',
         display: 'standalone',
+        // Androidアプリ化(TWA)を見据えた明示指定。id未指定だとstart_urlからの
+        // 暗黙導出に頼ることになり、再インストール/アップデート時のアプリ識別が
+        // 不安定になりうる。本アプリは縦画面専用の設計のためorientationも固定する
+        id: '/',
         start_url: '/',
+        orientation: 'portrait',
+        display_override: ['standalone'],
         icons: [
           {
             src: '/icon-192.png',
@@ -55,8 +66,13 @@ export default defineConfig({
             icons: [{ src: '/icon-192.png', sizes: '192x192' }],
           },
           {
-            name: 'すうじモード',
+            name: 'すうじモード（逆から入力）',
             url: '/?shortcut=digit-reverse',
+            icons: [{ src: '/icon-192.png', sizes: '192x192' }],
+          },
+          {
+            name: 'すうじモード（合計を入力）',
+            url: '/?shortcut=digit-sum',
             icons: [{ src: '/icon-192.png', sizes: '192x192' }],
           },
           {
@@ -82,6 +98,11 @@ export default defineConfig({
           {
             name: '音・色モード',
             url: '/?shortcut=tone',
+            icons: [{ src: '/icon-192.png', sizes: '192x192' }],
+          },
+          {
+            name: 'ランダムモード',
+            url: '/?shortcut=random',
             icons: [{ src: '/icon-192.png', sizes: '192x192' }],
           },
         ],

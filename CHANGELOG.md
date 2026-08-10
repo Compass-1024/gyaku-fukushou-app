@@ -8,6 +8,11 @@
 
 - ランダムモードのすうじラウンドで、出題の数字が1つずつ切り替わるたびに上部の「よく覚えてください」の表示位置が上下にずれる不具合を修正（空白のみの段落がCSS上つぶれて高さが変わっていたため。ノーブレークスペースに統一）
 - ランダムモードの回答フェーズで、単体のすうじ/空間/変化検出/音・色モード画面と異なり指示文（「逆から入力してください」等）が一切表示されていなかった不具合を修正
+- Android実装を見据え、連続タップ操作中に長押しでテキスト選択・コンテキストメニューが誤って開く不具合を修正（`button`要素に`user-select: none`/`-webkit-touch-callout: none`を適用）
+- Android実装を見据え、回答フェーズの連続タップ中にプルツーリフレッシュ・オーバースクロールのバウンス演出が誤って発生しうる問題を修正（`overscroll-behavior-y: none`）
+- 初回オンボーディングの「スキップ」ボタンのタップ領域が約20px四方しかなくAndroidの推奨タップ領域(48dp)を下回っていた問題を修正（他のボタンと同じ`-m-2 p-2`の余白拡張パターンを適用）
+- Web ManifestのPWAショートカットに「すうじモード（合計を入力）」「ランダムモード」が未登録だった不具合を修正（`?shortcut=digit-sum`/`?shortcut=random`は既にApp.tsx側で対応済みだったが、manifestの`shortcuts`に載っておらずAndroidホーム画面長押しメニューから到達できなかった）
+- 通知の`badge`アイコンが本体アイコン（icon-192.png）と同一で、Android通知シェードでの視認性が低かった問題を修正（透過モノクロシルエット画像`badge-96.png`を新規作成）
 
 ### Changed
 
@@ -43,6 +48,8 @@
 - 統計画面の学習カレンダー（GitHub風ヒートマップ）のマスをタップすると、その日に挑戦したモード・レベル・正誤内訳をドリルダウン表示できるようにした（`src/components/StatsCalendarSection.tsx`）
 - 統計画面に「実績・達成の通知センター」を追加。実績解除・ミッション達成を新しい順に一覧表示する。解除済みフラグを保存しない設計のため、履歴を古い順に再生しながら`isUnlocked`が初めてtrueになった時点を解除日として近似する（`src/lib/notifications.ts`）
 - すうじ/空間/変化検出/音・色の4モードにアダプティブ難易度モードを追加。1セット3問と試行数が少ないため、Nバック系の3試行ウィンドウ方式ではなく問題ごとに正解でレベル+1・不正解でレベル-1する即時ステップ調整方式にした（`src/lib/adaptiveDifficulty.ts`の`nextAdaptiveLevel`、各lib（digits/spatial/pattern/tone.ts）に1問単位の生成関数`pick*Question`を追加）
+- Android実装（TWA方式）を見据え、Web Manifestに`id`・`orientation: portrait`・`display_override`を明示指定（`vite.config.ts`）
+- 開発サーバー（`npm run dev`）でもmanifest/Service Workerの挙動を確認できるよう`devOptions.enabled`を有効化
 
 ### Fixed
 

@@ -27,6 +27,23 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Android実装を見据えた対応: 連続タップ操作が中心のゲーム画面で、
+   長押しによるテキスト選択・コンテキストメニューが誤って開くのを防ぐ。
+   本アプリの<button>はすべてタップ操作用でテキスト選択が必要な場面が
+   無いため、グローバルに無効化してよい */
+button {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* プルツーリフレッシュ・オーバースクロールのバウンス演出が、回答フェーズの
+   連続タップ中に誤って発生し集中を妨げるのを防ぐ */
+html,
+body {
+  overscroll-behavior-y: none;
+}
+
 @keyframes pop {
   0% {
     transform: scale(1);

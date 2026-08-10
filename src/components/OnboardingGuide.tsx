@@ -52,7 +52,7 @@ export function OnboardingGuide({ onDismiss }: OnboardingGuideProps) {
           <button
             type="button"
             onClick={onDismiss}
-            className="touch-manipulation text-sm text-gray-500 hover:underline dark:text-gray-400"
+            className="-m-2 touch-manipulation p-2 text-sm text-gray-500 hover:underline dark:text-gray-400"
           >
             {t.onboarding.skip}
           </button>
