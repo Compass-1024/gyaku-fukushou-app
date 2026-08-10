@@ -80,6 +80,14 @@ describe('pickPatternQuestionSet の除外機能', () => {
       expect([...filledCells].sort((a, b) => a - b)).not.toEqual([0, 1, 4, 5])
     }
   })
+
+  it('同一セット内で同じ模様（順序は問わない）が重複して出題されない', () => {
+    for (let i = 0; i < 200; i++) {
+      const set = pickPatternQuestionSet(1)
+      const serialized = set.map((q) => [...q.filledCells].sort((a, b) => a - b).join(','))
+      expect(new Set(serialized).size).toBe(set.length)
+    }
+  })
 })
 
 describe('isPatternSelectionCorrect', () => {

@@ -101,6 +101,14 @@ describe('pickDigitQuestionSet の除外機能', () => {
       expect(digits).not.toEqual([1, 2, 3])
     }
   })
+
+  it('同一セット内で同じ数字列が重複して出題されない', () => {
+    for (let i = 0; i < 200; i++) {
+      const set = pickDigitQuestionSet(1)
+      const serialized = set.map((q) => q.digits.join(','))
+      expect(new Set(serialized).size).toBe(set.length)
+    }
+  })
 })
 
 describe('getAnswerTimeoutMs', () => {

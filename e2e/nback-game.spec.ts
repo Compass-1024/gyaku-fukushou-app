@@ -34,3 +34,25 @@ test('Nバックモード: アダプティブ難易度モードで最後まで�
   await expect(page.getByText(/問正解/)).toBeVisible({ timeout: 30_000 })
   await expect(page.getByText(/到達した最大N/)).toBeVisible()
 })
+
+test('Nバックモード: 結果画面の全試行内訳は既定で折りたたまれており、ボタンで展開できる（改善: 長大リストの解消）', async ({
+  page,
+}) => {
+  test.setTimeout(60_000)
+  await page.goto('/')
+  await page.getByRole('button', { name: /^Nバックモード/ }).click()
+  await page.getByRole('button', { name: '10問' }).click()
+  await page.getByRole('button', { name: /レベル1（1つ前と比較）/ }).click()
+
+  // 何も操作せず10試行をタイムアウトで進め、結果画面まで到達する
+  await expect(page.getByText(/問正解/)).toBeVisible({ timeout: 30_000 })
+
+  // 10問分の内訳（「問題1: …」等）は既定では表示されず、折りたたみボタンのみ
+  const toggle = page.getByRole('button', { name: /内訳を表示（全10問）/ })
+  await expect(toggle).toBeVisible()
+  await expect(page.getByText(/^問題1[:：]/)).toHaveCount(0)
+
+  await toggle.click()
+  await expect(page.getByText(/^問題1[:：]/)).toBeVisible()
+  await expect(page.getByRole('button', { name: '内訳を隠す' })).toBeVisible()
+})

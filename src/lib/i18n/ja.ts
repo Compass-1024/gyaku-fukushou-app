@@ -144,6 +144,8 @@ export const ja: Translations = {
     xpGained: (xp) => `獲得XP: +${xp}`,
     xpGainedZero: '今回の獲得XPはなし。次は1つ正解を目指そう',
     levelUp: (level) => `🎉 Level Up! プレイヤーLv.${level}`,
+    showDetails: (count) => `内訳を表示（全${count}問）`,
+    hideDetails: '内訳を隠す',
   },
   settings: {
     heading: '設定',

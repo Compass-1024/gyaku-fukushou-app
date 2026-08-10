@@ -39,9 +39,18 @@ export function pickToneQuestion(
 }
 
 // exclude: 直前に中断したセットで実際に表示済みだった系列（モードを途中で
-// やめて再挑戦した際、同じ問題が出ないようにする）
+// やめて再挑戦した際、同じ問題が出ないようにする）に加え、同一セット内で
+// 既に選んだ系列も除外することで、1セット3問の中で同じ問題が重複して
+// 出題されないようにする
 export function pickToneQuestionSet(level: Level, exclude: number[][] = []): ToneQuestion[] {
-  return Array.from({ length: QUESTIONS_PER_SET }, (_, i) => pickToneQuestion(level, i, exclude))
+  const used = [...exclude]
+  const picked: ToneQuestion[] = []
+  for (let i = 0; i < QUESTIONS_PER_SET; i++) {
+    const question = pickToneQuestion(level, i, used)
+    picked.push(question)
+    used.push(question.sequence)
+  }
+  return picked
 }
 
 export function recordToneAttempt(

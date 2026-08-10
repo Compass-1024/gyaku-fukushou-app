@@ -72,9 +72,18 @@ export function pickPatternQuestion(
 }
 
 // exclude: 直前に中断したセットで実際に表示済みだった模様（モードを途中で
-// やめて再挑戦した際、同じ問題が出ないようにする）
+// やめて再挑戦した際、同じ問題が出ないようにする）に加え、同一セット内で
+// 既に選んだ模様も除外することで、1セット3問の中で同じ問題が重複して
+// 出題されないようにする
 export function pickPatternQuestionSet(level: Level, exclude: number[][] = []): PatternQuestion[] {
-  return Array.from({ length: QUESTIONS_PER_SET }, (_, i) => pickPatternQuestion(level, i, exclude))
+  const used = [...exclude]
+  const picked: PatternQuestion[] = []
+  for (let i = 0; i < QUESTIONS_PER_SET; i++) {
+    const question = pickPatternQuestion(level, i, used)
+    picked.push(question)
+    used.push(question.filledCells)
+  }
+  return picked
 }
 
 export function recordPatternAttempt(

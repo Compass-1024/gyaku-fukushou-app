@@ -59,6 +59,14 @@ describe('pickToneQuestionSet の除外機能', () => {
       expect(sequence).not.toEqual([0, 0, 1])
     }
   })
+
+  it('同一セット内で同じ系列が重複して出題されない', () => {
+    for (let i = 0; i < 200; i++) {
+      const set = pickToneQuestionSet(1)
+      const serialized = set.map((q) => q.sequence.join(','))
+      expect(new Set(serialized).size).toBe(set.length)
+    }
+  })
 })
 
 describe('isToneAnswerCorrect', () => {

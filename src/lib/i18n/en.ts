@@ -151,6 +151,8 @@ export const en: Translations = {
     xpGained: (xp) => `XP gained: +${xp}`,
     xpGainedZero: 'No XP this time — aim for at least one correct next time',
     levelUp: (level) => `🎉 Level Up! Player Lv.${level}`,
+    showDetails: (count) => `Show breakdown (${count} questions)`,
+    hideDetails: 'Hide breakdown',
   },
   settings: {
     heading: 'Settings',

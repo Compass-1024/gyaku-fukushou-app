@@ -79,6 +79,10 @@ export interface Translations {
     xpGained: (xp: number) => string
     xpGainedZero: string
     levelUp: (level: number) => string
+    // Nバック/デュアルNバックのような試行数が多いモードでは、全問の内訳を
+    // 既定で折りたたみ表示にする（結果画面が長大化するのを防ぐため）
+    showDetails: (count: number) => string
+    hideDetails: string
   }
   top: {
     heading: string

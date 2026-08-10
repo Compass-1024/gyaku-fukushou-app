@@ -14,6 +14,12 @@ import type { Achievement } from '../lib/achievements'
 // インストール促進バナーを表示する。毎回は出さない
 const MIN_TOTAL_SETS_FOR_INSTALL_BANNER = 3
 
+// Nバック/デュアルNバック（最大30試行＝最大60行）のように出題数が多い
+// モードでは、全問の内訳を並べると結果画面が非常に長くなり、上部の
+// スコア・演出バナーが埋もれてしまう。3問1セットの他モードには影響しない
+// しきい値を超えたら既定で折りたたみ、必要な人だけ展開できるようにする
+const ITEM_LIST_COLLAPSE_THRESHOLD = 8
+
 export interface SummaryItem {
   key: string
   label: string
@@ -62,6 +68,8 @@ export function SetSummary({
   const [shareStatus, setShareStatus] = useState<
     'idle' | 'shared' | 'copied' | 'error'
   >('idle')
+  const shouldCollapseItems = items.length > ITEM_LIST_COLLAPSE_THRESHOLD
+  const [itemsExpanded, setItemsExpanded] = useState(!shouldCollapseItems)
 
   // 表示のたびにlocalStorageから読み直す（このセット自身の記録がまだ
   // 反映されていないタイミングで最初に描画されても、直後の再描画で正しい値になる）
@@ -203,32 +211,45 @@ export function SetSummary({
         </div>
       )}
 
-      <ul className="flex flex-col gap-2">
-        {items.map((item, i) => (
-          <li
-            key={item.key}
-            className={`flex items-center justify-between rounded-lg border px-4 py-3 text-sm ${
-              item.correct
-                ? 'border-emerald-300 bg-emerald-50 dark:border-emerald-700 dark:bg-emerald-900/30'
-                : 'border-rose-300 bg-rose-50 dark:border-rose-700 dark:bg-rose-900/30'
-            }`}
-          >
-            <span className="text-gray-500 dark:text-gray-400">
-              {t.setSummary.questionLabel(i + 1)}
-              {item.label}
-            </span>
-            <span
-              className={
+      {shouldCollapseItems && (
+        <button
+          type="button"
+          onClick={() => setItemsExpanded((e) => !e)}
+          aria-expanded={itemsExpanded}
+          className="touch-manipulation self-center text-sm text-gray-500 underline decoration-dotted underline-offset-2 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+        >
+          {itemsExpanded ? t.setSummary.hideDetails : t.setSummary.showDetails(items.length)}
+        </button>
+      )}
+
+      {itemsExpanded && (
+        <ul className="flex flex-col gap-2">
+          {items.map((item, i) => (
+            <li
+              key={item.key}
+              className={`flex items-center justify-between rounded-lg border px-4 py-3 text-sm ${
                 item.correct
-                  ? 'font-semibold text-emerald-700 dark:text-emerald-300'
-                  : 'font-semibold text-rose-700 dark:text-rose-300'
-              }
+                  ? 'border-emerald-300 bg-emerald-50 dark:border-emerald-700 dark:bg-emerald-900/30'
+                  : 'border-rose-300 bg-rose-50 dark:border-rose-700 dark:bg-rose-900/30'
+              }`}
             >
-              {item.correct ? t.common.correct : t.common.incorrect}
-            </span>
-          </li>
-        ))}
-      </ul>
+              <span className="text-gray-500 dark:text-gray-400">
+                {t.setSummary.questionLabel(i + 1)}
+                {item.label}
+              </span>
+              <span
+                className={
+                  item.correct
+                    ? 'font-semibold text-emerald-700 dark:text-emerald-300'
+                    : 'font-semibold text-rose-700 dark:text-rose-300'
+                }
+              >
+                {item.correct ? t.common.correct : t.common.incorrect}
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
 
       {dailyGoal > 0 && (
         <div className="rounded-lg border border-gray-200 px-4 py-3 dark:border-gray-700">
