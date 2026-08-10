@@ -447,10 +447,13 @@ interface AppSettings {
   bgmVolume: number // 0-100
   dailyGoal: number
   notificationsEnabled: boolean
+  focusModeEnabled: boolean // 回答中の背景装飾を非表示にする集中モード
+  autoExpandChip: 'none' | 'mission' | 'challenge' | 'program' // ホーム画面表示時に自動展開するチップ
+  hapticsEnabled: boolean // Android実装を見据えたハプティックフィードバック（既定オフ）
 }
 ```
 
-デフォルト設定: `{ themeMode: 'system', language: 'ja', speechRate: 0.95, voiceURI: null, soundEnabled: true, sfxVolume: 80, bgmEnabled: false, bgmVolume: 50, dailyGoal: 3, notificationsEnabled: false }`
+デフォルト設定: `{ themeMode: 'system', language: 'ja', speechRate: 0.95, voiceURI: null, soundEnabled: true, sfxVolume: 80, bgmEnabled: false, bgmVolume: 50, dailyGoal: 3, notificationsEnabled: false, focusModeEnabled: false, autoExpandChip: 'none', hapticsEnabled: false }`
 
 読み込み・保存とも`try/catch`でlocalStorage利用不可（プライベートモード等）を許容し、失敗時はデフォルト値やno-opにフォールバックする。
 
@@ -458,31 +461,54 @@ interface AppSettings {
 
 `src/lib/backup.ts`のエクスポート/インポート対象は`history`・`settings`・`missionCompletions`・`dailyChallengeCompletions`（`BACKUP_VERSION: 3`）。`missionCompletions`が無いv1形式・`dailyChallengeCompletions`が無いv2以前形式のバックアップも読み込め、その場合は空配列として扱う（後方互換）。`recap.ts`の表示済み週キー・`phraseStats.ts`のフレーズ統計はバックアップ対象外（キャッシュ的な性質のため）。
 
+### セッション状態の一時保存（sessionStorage）
+
+上記のlocalStorageとは別に、Android実装（モバイルOSがバックグラウンドでタブ/TWAプロセスを再生成しうる）を見据え、`sessionStorage`（同一タブのセッション中のみ生存）に回答途中のゲームセットを一時保存する仕組みがある。学習データとしての永続化ではなく、あくまで「再読み込み後もその場で再開できる」ための一時キャッシュのため、`backup.ts`のバックアップ対象には含めない。
+
+| キー | 用途 | 読み書き |
+|---|---|---|
+| `gyaku-fukushou:lastGameView` | 直前に表示していたゲーム画面（`View`オブジェクト、30分TTL） | `src/App.tsx`が単独で担う（`getResumedGameView`/`saveResumableView`/`clearResumableView`） |
+| `game-session:<mode>:...` | すうじ/空間/変化検出/音・色モードの、問題ごとの正誤結果・現在の問題位置（30分TTL） | `src/lib/gameSessionPersistence.ts`（`saveGameSession`/`loadGameSession`/`clearGameSession`）。各GameScreenが自身のsessionKey（例: `` `game-session:digit:${gameType}:${level}:${adaptive}` ``）で呼び出す |
+
+回答途中の入力内容やカウントダウンの残り時間までは対象外（復元後は該当問題をready状態からやり直す）。「← レベル選択」等の意図的な退出時はクリアする。ことば/Nバック/デュアルNバック/ランダムモードは対象外（[ROADMAP.md](ROADMAP.md)の候補欄を参照）。
+
 ## Non-functional requirements
 
 - **PWA対応**:
   - `name`「逆復唱トレーニング」、`short_name`「逆復唱」、`lang: 'ja'`
   - `theme_color: '#0ea5e9'`、`background_color: '#ffffff'`、`display: 'standalone'`
-  - アイコン: 192x192、512x512、maskable 512x512
+  - `id: '/'`、`orientation: 'portrait'`、`display_override: ['standalone']`（Android実装（TWA）を見据えた明示指定）
+  - アイコン: 192x192、512x512、maskable 512x512、通知バッジ用の透過モノクロシルエット`badge-96.png`
   - History API連動でOS標準の戻るボタンにも対応
   - `env(safe-area-inset-*)`によるノッチ／セーフエリア対応
+  - `devOptions.enabled: true`（`vite.config.ts`）で`npm run dev`中もmanifest/Service Workerの挙動を確認可能
 - **ダークモード**:
   - Tailwind v4のカスタムバリアントで`.dark`クラスの有無により切替（手動トグル可能）
   - `themeMode`はシステム設定とユーザー選択を解決し、`matchMedia`の変更もリアルタイム追従
-- **レスポンシブ対応**: モバイルファースト（`max-w-md`）、`touch-manipulation`でタップ操作最適化
+- **レスポンシブ対応**: モバイルファースト（`max-w-md`）、`touch-manipulation`でタップ操作最適化。`button`要素には`user-select: none`/`-webkit-touch-callout: none`（連続タップ中の誤選択防止）、`html`/`body`には`overscroll-behavior-y: none`（プルツーリフレッシュの誤発生防止）を適用（`src/index.css`）
 - **音声認識・音声合成のブラウザ対応**:
   - 音声認識: Chrome/Edge系のベンダープレフィックス対応、非対応時は機能を無効化して警告表示
   - 音声合成: 非対応時はテキスト表示にフォールバック
   - 日本語音声（`lang: 'ja-JP'`）を優先選択
 
+### Android実装（TWA）に関する設計判断
+
+将来のAndroidアプリ化は[TWA（Trusted Web Activity）](https://developer.chrome.com/docs/android/trusted-web-activity)方式を前提に設計している（詳細な手順は[DEPLOYMENT.md](DEPLOYMENT.md)の「Androidアプリ化（TWA）のセットアップ」を参照）。理由は、ことばモードが依存する`SpeechRecognition`/`speechSynthesis`がAndroid標準WebView（Capacitor等のWebViewラップ方式が使う実行エンジン）では非対応・不安定なことが多く、TWAなら端末の実Chromeがそのまま動くため安定して動作するため。もし将来WebViewベースの実装へ変更する場合は、ことばモードを提供しないか代替手段（テキスト入力フォールバックの常時使用等）を検討する必要がある。
+
+このAndroid実装を見据え、以下の機能を実装済み:
+
+- **Wake Lock API**（`src/hooks/useWakeLock.ts`）: ゲーム画面表示中のみ画面消灯を防ぐ。非対応環境では単に無効化されるだけ
+- **ハプティックフィードバック**（`src/lib/haptics.ts`）: 正解/不正解・実績解除・レベルアップ時に`navigator.vibrate`で振動。設定画面で独立してON/OFF切替可能（既定オフ、`AppSettings.hapticsEnabled`）
+- **セッション状態の一時保存**: モバイルOSがバックグラウンドでタブ/TWAプロセスを再生成した場合に備え、回答中のゲームセットをsessionStorageへ一時保存する（詳細は「Data model」内の「セッション状態の一時保存」を参照）
+- **オフラインインジケータ**（`src/hooks/useOnlineStatus.ts`）: `navigator.onLine`を監視し、オフライン時にホーム画面へバナー表示
+- **遅延読み込み**: StatsScreen/SettingsScreenも`React.lazy`で分割し、低スペック端末・低速回線での初期表示を軽量化
+- **モバイル幅のE2E**: Playwrightの`mobile`プロジェクト（Pixel 7相当、`e2e/mobile-smoke.spec.ts`）でレイアウト崩れ・タップ領域を自動検知
+
 ## Testing
 
-- **ユニットテスト（Vitest）**: `src/lib/`配下にロジック層のテストを併置している（UIコンポーネントの単体テストはなし）:
-  `reverse.test.ts` / `digits.test.ts` / `digitAnswer.ts`（`digits.test.ts`経由でカバー） / `kana.test.ts` / `difficulty.test.ts` / `theme.test.ts` / `history.test.ts` / `nback.test.ts` / `dualNback.test.ts` / `achievements.test.ts` / `logger.test.ts` / `backup.test.ts` / `spatial.test.ts` / `pattern.test.ts` / `tone.test.ts` / `random.test.ts` / `benchmarks.test.ts` / `xp.test.ts` / `missions.test.ts` / `questionWeighting.test.ts` / `reminder.test.ts`
-
-  加えて`api/_lib/reminder.ts`（`src/lib/reminder.ts`の複製）にも同期確認用の軽量テスト`api/_lib/reminder.test.ts`がある。
-  新しいロジックを`src/lib/`に追加する場合は、同ディレクトリに`*.test.ts`を併置してVitestでカバーすること。`vitest.config.ts`で`e2e/`ディレクトリは除外している。
+- **ユニットテスト（Vitest）**: `src/lib/`配下にロジック層のテストを併置している（UIコンポーネントの単体テストはなし）。新しいロジックを`src/lib/`に追加する場合は、同ディレクトリに`*.test.ts`を併置してVitestでカバーすること。`vitest.config.ts`で`e2e/`ディレクトリは除外している。加えて`api/_lib/reminder.ts`（`src/lib/reminder.ts`の複製）にも同期確認用の軽量テスト`api/_lib/reminder.test.ts`がある。
 - **E2Eテスト（Playwright）**: `e2e/`配下に主要な画面遷移・操作フローのスモークテストを配置している（`playwright.config.ts`、本番ビルドを`vite preview`で配信して実行）。新しい画面や主要フローを追加した場合は、ここにスモークテストを追加することを検討する。
+  - `playwright.config.ts`は`chromium`（デスクトップ幅、既定）と`mobile`（Pixel 7相当、`e2e/mobile-smoke.spec.ts`のみ対象）の2プロジェクトを持つ。Android実装を見据え、モバイル幅でのレイアウト崩れ・タップ領域の問題を検知する用途に絞っており、全E2Eをモバイルでも回すとCI時間が倍増するため対象ファイルを限定している（`chromium`側は`testIgnore`で当該ファイルを除外し二重実行を防ぐ）。
 - **アクセシビリティ自動検証（axe-core）**: `@axe-core/playwright`を用いた`e2e/accessibility.spec.ts`で、主要画面についてWCAG AA準拠を自動チェックする。新しい画面を追加した場合はここに対象を追加することを検討する。詳細は[ACCESSIBILITY.md](ACCESSIBILITY.md)を参照。
 
 ## Error handling / logging

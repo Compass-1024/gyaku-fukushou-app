@@ -99,7 +99,50 @@ npm run preview
 
 Vercelダッシュボードの「Deployments」タブから過去のデプロイを選択し、「Promote to Production」を実行することで即座に切り戻せる。`git revert`でコードを戻して再pushする方法でも良い。
 
+## Androidアプリ化（TWA）のセットアップ
+
+本アプリをAndroidアプリとして配布する場合、[TWA（Trusted Web Activity）](https://developer.chrome.com/docs/android/trusted-web-activity)方式を推奨する（実行エンジンが端末の実Chromeそのものになるため、ことばモードが依存する`SpeechRecognition`/`speechSynthesis`がAndroid標準WebViewより安定して動作する。詳細は[CLAUDE.md](CLAUDE.md)の「音声認識・音声合成のAndroid対応方針」を参照）。
+
+### 前提
+
+- 本番PWAが既にデプロイ済みで、manifestが`id`/`orientation`/`display_override`を含む状態であること（`vite.config.ts`のVitePWA設定）。
+- アイコン（192/512/maskable 512）は既存のものをそのまま流用できる。
+
+### 手順（[Bubblewrap](https://github.com/GoogleChromeLabs/bubblewrap) CLIを使う場合）
+
+1. Node.js環境に`@bubblewrap/cli`をインストールする（`npm i -g @bubblewrap/cli`、初回はAndroid SDK/JDKの自動セットアップが走る）。
+2. プロジェクトルート以外の作業ディレクトリで初期化する（本リポジトリには含めない、Androidプロジェクトは別リポジトリ管理を推奨）。
+   ```bash
+   bubblewrap init --manifest=https://gyaku-fukushou-app.vercel.app/manifest.webmanifest
+   ```
+3. 対話形式でパッケージ名（例: `app.vercel.gyaku_fukushou_app.twa`）・署名鍵を設定する。署名鍵（`.keystore`ファイル）は**絶対にリポジトリにコミットしない**。パスワードともに安全な場所（パスワードマネージャー等）で管理する。
+4. ビルドする。
+   ```bash
+   bubblewrap build
+   ```
+5. 生成された`.apk`/`.aab`をローカル実機・エミュレータで動作確認する（音声認識・音声合成・Web Audio・Web Push・Wake Lock・バイブレーション等、Web APIに依存する機能が実機でも動くか確認する。この開発環境では実機検証ができないため、必ず実施すること）。
+
+### Digital Asset Links（アプリ内ブラウザバー非表示に必須）
+
+TWAはDigital Asset Linksによる検証に成功しないと、URLバー付きのCustom Tabとして開かれてしまい「アプリらしさ」が失われる。
+
+1. 署名鍵からSHA-256フィンガープリントを取得する。
+   ```bash
+   keytool -list -v -keystore <keystoreファイル> -alias <alias名>
+   ```
+2. [public/.well-known/assetlinks.json](public/.well-known/assetlinks.json)の`package_name`と`sha256_cert_fingerprints`を実際の値に置き換える（このファイルは雛形として`REPLACE_WITH_...`のプレースホルダーが入っている）。
+3. コミット・pushして本番反映し、`https://gyaku-fukushou-app.vercel.app/.well-known/assetlinks.json`が正しいJSONで配信されることを確認する。
+4. [Statement List Generator and Tester](https://developers.google.com/digital-asset-links/tools/generator)で検証する。
+5. Google Play Consoleで公開する場合、Play App Signingが有効だとアップロード時の署名鍵と配布時の署名鍵が異なることがある（Play Consoleの「App integrity」→「App signing」に表示される配布用SHA-256フィンガープリントを使って`assetlinks.json`を更新する必要がある）。
+
+### Play Console提出時の留意点
+
+- 「データセーフティ」セクションの申告内容は[PRIVACY.md](PRIVACY.md)の「Google Play向けデータセーフティ申告の対応表」と整合させること。
+- プライバシーポリシーURLには`https://gyaku-fukushou-app.vercel.app/privacy.html`（日本語）を指定する。
+
 ## 関連ファイル
 
 - [.github/workflows/ci.yml](.github/workflows/ci.yml) — lint/test/buildの自動実行
 - [CLAUDE.md](CLAUDE.md) — アプリ全体の仕様
+- [public/.well-known/assetlinks.json](public/.well-known/assetlinks.json) — TWA用Digital Asset Linksの雛形
+- [PRIVACY.md](PRIVACY.md) — プライバシーポリシー・Google Playデータセーフティ対応表
