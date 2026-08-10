@@ -16,19 +16,27 @@ function generateDigits(length: number): number[] {
 // （固定候補プールを持たないモードのため、候補を複数生成して選ぶ方式）。
 // ④-2: アダプティブ難易度モードは問題ごとにレベルが変わりうるため、
 // 3問セットの一括生成(pickDigitQuestionSet)とは別に1問単位の生成が必要
-export function pickDigitQuestion(level: Level, idSuffix: string | number = 0): DigitQuestion {
+export function pickDigitQuestion(
+  level: Level,
+  idSuffix: string | number = 0,
+  exclude: number[][] = [],
+): DigitQuestion {
   const length = DIGIT_LENGTH[level]
   const stats = loadBucketStats(STATS_MODE)
   const digits = pickWeightedCandidate(
     () => generateDigits(length),
     (d) => `${level}:${classifyDigitPattern(d)}`,
     stats,
+    undefined,
+    exclude,
   )
   return { id: `${level}-${Date.now()}-${idSuffix}`, digits }
 }
 
-export function pickDigitQuestionSet(level: Level): DigitQuestion[] {
-  return Array.from({ length: QUESTIONS_PER_SET }, (_, i) => pickDigitQuestion(level, i))
+// exclude: 直前に中断したセットで実際に表示済みだった数字列（モードを途中で
+// やめて再挑戦した際、同じ問題が出ないようにする）
+export function pickDigitQuestionSet(level: Level, exclude: number[][] = []): DigitQuestion[] {
+  return Array.from({ length: QUESTIONS_PER_SET }, (_, i) => pickDigitQuestion(level, i, exclude))
 }
 
 export function recordDigitAttempt(

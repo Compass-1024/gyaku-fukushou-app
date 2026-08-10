@@ -21,19 +21,27 @@ function classifyToneSequence(sequence: number[]): string {
 // 誤答が多い系列パターンほど選ばれやすい重み付き抽選で1問だけ生成する。
 // ④-2: アダプティブ難易度モードは問題ごとにレベルが変わりうるため、
 // 3問セットの一括生成(pickToneQuestionSet)とは別に1問単位の生成が必要
-export function pickToneQuestion(level: Level, idSuffix: string | number = 0): ToneQuestion {
+export function pickToneQuestion(
+  level: Level,
+  idSuffix: string | number = 0,
+  exclude: number[][] = [],
+): ToneQuestion {
   const length = SEQUENCE_LENGTH[level]
   const stats = loadBucketStats(STATS_MODE)
   const sequence = pickWeightedCandidate(
     () => generateSequence(length),
     (s) => `${level}:${classifyToneSequence(s)}`,
     stats,
+    undefined,
+    exclude,
   )
   return { id: `${level}-${Date.now()}-${idSuffix}`, sequence }
 }
 
-export function pickToneQuestionSet(level: Level): ToneQuestion[] {
-  return Array.from({ length: QUESTIONS_PER_SET }, (_, i) => pickToneQuestion(level, i))
+// exclude: 直前に中断したセットで実際に表示済みだった系列（モードを途中で
+// やめて再挑戦した際、同じ問題が出ないようにする）
+export function pickToneQuestionSet(level: Level, exclude: number[][] = []): ToneQuestion[] {
+  return Array.from({ length: QUESTIONS_PER_SET }, (_, i) => pickToneQuestion(level, i, exclude))
 }
 
 export function recordToneAttempt(

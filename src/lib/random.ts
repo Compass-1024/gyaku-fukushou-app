@@ -1,7 +1,7 @@
-import { pickDigitQuestionSet } from './digits'
-import { pickSpatialQuestionSet } from './spatial'
-import { pickPatternQuestionSet } from './pattern'
-import { pickToneQuestionSet } from './tone'
+import { pickDigitQuestion } from './digits'
+import { pickSpatialQuestion } from './spatial'
+import { pickPatternQuestion } from './pattern'
+import { pickToneQuestion } from './tone'
 import { getLevelStats } from './history'
 import type { DigitGameType, HistoryEntry, Level, Mode, RandomRound } from '../types'
 
@@ -45,6 +45,16 @@ export interface BuildRandomRoundsOptions {
   history: HistoryEntry[]
 }
 
+// モードを途中でやめて再挑戦した際、直前に表示済みだったラウンドの出題を
+// 除外するための、モード種別ごとの除外候補。すうじ（逆から入力/合計を入力）は
+// 出題内容自体（数字列）を共有するため1本のリストにまとめる
+export interface RandomRoundExcludeSets {
+  digit?: number[][]
+  spatial?: number[][]
+  pattern?: number[][]
+  tone?: number[][]
+}
+
 function shuffled<T>(items: readonly T[]): T[] {
   const copy = items.slice()
   for (let i = copy.length - 1; i > 0; i--) {
@@ -60,6 +70,7 @@ function shuffled<T>(items: readonly T[]): T[] {
 function buildRoundGenerators(
   level: Level,
   options?: BuildRandomRoundsOptions,
+  exclude?: RandomRoundExcludeSets,
 ): (() => RandomRound)[] {
   const levelFor = (mode: Mode, gameType?: DigitGameType): Level =>
     options ? pickFocusedLevel(options.history, mode, gameType, level) : level
@@ -68,16 +79,22 @@ function buildRoundGenerators(
     () => ({
       mode: 'digit',
       gameType: 'reverse',
-      question: pickDigitQuestionSet(levelFor('digit', 'reverse'))[0],
+      question: pickDigitQuestion(levelFor('digit', 'reverse'), 0, exclude?.digit),
     }),
     () => ({
       mode: 'digit',
       gameType: 'sum',
-      question: pickDigitQuestionSet(levelFor('digit', 'sum'))[0],
+      question: pickDigitQuestion(levelFor('digit', 'sum'), 0, exclude?.digit),
     }),
-    () => ({ mode: 'spatial', question: pickSpatialQuestionSet(levelFor('spatial'))[0] }),
-    () => ({ mode: 'pattern', question: pickPatternQuestionSet(levelFor('pattern'))[0] }),
-    () => ({ mode: 'tone', question: pickToneQuestionSet(levelFor('tone'))[0] }),
+    () => ({
+      mode: 'spatial',
+      question: pickSpatialQuestion(levelFor('spatial'), 0, exclude?.spatial),
+    }),
+    () => ({
+      mode: 'pattern',
+      question: pickPatternQuestion(levelFor('pattern'), 0, exclude?.pattern),
+    }),
+    () => ({ mode: 'tone', question: pickToneQuestion(levelFor('tone'), 0, exclude?.tone) }),
   ]
 }
 
@@ -89,8 +106,9 @@ export function buildRandomRounds(
   level: Level,
   roundCount: RoundCount = DEFAULT_ROUND_COUNT,
   options?: BuildRandomRoundsOptions,
+  exclude?: RandomRoundExcludeSets,
 ): RandomRound[] {
-  const generators = buildRoundGenerators(level, options)
+  const generators = buildRoundGenerators(level, options, exclude)
   let selected: (() => RandomRound)[]
   if (roundCount <= generators.length) {
     selected = shuffled(generators).slice(0, roundCount)

@@ -14,6 +14,7 @@ import { reverseText } from '../lib/reverse'
 import { loadPhraseStats, recordPhraseAttempt } from '../lib/phraseStats'
 import { findMatchingAlternative, normalizeForCompare } from '../lib/kana'
 import { confirmExit } from '../lib/confirmExit'
+import { saveRecentQuestions, consumeRecentQuestions } from '../lib/recentQuestions'
 import { getSuggestedLevel } from '../lib/difficulty'
 import { loadSettings } from '../lib/settings'
 import { playCorrectSound, playIncorrectSound, playButtonTap } from '../lib/sound'
@@ -45,8 +46,11 @@ export function GameScreen({ level, onExit, onSelectLevel }: GameScreenProps) {
   const { listening, listenOnce, supported: recognitionSupported } =
     useSpeechRecognition()
 
+  // 直前に中断したセットで表示済みだったフレーズを、再挑戦時の出題候補から
+  // 除外する（モードを途中でやめて再びトライすると、やめる前と異なる問題に
+  // なるようにする）
   const [questions, setQuestions] = useState<Phrase[]>(() =>
-    pickQuestionSet(level, loadPhraseStats()),
+    pickQuestionSet(level, loadPhraseStats(), consumeRecentQuestions<string>(`word:${level}`)),
   )
   const [currentIndex, setCurrentIndex] = useState(0)
   const [phase, setPhase] = useState<QuestionPhase>('reading')
@@ -263,7 +267,13 @@ export function GameScreen({ level, onExit, onSelectLevel }: GameScreenProps) {
       <GameHeader
         backLabel="← レベル選択"
         onBack={() =>
-          confirmExit(results.length > 0 || currentResult !== null, onExit)
+          confirmExit(results.length > 0 || currentResult !== null, () => {
+            saveRecentQuestions(
+              `word:${level}`,
+              questions.slice(0, currentIndex + 1).map((q) => q.id),
+            )
+            onExit()
+          })
         }
         currentIndex={currentIndex}
         total={questions.length}

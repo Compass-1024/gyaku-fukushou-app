@@ -72,6 +72,16 @@ describe('pickPatternQuestionSet', () => {
   })
 })
 
+describe('pickPatternQuestionSet の除外機能', () => {
+  it('excludeに渡した模様（順序は問わない）を避けて生成する（モードを途中でやめて再挑戦した際、同じ問題が出ないようにする）', () => {
+    const exclude = [[0, 1, 4, 5]]
+    for (let i = 0; i < 200; i++) {
+      const [{ filledCells }] = pickPatternQuestionSet(1, exclude)
+      expect([...filledCells].sort((a, b) => a - b)).not.toEqual([0, 1, 4, 5])
+    }
+  })
+})
+
 describe('isPatternSelectionCorrect', () => {
   it('is correct when the selection exactly matches the filled cells (order-independent)', () => {
     expect(isPatternSelectionCorrect([1, 2, 3], [3, 2, 1])).toBe(true)

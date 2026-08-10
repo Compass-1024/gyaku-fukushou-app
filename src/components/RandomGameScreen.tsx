@@ -5,8 +5,9 @@ import { useStepReveal } from '../hooks/useStepReveal'
 import { useSetCompletionRecorder } from '../hooks/useSetCompletionRecorder'
 import { usePauseState } from '../hooks/usePauseState'
 import { buildRandomRounds, DEFAULT_ROUND_COUNT } from '../lib/random'
-import type { RoundCount } from '../lib/random'
+import type { RoundCount, RandomRoundExcludeSets } from '../lib/random'
 import { loadHistory } from '../lib/history'
+import { saveRecentQuestions, consumeRecentQuestions } from '../lib/recentQuestions'
 import {
   reverseDigits,
   sumDigits,
@@ -71,12 +72,70 @@ type RandomGameScreenProps = BaseGameScreenProps & {
   roundCount?: RoundCount
 }
 
-function buildRounds(level: Level, weakPointFocus?: boolean, roundCount?: RoundCount) {
+function buildRounds(
+  level: Level,
+  weakPointFocus?: boolean,
+  roundCount?: RoundCount,
+  exclude?: RandomRoundExcludeSets,
+) {
   return buildRandomRounds(
     level,
     roundCount ?? DEFAULT_ROUND_COUNT,
     weakPointFocus ? { history: loadHistory() } : undefined,
+    exclude,
   )
+}
+
+// 問題id（`${level}-${Date.now()}-${idSuffix}`形式）からlevelを取り出す。
+// 弱点重視モードでは各ラウンドのレベルが選択レベルと異なりうるため、
+// 除外対象を正しいレベルのキーに保存するのに使う
+function levelFromQuestionId(id: string): Level {
+  const raw = Number(id.split('-')[0])
+  return raw === 1 || raw === 2 || raw === 3 ? raw : 1
+}
+
+// 直前に中断したセットで実際に表示済みだったラウンドを、モード×レベル単位で
+// まとめてsessionStorageに保存する。単体モード画面（DigitGameScreen等）と
+// 同じキー（`<mode>:<level>`）を使うため、次回の出題生成は単体モード・
+// ランダムモードのどちらから見ても直前に表示済みだった問題を除外できる
+function saveShownRoundsForExclusion(rounds: RandomRound[]): void {
+  const grouped = new Map<string, number[][]>()
+  const add = (mode: string, id: string, shape: number[]) => {
+    const key = `${mode}:${levelFromQuestionId(id)}`
+    const list = grouped.get(key) ?? []
+    list.push(shape)
+    grouped.set(key, list)
+  }
+  for (const round of rounds) {
+    switch (round.mode) {
+      case 'digit':
+        add('digit', round.question.id, round.question.digits)
+        break
+      case 'spatial':
+        add('spatial', round.question.id, round.question.sequence)
+        break
+      case 'pattern':
+        add('pattern', round.question.id, round.question.filledCells)
+        break
+      case 'tone':
+        add('tone', round.question.id, round.question.sequence)
+        break
+    }
+  }
+  for (const [key, items] of grouped) saveRecentQuestions(key, items)
+}
+
+// 新しいセットを組み立てる前に、モードごと（レベル問わず、弱点重視モードで
+// どのレベルが選ばれても除外が効くよう全レベル分）の除外対象を読み出して消費する
+function consumeRandomExcludeSets(): RandomRoundExcludeSets {
+  const merge = (mode: string): number[][] =>
+    ([1, 2, 3] as const).flatMap((lvl) => consumeRecentQuestions<number[]>(`${mode}:${lvl}`))
+  return {
+    digit: merge('digit'),
+    spatial: merge('spatial'),
+    pattern: merge('pattern'),
+    tone: merge('tone'),
+  }
 }
 
 interface RoundOutcome {
@@ -165,9 +224,14 @@ export function RandomGameScreen({
   const [restoredSession] = useState(() =>
     loadGameSession<RandomRound, RoundOutcome>(sessionKey),
   )
-  const [rounds, setRounds] = useState<RandomRound[]>(
-    () => restoredSession?.questions ?? buildRounds(level, weakPointFocus, roundCount),
-  )
+  // 直前に中断したセットで表示済みだったラウンドを、再挑戦時の出題候補から
+  // 除外する（モードを途中でやめて再びトライすると、やめる前と異なる問題に
+  // なるようにする）。sessionStorageから復元する場合（reload後の再開）は
+  // 同じ試行の続きなので除外しない
+  const [rounds, setRounds] = useState<RandomRound[]>(() => {
+    if (restoredSession?.questions) return restoredSession.questions
+    return buildRounds(level, weakPointFocus, roundCount, consumeRandomExcludeSets())
+  })
   const [currentIndex, setCurrentIndex] = useState(() => restoredSession?.currentIndex ?? 0)
   const [phase, setPhase] = useState<RandomQuestionPhase>('ready')
   const [typed, setTyped] = useState('')
@@ -308,6 +372,25 @@ export function RandomGameScreen({
     })
   }
 
+  // バグ修正: 単体のDigitGameScreenでは回答フェーズ中に物理キーボードの数字
+  // 入力も受け付けるが、ランダムモードのすうじラウンドにはこの対応が無く、
+  // 画面タップでしか入力できなかった
+  useEffect(() => {
+    if (phase !== 'answering' || paused || currentRound.mode !== 'digit') return
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key >= '0' && e.key <= '9') {
+        handleDigitPress(e.key)
+      } else if (e.key === 'Backspace') {
+        handleBackspacePress()
+      } else if (e.key === 'Enter') {
+        commitTypedAnswer()
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phase, currentRound])
+
   // 空間・音/色ラウンド: 順番にタップし、期待される長さに達したら自動採点する
   function handleOrderedTap(cell: number) {
     if (phase !== 'answering' || paused) return
@@ -414,6 +497,7 @@ export function RandomGameScreen({
           confirmExit(
             results.length > 0 || currentOutcome !== null,
             () => {
+              saveShownRoundsForExclusion(rounds.slice(0, currentIndex + 1))
               clearGameSession(sessionKey)
               onExit()
             },

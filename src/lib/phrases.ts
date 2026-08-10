@@ -206,12 +206,17 @@ export function findPhraseById(id: string): Phrase | undefined {
 const QUESTIONS_PER_SET = 3
 
 // phraseStatsを渡すと、誤答が多いフレーズほど選ばれやすい重み付き抽選になる
-// （省略時は全フレーズ等確率＝従来どおりの挙動）
+// （省略時は全フレーズ等確率＝従来どおりの挙動）。excludeIdsを渡すと、直前に
+// 中断したセットで実際に表示済みだったフレーズを除外する（モードを途中で
+// やめて再挑戦した際、同じ問題が出ないようにする）。除外後にプールが空に
+// なる場合（レベル3で3問全て除外される等）はフォールバックとして除外しない
 export function pickQuestionSet(
   level: Level,
   phraseStats: PhraseStats = {},
+  excludeIds: string[] = [],
 ): Phrase[] {
-  const pool = [...PHRASES[level]]
+  const filtered = PHRASES[level].filter((p) => !excludeIds.includes(p.id))
+  const pool = filtered.length > 0 ? [...filtered] : [...PHRASES[level]]
   const picked: Phrase[] = []
   for (let i = 0; i < QUESTIONS_PER_SET && pool.length > 0; i++) {
     const weights = pool.map((p) => getPhraseWeight(phraseStats, p.id))

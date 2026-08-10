@@ -93,6 +93,16 @@ describe('pickDigitQuestionSet', () => {
   })
 })
 
+describe('pickDigitQuestionSet の除外機能', () => {
+  it('excludeに渡した数字列を避けて生成する（モードを途中でやめて再挑戦した際、同じ問題が出ないようにする）', () => {
+    const exclude = [[1, 2, 3]]
+    for (let i = 0; i < 200; i++) {
+      const [{ digits }] = pickDigitQuestionSet(1, exclude)
+      expect(digits).not.toEqual([1, 2, 3])
+    }
+  })
+})
+
 describe('getAnswerTimeoutMs', () => {
   it('grows with digit length', () => {
     expect(getAnswerTimeoutMs(7)).toBeGreaterThan(getAnswerTimeoutMs(3))

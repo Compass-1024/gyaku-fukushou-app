@@ -77,6 +77,40 @@ test('すうじモード: 意図的に「← レベル選択」で退出した�
   await expect(page.getByText('問題 1 / 3')).toBeVisible()
 })
 
+test('すうじモード: モードを途中でやめて再挑戦すると、やめる前に表示済みだった問題が出ない（バグ修正）', async ({
+  page,
+}) => {
+  await page.goto('/')
+  await page.getByRole('button', { name: /すうじモード（逆から入力）/ }).click()
+  await page.getByRole('button', { name: /レベル1（3桁）/ }).click()
+  await expect(
+    page.getByText('逆から入力してください'),
+  ).toBeVisible({ timeout: 15_000 })
+
+  const shownDigits = await page.evaluate(() => {
+    const raw = sessionStorage.getItem('game-session:digit:reverse:1:false')
+    const parsed = raw ? JSON.parse(raw) : null
+    return parsed?.questions?.[0]?.digits as number[] | undefined
+  })
+  expect(shownDigits).toHaveLength(3)
+
+  page.once('dialog', (dialog) => dialog.accept())
+  await page.getByRole('button', { name: '← レベル選択' }).click()
+  await expect(page.getByRole('heading', { name: /すうじモード（逆から入力）/ })).toBeVisible()
+
+  await page.getByRole('button', { name: /レベル1（3桁）/ }).click()
+  await expect(
+    page.getByText('逆から入力してください'),
+  ).toBeVisible({ timeout: 15_000 })
+
+  const retriedDigits = await page.evaluate(() => {
+    const raw = sessionStorage.getItem('game-session:digit:reverse:1:false')
+    const parsed = raw ? JSON.parse(raw) : null
+    return parsed?.questions?.[0]?.digits as number[] | undefined
+  })
+  expect(retriedDigits).not.toEqual(shownDigits)
+})
+
 test('すうじモード: アダプティブ難易度モードで最後まで完走し、到達した最大レベルが結果画面に表示される（④-2）', async ({
   page,
 }) => {

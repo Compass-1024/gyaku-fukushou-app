@@ -42,7 +42,20 @@ function classifyFilledCells(filledCells: number[], gridSize: number): string {
 // 誤答が多い模様パターンほど選ばれやすい重み付き抽選で1問だけ生成する。
 // ④-2: アダプティブ難易度モードは問題ごとにレベルが変わりうるため、
 // 3問セットの一括生成(pickPatternQuestionSet)とは別に1問単位の生成が必要
-export function pickPatternQuestion(level: Level, idSuffix: string | number = 0): PatternQuestion {
+// filledCellsはマス集合であり、生成順序に意味が無いため、ソートしてから
+// 比較する（順序違いを別パターンと誤判定しないため）
+function isSameFilledCells(a: number[], b: number[]): boolean {
+  if (a.length !== b.length) return false
+  const sortedA = [...a].sort((x, y) => x - y)
+  const sortedB = [...b].sort((x, y) => x - y)
+  return sortedA.every((v, i) => v === sortedB[i])
+}
+
+export function pickPatternQuestion(
+  level: Level,
+  idSuffix: string | number = 0,
+  exclude: number[][] = [],
+): PatternQuestion {
   const gridSize = GRID_SIZE[level]
   const totalCells = gridSize * gridSize
   const count = FILLED_COUNT[level]
@@ -51,12 +64,17 @@ export function pickPatternQuestion(level: Level, idSuffix: string | number = 0)
     () => pickRandomCells(totalCells, count),
     (cells) => `${level}:${classifyFilledCells(cells, gridSize)}`,
     stats,
+    undefined,
+    exclude,
+    isSameFilledCells,
   )
   return { id: `${level}-${Date.now()}-${idSuffix}`, gridSize, filledCells }
 }
 
-export function pickPatternQuestionSet(level: Level): PatternQuestion[] {
-  return Array.from({ length: QUESTIONS_PER_SET }, (_, i) => pickPatternQuestion(level, i))
+// exclude: 直前に中断したセットで実際に表示済みだった模様（モードを途中で
+// やめて再挑戦した際、同じ問題が出ないようにする）
+export function pickPatternQuestionSet(level: Level, exclude: number[][] = []): PatternQuestion[] {
+  return Array.from({ length: QUESTIONS_PER_SET }, (_, i) => pickPatternQuestion(level, i, exclude))
 }
 
 export function recordPatternAttempt(

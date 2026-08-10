@@ -51,6 +51,16 @@ describe('pickToneQuestionSet', () => {
   })
 })
 
+describe('pickToneQuestionSet の除外機能', () => {
+  it('excludeに渡した系列を避けて生成する（モードを途中でやめて再挑戦した際、同じ問題が出ないようにする）', () => {
+    const exclude = [[0, 0, 1]]
+    for (let i = 0; i < 200; i++) {
+      const [{ sequence }] = pickToneQuestionSet(1, exclude)
+      expect(sequence).not.toEqual([0, 0, 1])
+    }
+  })
+})
+
 describe('isToneAnswerCorrect', () => {
   it('returns true when tapped order exactly matches the sequence', () => {
     expect(isToneAnswerCorrect([0, 1, 2], [0, 1, 2])).toBe(true)

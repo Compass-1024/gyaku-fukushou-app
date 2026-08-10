@@ -132,4 +132,35 @@ describe('pickWeightedCandidate', () => {
     // weak(weight=4) vs strong(weight=1) -> weak should be picked ~80% of the time
     expect(weakCount).toBeGreaterThan(120)
   })
+
+  it('avoids excluded candidates by regenerating (up to the retry limit)', () => {
+    // generate cycles through 0..9 repeatedly; excluding 0 should mean the
+    // returned candidate is never 0 as long as regeneration succeeds
+    let n = 0
+    for (let trial = 0; trial < 50; trial++) {
+      n = 0
+      const result = pickWeightedCandidate(
+        () => n++ % 10,
+        () => 'bucket',
+        {},
+        5,
+        [0],
+      )
+      expect(result).not.toBe(0)
+    }
+  })
+
+  it('falls back to a matching candidate when the candidate space is smaller than exclude', () => {
+    // generate always returns 0; with 0 excluded, regeneration cannot escape
+    // it (retry limit exhausted), so it should still return something rather
+    // than looping forever or throwing
+    const result = pickWeightedCandidate(
+      () => 0,
+      () => 'bucket',
+      {},
+      3,
+      [0],
+    )
+    expect(result).toBe(0)
+  })
 })

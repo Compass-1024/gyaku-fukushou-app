@@ -41,7 +41,11 @@ function classifySpatialSequence(sequence: number[], gridSize: number): string {
 // 誤答が多い系列パターンほど選ばれやすい重み付き抽選で1問だけ生成する。
 // ④-2: アダプティブ難易度モードは問題ごとにレベルが変わりうるため、
 // 3問セットの一括生成(pickSpatialQuestionSet)とは別に1問単位の生成が必要
-export function pickSpatialQuestion(level: Level, idSuffix: string | number = 0): SpatialQuestion {
+export function pickSpatialQuestion(
+  level: Level,
+  idSuffix: string | number = 0,
+  exclude: number[][] = [],
+): SpatialQuestion {
   const gridSize = GRID_SIZE[level]
   const length = SEQUENCE_LENGTH[level]
   const stats = loadBucketStats(STATS_MODE)
@@ -49,12 +53,16 @@ export function pickSpatialQuestion(level: Level, idSuffix: string | number = 0)
     () => generateSequence(gridSize, length),
     (s) => `${level}:${classifySpatialSequence(s, gridSize)}`,
     stats,
+    undefined,
+    exclude,
   )
   return { id: `${level}-${Date.now()}-${idSuffix}`, gridSize, sequence }
 }
 
-export function pickSpatialQuestionSet(level: Level): SpatialQuestion[] {
-  return Array.from({ length: QUESTIONS_PER_SET }, (_, i) => pickSpatialQuestion(level, i))
+// exclude: 直前に中断したセットで実際に表示済みだった系列（モードを途中で
+// やめて再挑戦した際、同じ問題が出ないようにする）
+export function pickSpatialQuestionSet(level: Level, exclude: number[][] = []): SpatialQuestion[] {
+  return Array.from({ length: QUESTIONS_PER_SET }, (_, i) => pickSpatialQuestion(level, i, exclude))
 }
 
 export function recordSpatialAttempt(

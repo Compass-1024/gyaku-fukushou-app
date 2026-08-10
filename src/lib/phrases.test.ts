@@ -26,6 +26,21 @@ describe('pickQuestionSet', () => {
     const [first] = pickQuestionSet(1, stats)
     expect(first.id).toBe(weakId)
   })
+
+  it('excludeIdsに渡したフレーズを除外して選ぶ（モードを途中でやめて再挑戦した際、同じ問題が出ないようにする）', () => {
+    const excludeIds = PHRASES[1].slice(0, 60).map((p) => p.id)
+    const picked = pickQuestionSet(1, {}, excludeIds)
+    expect(picked).toHaveLength(3)
+    for (const p of picked) {
+      expect(excludeIds).not.toContain(p.id)
+    }
+  })
+
+  it('除外後にプールが空になる場合は除外せずフォールバックする', () => {
+    const allIds = PHRASES[1].map((p) => p.id)
+    const picked = pickQuestionSet(1, {}, allIds)
+    expect(picked).toHaveLength(3)
+  })
 })
 
 describe('findPhraseById', () => {

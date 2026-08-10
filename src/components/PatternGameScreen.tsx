@@ -15,6 +15,7 @@ import {
 } from '../lib/pattern'
 import { nextAdaptiveLevel } from '../lib/adaptiveDifficulty'
 import { saveGameSession, loadGameSession, clearGameSession } from '../lib/gameSessionPersistence'
+import { saveRecentQuestions, consumeRecentQuestions } from '../lib/recentQuestions'
 import { confirmExit } from '../lib/confirmExit'
 import { getSuggestedLevel } from '../lib/difficulty'
 import { loadSettings } from '../lib/settings'
@@ -50,11 +51,17 @@ export function PatternGameScreen({
   const [restoredSession] = useState(() =>
     loadGameSession<PatternQuestion, PatternQuestionResult>(sessionKey),
   )
-  const [questions, setQuestions] = useState<PatternQuestion[]>(
-    () =>
-      restoredSession?.questions ??
-      (adaptive ? [pickPatternQuestion(level, 0)] : pickPatternQuestionSet(level)),
-  )
+  // 直前に中断したセットで表示済みだった問題を、再挑戦時の出題候補から除外する
+  // （モードを途中でやめて再びトライすると、やめる前と異なる問題になるように
+  // する）。sessionStorageから復元する場合（reload後の再開）は同じ試行の
+  // 続きなので除外しない
+  const [questions, setQuestions] = useState<PatternQuestion[]>(() => {
+    if (restoredSession?.questions) return restoredSession.questions
+    const exclude = consumeRecentQuestions<number[]>(`pattern:${level}`)
+    return adaptive
+      ? [pickPatternQuestion(level, 0, exclude)]
+      : pickPatternQuestionSet(level, exclude)
+  })
   const [questionLevels, setQuestionLevels] = useState<Level[]>(
     () =>
       (restoredSession?.questionLevels as Level[] | undefined) ??
@@ -269,6 +276,10 @@ export function PatternGameScreen({
           confirmExit(
             results.length > 0 || currentResult !== null,
             () => {
+              saveRecentQuestions(
+                `pattern:${level}`,
+                questions.slice(0, currentIndex + 1).map((q) => q.filledCells),
+              )
               clearGameSession(sessionKey)
               onExit()
             },

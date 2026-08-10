@@ -119,15 +119,40 @@ export function getWeakestBucket(stats: BucketStats): WeakestBucket | null {
   return worst
 }
 
+// 除外候補との一致判定を1件あたり最大何回まで再生成してリトライするか。
+// 候補空間（数字列・マス系列等）は十分広いため、数回のリトライで除外対象を
+// 避けられなかった場合は諦めてそのまま採用する（無限ループ防止）
+const MAX_EXCLUDE_REGEN_ATTEMPTS = 10
+
+function defaultIsEqual<T>(a: T, b: T): boolean {
+  return JSON.stringify(a) === JSON.stringify(b)
+}
+
 // generateで候補を複数生成し、classifyで求めたバケットの重みに応じた
-// 重み付き抽選で1件を選ぶ
+// 重み付き抽選で1件を選ぶ。excludeを渡すと、そのいずれかとisEqualで一致する
+// 候補は（可能な範囲で）避けて再生成する。「モードを途中でやめて再挑戦した際に
+// 直前に表示済みだった問題を除外する」用途で使う
 export function pickWeightedCandidate<T>(
   generate: () => T,
   classify: (item: T) => string,
   stats: BucketStats,
   candidateCount: number = DEFAULT_CANDIDATE_COUNT,
+  exclude: T[] = [],
+  isEqual: (a: T, b: T) => boolean = defaultIsEqual,
 ): T {
-  const candidates = Array.from({ length: candidateCount }, () => generate())
+  const candidates = Array.from({ length: candidateCount }, () => {
+    let candidate = generate()
+    let attempts = 0
+    while (
+      exclude.length > 0 &&
+      exclude.some((e) => isEqual(e, candidate)) &&
+      attempts < MAX_EXCLUDE_REGEN_ATTEMPTS
+    ) {
+      candidate = generate()
+      attempts += 1
+    }
+    return candidate
+  })
   const weights = candidates.map((c) => getBucketWeight(stats, classify(c)))
   const totalWeight = weights.reduce((sum, w) => sum + w, 0)
   let r = Math.random() * totalWeight

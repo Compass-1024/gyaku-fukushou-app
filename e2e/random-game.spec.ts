@@ -249,6 +249,78 @@ test('ランダムモード: 音・色ラウンドで表示された順にすべ
   }
 })
 
+test('ランダムモード: モードを途中でやめて再挑戦すると、やめる前に表示済みだったラウンドの出題が除外される（バグ修正）', async ({
+  page,
+}) => {
+  test.setTimeout(60_000)
+  await page.goto('/')
+  await page.getByRole('button', { name: /ランダムモード/ }).click()
+  await page.getByRole('button', { name: /レベル1/ }).click()
+
+  await expect(page.getByText('問題 1 / 5')).toBeVisible({ timeout: 15_000 })
+
+  // 1問目のラウンド種別を特定する（saveGameSessionのuseEffectが実行される
+  // までわずかにラグがありうるため、ポーリングして待つ）
+  const roundMode = await page.waitForFunction(() => {
+    const raw = sessionStorage.getItem('game-session:random:1:false:5')
+    const parsed = raw ? JSON.parse(raw) : null
+    return parsed?.questions?.[0]?.mode ?? null
+  }, { timeout: 5_000 }).then((handle) => handle.jsonValue() as Promise<string>)
+  expect(roundMode).toBeTruthy()
+
+  page.once('dialog', (dialog) => dialog.accept())
+  await page.getByRole('button', { name: '← レベル選択' }).click()
+  await expect(page.getByRole('heading', { name: /ランダムモード/ })).toBeVisible()
+
+  // 中断時に表示済みだった1問目のラウンドが除外リストに保存されている
+  const excluded = await page.evaluate(
+    (mode) => sessionStorage.getItem(`gyaku-fukushou:recentQuestions:${mode}:1`),
+    roundMode,
+  )
+  expect(excluded).not.toBeNull()
+
+  // 再挑戦すると、除外リストが消費されて空になる（一度きりの除外のため）
+  await page.getByRole('button', { name: /レベル1/ }).click()
+  await expect(page.getByText('問題 1 / 5')).toBeVisible({ timeout: 15_000 })
+  const excludedAfterRetry = await page.evaluate(
+    (mode) => sessionStorage.getItem(`gyaku-fukushou:recentQuestions:${mode}:1`),
+    roundMode,
+  )
+  expect(excludedAfterRetry).toBeNull()
+})
+
+test('ランダムモード: すうじラウンドの回答フェーズで物理キーボードの数字入力を受け付ける（バグ修正）', async ({
+  page,
+}) => {
+  test.setTimeout(60_000)
+  await page.goto('/')
+  await page.getByRole('button', { name: /ランダムモード/ }).click()
+  await page.getByRole('button', { name: /レベル1/ }).click()
+
+  for (let round = 1; round <= 5; round++) {
+    await expect(page.getByText(`問題 ${round} / 5`)).toBeVisible({ timeout: 15_000 })
+
+    const isDigitRound = await page
+      .getByText(/逆から入力してください|全部たすといくつ？/)
+      .waitFor({ state: 'visible', timeout: 12_000 })
+      .then(() => true)
+      .catch(() => false)
+    if (isDigitRound) {
+      await page.keyboard.press('1')
+      await page.keyboard.press('2')
+      // NumpadInputの表示値に物理キーボード入力が反映される
+      await expect(page.getByText('12', { exact: true })).toBeVisible()
+      return
+    }
+
+    await expect(page.getByText(/^(正解|不正解)$/)).toBeVisible({ timeout: 20_000 })
+    const nextButton = page.getByRole('button', {
+      name: round === 5 ? '結果を見る' : '次へ',
+    })
+    await nextButton.click()
+  }
+})
+
 test('ランダムモード: セット途中でページを再読み込みしても、それまでの結果を保持して再開できる（Android対応⑨）', async ({
   page,
 }) => {

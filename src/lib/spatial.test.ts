@@ -77,6 +77,16 @@ describe('pickSpatialQuestionSet', () => {
   })
 })
 
+describe('pickSpatialQuestionSet の除外機能', () => {
+  it('excludeに渡した系列を避けて生成する（モードを途中でやめて再挑戦した際、同じ問題が出ないようにする）', () => {
+    const exclude = [[0, 1, 2]]
+    for (let i = 0; i < 200; i++) {
+      const [{ sequence }] = pickSpatialQuestionSet(1, exclude)
+      expect(sequence).not.toEqual([0, 1, 2])
+    }
+  })
+})
+
 describe('getGridSize', () => {
   it('returns the grid size for each level', () => {
     expect(getGridSize(1)).toBe(3)

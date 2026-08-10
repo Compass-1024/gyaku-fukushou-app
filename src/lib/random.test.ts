@@ -40,6 +40,35 @@ describe('buildRandomRounds', () => {
     }
   })
 
+  it('excludeに渡した問題を避けて出題する（モードを途中でやめて再挑戦した際、同じ問題が出ないようにする）', () => {
+    for (let i = 0; i < 50; i++) {
+      const rounds = buildRandomRounds(1, 5, undefined, {
+        digit: [[1, 2, 3]],
+        spatial: [[0, 1, 2]],
+        pattern: [[0, 1, 4, 5]],
+        tone: [[0, 0, 1]],
+      })
+      for (const round of rounds) {
+        switch (round.mode) {
+          case 'digit':
+            expect(round.question.digits).not.toEqual([1, 2, 3])
+            break
+          case 'spatial':
+            expect(round.question.sequence).not.toEqual([0, 1, 2])
+            break
+          case 'pattern':
+            expect([...round.question.filledCells].sort((a, b) => a - b)).not.toEqual([
+              0, 1, 4, 5,
+            ])
+            break
+          case 'tone':
+            expect(round.question.sequence).not.toEqual([0, 0, 1])
+            break
+        }
+      }
+    }
+  })
+
   describe('roundCount', () => {
     for (const count of ROUND_COUNT_OPTIONS) {
       it(`generates exactly ${count} rounds`, () => {

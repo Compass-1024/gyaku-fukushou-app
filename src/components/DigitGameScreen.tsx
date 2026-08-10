@@ -18,6 +18,7 @@ import {
 } from '../lib/digits'
 import { nextAdaptiveLevel } from '../lib/adaptiveDifficulty'
 import { saveGameSession, loadGameSession, clearGameSession } from '../lib/gameSessionPersistence'
+import { saveRecentQuestions, consumeRecentQuestions } from '../lib/recentQuestions'
 import { confirmExit } from '../lib/confirmExit'
 import { getSuggestedLevel } from '../lib/difficulty'
 import { loadSettings } from '../lib/settings'
@@ -67,11 +68,15 @@ export function DigitGameScreen({
   const [restoredSession] = useState(() =>
     loadGameSession<DigitQuestion, DigitQuestionResult>(sessionKey),
   )
-  const [questions, setQuestions] = useState<DigitQuestion[]>(
-    () =>
-      restoredSession?.questions ??
-      (adaptive ? [pickDigitQuestion(level, 0)] : pickDigitQuestionSet(level)),
-  )
+  // 直前に中断したセットで表示済みだった問題を、再挑戦時の出題候補から除外する
+  // （モードを途中でやめて再びトライすると、やめる前と異なる問題になるように
+  // する）。sessionStorageから復元する場合（reload後の再開）は同じ試行の
+  // 続きなので除外しない
+  const [questions, setQuestions] = useState<DigitQuestion[]>(() => {
+    if (restoredSession?.questions) return restoredSession.questions
+    const exclude = consumeRecentQuestions<number[]>(`digit:${level}`)
+    return adaptive ? [pickDigitQuestion(level, 0, exclude)] : pickDigitQuestionSet(level, exclude)
+  })
   // ④-2: アダプティブモードのみ使う、各問題を生成した時点のレベル。
   // 非アダプティブ時は常にlevelと同じ
   const [questionLevels, setQuestionLevels] = useState<Level[]>(
@@ -321,6 +326,10 @@ export function DigitGameScreen({
           confirmExit(
             results.length > 0 || currentResult !== null,
             () => {
+              saveRecentQuestions(
+                `digit:${level}`,
+                questions.slice(0, currentIndex + 1).map((q) => q.digits),
+              )
               clearGameSession(sessionKey)
               onExit()
             },
