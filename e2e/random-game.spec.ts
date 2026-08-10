@@ -162,6 +162,26 @@ test('ランダムモード: すうじ（合計）ラウンドは桁数分入力
   }
 })
 
+test('ランダムモード: セット途中でページを再読み込みしても、それまでの結果を保持して再開できる（Android対応⑨）', async ({
+  page,
+}) => {
+  test.setTimeout(60_000)
+  await page.goto('/')
+  await page.getByRole('button', { name: /ランダムモード/ }).click()
+  await page.getByRole('button', { name: '3問', exact: true }).click()
+  await page.getByRole('button', { name: /レベル1/ }).click()
+
+  await expect(page.getByText('問題 1 / 3')).toBeVisible({ timeout: 15_000 })
+  await expect(page.getByText(/^(正解|不正解)$/)).toBeVisible({ timeout: 20_000 })
+  await page.getByRole('button', { name: '次へ' }).click()
+  await expect(page.getByText('問題 2 / 3')).toBeVisible({ timeout: 15_000 })
+
+  // モバイルOSがバックグラウンドでプロセスを再生成する状況をページ再読み込みで再現する
+  await page.reload()
+
+  await expect(page.getByText('問題 2 / 3')).toBeVisible({ timeout: 15_000 })
+})
+
 test('ランダムモード: すうじラウンドで「よく覚えてください」の表示位置が数字の切り替わり中も動かない', async ({
   page,
 }) => {

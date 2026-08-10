@@ -35,6 +35,7 @@ import {
   TONE_GAP_MS,
   getAnswerTimeoutMs as getToneAnswerTimeoutMs,
 } from '../lib/tone'
+import { saveGameSession, loadGameSession, clearGameSession } from '../lib/gameSessionPersistence'
 import { confirmExit } from '../lib/confirmExit'
 import { getSuggestedLevel } from '../lib/difficulty'
 import { loadSettings } from '../lib/settings'
@@ -158,10 +159,16 @@ export function RandomGameScreen({
   roundCount,
 }: RandomGameScreenProps) {
   const t = useTranslation()
-  const [rounds, setRounds] = useState<RandomRound[]>(() =>
-    buildRounds(level, weakPointFocus, roundCount),
+  // Android実装を見据え、モバイルOSがバックグラウンドでプロセスを再生成した
+  // 場合に回答中のセットが失われないよう、sessionStorageから復元を試みる
+  const sessionKey = `game-session:random:${level}:${weakPointFocus}:${roundCount ?? DEFAULT_ROUND_COUNT}`
+  const [restoredSession] = useState(() =>
+    loadGameSession<RandomRound, RoundOutcome>(sessionKey),
   )
-  const [currentIndex, setCurrentIndex] = useState(0)
+  const [rounds, setRounds] = useState<RandomRound[]>(
+    () => restoredSession?.questions ?? buildRounds(level, weakPointFocus, roundCount),
+  )
+  const [currentIndex, setCurrentIndex] = useState(() => restoredSession?.currentIndex ?? 0)
   const [phase, setPhase] = useState<RandomQuestionPhase>('ready')
   const [typed, setTyped] = useState('')
   const typedRef = useRef(typed)
@@ -170,10 +177,20 @@ export function RandomGameScreen({
   const arrayValueRef = useRef(arrayValue)
   arrayValueRef.current = arrayValue
   const [currentOutcome, setCurrentOutcome] = useState<RoundOutcome | null>(null)
-  const [results, setResults] = useState<RoundOutcome[]>([])
+  const [results, setResults] = useState<RoundOutcome[]>(
+    () => restoredSession?.results ?? [],
+  )
   const [finished, setFinished] = useState(false)
 
   const currentRound = rounds[currentIndex]
+
+  useEffect(() => {
+    if (finished) {
+      clearGameSession(sessionKey)
+    } else {
+      saveGameSession(sessionKey, { questions: rounds, results, currentIndex })
+    }
+  }, [sessionKey, rounds, results, currentIndex, finished])
 
   // ラウンドが変わるたびに状態をリセットする
   useEffect(() => {
@@ -393,7 +410,10 @@ export function RandomGameScreen({
         onBack={() =>
           confirmExit(
             results.length > 0 || currentOutcome !== null,
-            onExit,
+            () => {
+              clearGameSession(sessionKey)
+              onExit()
+            },
             t.common.confirmExitMessage,
           )
         }
