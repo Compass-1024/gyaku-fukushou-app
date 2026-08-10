@@ -9,8 +9,6 @@ import { SpatialLevelSelect } from './components/SpatialLevelSelect'
 import { PatternLevelSelect } from './components/PatternLevelSelect'
 import { ToneLevelSelect } from './components/ToneLevelSelect'
 import { RandomLevelSelect } from './components/RandomLevelSelect'
-import { SettingsScreen } from './components/SettingsScreen'
-import { StatsScreen } from './components/StatsScreen'
 import { PrivacyScreen } from './components/PrivacyScreen'
 import { useSpeechRecognition } from './hooks/useSpeechRecognition'
 import { useThemeMode } from './hooks/useThemeMode'
@@ -65,6 +63,16 @@ const RandomGameScreen = lazy(() =>
   import('./components/RandomGameScreen').then((m) => ({
     default: m.RandomGameScreen,
   })),
+)
+// Android実装（低スペック端末・低速回線）を見据え、初回表示（トップ画面）に
+// 不要な統計・設定画面も遅延読み込みにする
+const SettingsScreen = lazy(() =>
+  import('./components/SettingsScreen').then((m) => ({
+    default: m.SettingsScreen,
+  })),
+)
+const StatsScreen = lazy(() =>
+  import('./components/StatsScreen').then((m) => ({ default: m.StatsScreen })),
 )
 
 type View =

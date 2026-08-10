@@ -52,6 +52,7 @@
 - 開発サーバー（`npm run dev`）でもmanifest/Service Workerの挙動を確認できるよう`devOptions.enabled`を有効化
 - Android実装を見据え、Wake Lock APIによる回答中の画面スリープ防止を追加（`src/hooks/useWakeLock.ts`、非対応環境では単に無効化されるだけで害はない）
 - Android実装を見据え、正解/不正解・実績解除・レベルアップ時のハプティックフィードバック（`navigator.vibrate`）を追加。設定画面から独立してON/OFF切替可能（既定オフ、`src/lib/haptics.ts`）
+- StatsScreen/SettingsScreenを`React.lazy`で遅延読み込み化し、初期バンドルをgzip換算で約103KB→約93KBに削減（低スペックAndroid端末・低速回線での初期表示を意識）
 
 ### Fixed
 
