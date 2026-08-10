@@ -312,6 +312,10 @@ export interface Translations {
     }
     noInput: string
     questionLabel: string
+    // ④-2: アダプティブ難易度モード
+    adaptiveLabel: string
+    adaptiveDescription: string
+    maxLevelReachedLabel: (level: 1 | 2 | 3) => string
   }
   nback: {
     title: string
@@ -355,6 +359,10 @@ export interface Translations {
     litSquaresAriaLabel: string
     cellAriaLabel: (index: number, tapOrder: number | null) => string
     resultLabel: (cellCount: number) => string
+    // ④-2: アダプティブ難易度モード
+    adaptiveLabel: string
+    adaptiveDescription: string
+    maxLevelReachedLabel: (level: 1 | 2 | 3) => string
   }
   pattern: {
     title: string
@@ -363,6 +371,10 @@ export interface Translations {
     selectPrompt: string
     submitButton: string
     cellAriaLabel: (index: number, selected: boolean) => string
+    // ④-2: アダプティブ難易度モード
+    adaptiveLabel: string
+    adaptiveDescription: string
+    maxLevelReachedLabel: (level: 1 | 2 | 3) => string
   }
   random: {
     title: string
@@ -381,6 +393,10 @@ export interface Translations {
     padColors: readonly [string, string, string, string]
     padAriaLabel: (color: string) => string
     resultLabel: (padCount: number) => string
+    // ④-2: アダプティブ難易度モード
+    adaptiveLabel: string
+    adaptiveDescription: string
+    maxLevelReachedLabel: (level: 1 | 2 | 3) => string
   }
   benchmarks: {
     title: string

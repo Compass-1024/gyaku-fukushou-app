@@ -12,20 +12,23 @@ function generateDigits(length: number): number[] {
 }
 
 // 誤答が多い系列パターン（数字の重複あり/なし）ほど選ばれやすい重み付き抽選で
-// 出題する。src/lib/questionWeighting.tsのバケット単位統計に基づく
-// （固定候補プールを持たないモードのため、候補を複数生成して選ぶ方式）
-export function pickDigitQuestionSet(level: Level): DigitQuestion[] {
+// 1問だけ生成する。src/lib/questionWeighting.tsのバケット単位統計に基づく
+// （固定候補プールを持たないモードのため、候補を複数生成して選ぶ方式）。
+// ④-2: アダプティブ難易度モードは問題ごとにレベルが変わりうるため、
+// 3問セットの一括生成(pickDigitQuestionSet)とは別に1問単位の生成が必要
+export function pickDigitQuestion(level: Level, idSuffix: string | number = 0): DigitQuestion {
   const length = DIGIT_LENGTH[level]
-  const now = Date.now()
   const stats = loadBucketStats(STATS_MODE)
-  return Array.from({ length: QUESTIONS_PER_SET }, (_, i) => {
-    const digits = pickWeightedCandidate(
-      () => generateDigits(length),
-      (d) => `${level}:${classifyDigitPattern(d)}`,
-      stats,
-    )
-    return { id: `${level}-${now}-${i}`, digits }
-  })
+  const digits = pickWeightedCandidate(
+    () => generateDigits(length),
+    (d) => `${level}:${classifyDigitPattern(d)}`,
+    stats,
+  )
+  return { id: `${level}-${Date.now()}-${idSuffix}`, digits }
+}
+
+export function pickDigitQuestionSet(level: Level): DigitQuestion[] {
+  return Array.from({ length: QUESTIONS_PER_SET }, (_, i) => pickDigitQuestion(level, i))
 }
 
 export function recordDigitAttempt(

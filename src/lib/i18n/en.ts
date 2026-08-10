@@ -473,6 +473,9 @@ export const en: Translations = {
     },
     noInput: '(no input)',
     questionLabel: 'Shown: ',
+    adaptiveLabel: 'Adaptive (recommended)',
+    adaptiveDescription: 'The digit count grows automatically after correct answers and shrinks after mistakes',
+    maxLevelReachedLabel: (level) => `Highest level reached: ${level}`,
   },
   nback: {
     title: 'N-Back Mode',
@@ -543,6 +546,9 @@ export const en: Translations = {
     cellAriaLabel: (index, tapOrder) =>
       `Square ${index}${tapOrder !== null ? ` (tapped ${tapOrder}${tapOrder === 1 ? 'st' : tapOrder === 2 ? 'nd' : tapOrder === 3 ? 'rd' : 'th'})` : ''}`,
     resultLabel: (cellCount) => `${cellCount} square${cellCount === 1 ? '' : 's'}`,
+    adaptiveLabel: 'Adaptive (recommended)',
+    adaptiveDescription: 'The level rises automatically after correct answers and drops after mistakes',
+    maxLevelReachedLabel: (level) => `Highest level reached: ${level}`,
   },
   pattern: {
     title: 'Change Detection Mode',
@@ -560,6 +566,9 @@ export const en: Translations = {
     submitButton: 'Submit',
     cellAriaLabel: (index, selected) =>
       `Square ${index}${selected ? ' (selected)' : ''}`,
+    adaptiveLabel: 'Adaptive (recommended)',
+    adaptiveDescription: 'The level rises automatically after correct answers and drops after mistakes',
+    maxLevelReachedLabel: (level) => `Highest level reached: ${level}`,
   },
   random: {
     title: 'Random Mode',
@@ -585,6 +594,9 @@ export const en: Translations = {
     padColors: ['Red', 'Blue', 'Green', 'Yellow'],
     padAriaLabel: (color) => `${color} pad`,
     resultLabel: (padCount) => `${padCount} tone${padCount === 1 ? '' : 's'}`,
+    adaptiveLabel: 'Adaptive (recommended)',
+    adaptiveDescription: 'The level rises automatically after correct answers and drops after mistakes',
+    maxLevelReachedLabel: (level) => `Highest level reached: ${level}`,
   },
   benchmarks: {
     title: 'Working Memory Progress',

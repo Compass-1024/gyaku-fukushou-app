@@ -38,20 +38,23 @@ function classifySpatialSequence(sequence: number[], gridSize: number): string {
   return 'scattered'
 }
 
-// 誤答が多い系列パターンほど選ばれやすい重み付き抽選で出題する
-export function pickSpatialQuestionSet(level: Level): SpatialQuestion[] {
+// 誤答が多い系列パターンほど選ばれやすい重み付き抽選で1問だけ生成する。
+// ④-2: アダプティブ難易度モードは問題ごとにレベルが変わりうるため、
+// 3問セットの一括生成(pickSpatialQuestionSet)とは別に1問単位の生成が必要
+export function pickSpatialQuestion(level: Level, idSuffix: string | number = 0): SpatialQuestion {
   const gridSize = GRID_SIZE[level]
   const length = SEQUENCE_LENGTH[level]
-  const now = Date.now()
   const stats = loadBucketStats(STATS_MODE)
-  return Array.from({ length: QUESTIONS_PER_SET }, (_, i) => {
-    const sequence = pickWeightedCandidate(
-      () => generateSequence(gridSize, length),
-      (s) => `${level}:${classifySpatialSequence(s, gridSize)}`,
-      stats,
-    )
-    return { id: `${level}-${now}-${i}`, gridSize, sequence }
-  })
+  const sequence = pickWeightedCandidate(
+    () => generateSequence(gridSize, length),
+    (s) => `${level}:${classifySpatialSequence(s, gridSize)}`,
+    stats,
+  )
+  return { id: `${level}-${Date.now()}-${idSuffix}`, gridSize, sequence }
+}
+
+export function pickSpatialQuestionSet(level: Level): SpatialQuestion[] {
+  return Array.from({ length: QUESTIONS_PER_SET }, (_, i) => pickSpatialQuestion(level, i))
 }
 
 export function recordSpatialAttempt(

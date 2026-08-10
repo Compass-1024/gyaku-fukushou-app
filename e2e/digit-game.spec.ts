@@ -23,6 +23,36 @@ test('すうじモード（逆から入力）: 出題→回答→結果表示ま
   await expect(page.getByRole('button', { name: '次へ' })).toBeVisible()
 })
 
+test('すうじモード: アダプティブ難易度モードで最後まで完走し、到達した最大レベルが結果画面に表示される（④-2）', async ({
+  page,
+}) => {
+  await page.goto('/')
+  await page.getByRole('button', { name: /すうじモード（逆から入力）/ }).click()
+  await page.getByRole('checkbox', { name: 'アダプティブ（おすすめ）' }).check()
+  await page.getByRole('button', { name: /レベル1（3桁）/ }).click()
+
+  // アダプティブ時は問題ごとに桁数(3/5/7)が変わりうるため、決まった回数だけ
+  // タップするのではなく、結果フェーズに切り替わるまで1桁ずつタップし続ける
+  async function answerOneQuestion() {
+    for (let i = 0; i < 7; i++) {
+      if (await page.getByText(/^(正解|不正解)$/).isVisible()) return
+      await page.getByRole('button', { name: '1', exact: true }).click()
+    }
+  }
+
+  for (let q = 0; q < 3; q++) {
+    await expect(
+      page.getByText('逆から入力してください'),
+    ).toBeVisible({ timeout: 15_000 })
+    await answerOneQuestion()
+    await expect(page.getByText(/^(正解|不正解)$/)).toBeVisible()
+    await page.getByRole('button', { name: /^(次へ|結果を見る)$/ }).click()
+  }
+
+  await expect(page.getByText(/問正解/)).toBeVisible()
+  await expect(page.getByText(/到達した最大レベル/)).toBeVisible()
+})
+
 test('すうじモード: 回答フェーズを一時停止すると残り時間が保持され、再開すると続きからカウントダウンする', async ({
   page,
 }) => {

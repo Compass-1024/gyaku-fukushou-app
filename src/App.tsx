@@ -71,7 +71,7 @@ type View =
   | { screen: 'word-level' }
   | { screen: 'word-game'; level: Level }
   | { screen: 'digit-level'; gameType: DigitGameType }
-  | { screen: 'digit-game'; gameType: DigitGameType; level: Level }
+  | { screen: 'digit-game'; gameType: DigitGameType; level: Level; adaptive?: boolean }
   | { screen: 'nback-level' }
   | { screen: 'nback-game'; level: Level; trialCount: number; adaptive?: boolean }
   | { screen: 'dual-nback-level' }
@@ -82,11 +82,11 @@ type View =
       adaptive?: boolean
     }
   | { screen: 'spatial-level' }
-  | { screen: 'spatial-game'; level: Level }
+  | { screen: 'spatial-game'; level: Level; adaptive?: boolean }
   | { screen: 'pattern-level' }
-  | { screen: 'pattern-game'; level: Level }
+  | { screen: 'pattern-game'; level: Level; adaptive?: boolean }
   | { screen: 'tone-level' }
-  | { screen: 'tone-game'; level: Level }
+  | { screen: 'tone-game'; level: Level; adaptive?: boolean }
   | { screen: 'random-level' }
   | { screen: 'random-game'; level: Level; weakPointFocus?: boolean }
   | { screen: 'settings' }
@@ -279,8 +279,8 @@ function App() {
         <DigitLevelSelect
           gameType={view.gameType}
           history={history}
-          onSelect={(level) =>
-            goTo({ screen: 'digit-game', gameType: view.gameType, level })
+          onSelect={(level, adaptive) =>
+            goTo({ screen: 'digit-game', gameType: view.gameType, level, adaptive })
           }
           onBack={() => goTo({ screen: 'top' })}
         />
@@ -289,14 +289,15 @@ function App() {
     case 'digit-game':
       content = (
         <DigitGameScreen
-          key={`${view.gameType}-${view.level}`}
+          key={`${view.gameType}-${view.level}-${view.adaptive}`}
           level={view.level}
           gameType={view.gameType}
+          adaptive={view.adaptive}
           onExit={() =>
             goTo({ screen: 'digit-level', gameType: view.gameType })
           }
           onSelectLevel={(level) =>
-            goTo({ screen: 'digit-game', gameType: view.gameType, level })
+            goTo({ screen: 'digit-game', gameType: view.gameType, level, adaptive: view.adaptive })
           }
         />
       )
@@ -365,7 +366,7 @@ function App() {
       content = (
         <SpatialLevelSelect
           history={history}
-          onSelect={(level) => goTo({ screen: 'spatial-game', level })}
+          onSelect={(level, adaptive) => goTo({ screen: 'spatial-game', level, adaptive })}
           onBack={() => goTo({ screen: 'top' })}
         />
       )
@@ -373,10 +374,11 @@ function App() {
     case 'spatial-game':
       content = (
         <SpatialGameScreen
-          key={view.level}
+          key={`${view.level}-${view.adaptive}`}
           level={view.level}
+          adaptive={view.adaptive}
           onExit={() => goTo({ screen: 'spatial-level' })}
-          onSelectLevel={(level) => goTo({ screen: 'spatial-game', level })}
+          onSelectLevel={(level) => goTo({ screen: 'spatial-game', level, adaptive: view.adaptive })}
         />
       )
       break
@@ -384,7 +386,7 @@ function App() {
       content = (
         <PatternLevelSelect
           history={history}
-          onSelect={(level) => goTo({ screen: 'pattern-game', level })}
+          onSelect={(level, adaptive) => goTo({ screen: 'pattern-game', level, adaptive })}
           onBack={() => goTo({ screen: 'top' })}
         />
       )
@@ -392,10 +394,11 @@ function App() {
     case 'pattern-game':
       content = (
         <PatternGameScreen
-          key={view.level}
+          key={`${view.level}-${view.adaptive}`}
           level={view.level}
+          adaptive={view.adaptive}
           onExit={() => goTo({ screen: 'pattern-level' })}
-          onSelectLevel={(level) => goTo({ screen: 'pattern-game', level })}
+          onSelectLevel={(level) => goTo({ screen: 'pattern-game', level, adaptive: view.adaptive })}
         />
       )
       break
@@ -403,7 +406,7 @@ function App() {
       content = (
         <ToneLevelSelect
           history={history}
-          onSelect={(level) => goTo({ screen: 'tone-game', level })}
+          onSelect={(level, adaptive) => goTo({ screen: 'tone-game', level, adaptive })}
           onBack={() => goTo({ screen: 'top' })}
         />
       )
@@ -411,10 +414,11 @@ function App() {
     case 'tone-game':
       content = (
         <ToneGameScreen
-          key={view.level}
+          key={`${view.level}-${view.adaptive}`}
           level={view.level}
+          adaptive={view.adaptive}
           onExit={() => goTo({ screen: 'tone-level' })}
-          onSelectLevel={(level) => goTo({ screen: 'tone-game', level })}
+          onSelectLevel={(level) => goTo({ screen: 'tone-game', level, adaptive: view.adaptive })}
         />
       )
       break

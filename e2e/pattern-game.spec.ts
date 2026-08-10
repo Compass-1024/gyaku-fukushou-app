@@ -19,6 +19,30 @@ test('変化検出モード: 出題が始まりマスを選択して回答でき
   await expect(page.getByRole('button', { name: '次へ' })).toBeVisible()
 })
 
+test('変化検出モード: アダプティブ難易度モードで最後まで完走し、到達した最大レベルが結果画面に表示される（④-2）', async ({
+  page,
+}) => {
+  await page.goto('/')
+  await page.getByRole('button', { name: /変化検出モード/ }).click()
+  await page.getByRole('checkbox', { name: 'アダプティブ（おすすめ）' }).check()
+  await page.getByRole('button', { name: /レベル1（4×4・4マス）/ }).click()
+
+  for (let q = 0; q < 3; q++) {
+    await expect(
+      page.getByText('さっき青色だったマスをすべて選んでください'),
+    ).toBeVisible({ timeout: 10_000 })
+    const cells = page.getByRole('button', { name: /^マス\d+/ })
+    await cells.nth(0).click()
+    await cells.nth(1).click()
+    await page.getByRole('button', { name: '回答する' }).click()
+    await expect(page.getByText(/^(正解|不正解)$/)).toBeVisible()
+    await page.getByRole('button', { name: /^(次へ|結果を見る)$/ }).click()
+  }
+
+  await expect(page.getByText(/問正解/)).toBeVisible()
+  await expect(page.getByText(/到達した最大レベル/)).toBeVisible()
+})
+
 test('変化検出モード: 回答フェーズを一時停止すると残り時間が保持される', async ({
   page,
 }) => {

@@ -42,6 +42,7 @@
 - 設定画面に「チップの自動展開」を追加。「今日のミッション」「本日のお題」「7日間チャレンジ」のうち選んだ1件を、ホーム画面表示のたびに自動で展開表示できるようにした（`AppSettings.autoExpandChip`）
 - 統計画面の学習カレンダー（GitHub風ヒートマップ）のマスをタップすると、その日に挑戦したモード・レベル・正誤内訳をドリルダウン表示できるようにした（`src/components/StatsCalendarSection.tsx`）
 - 統計画面に「実績・達成の通知センター」を追加。実績解除・ミッション達成を新しい順に一覧表示する。解除済みフラグを保存しない設計のため、履歴を古い順に再生しながら`isUnlocked`が初めてtrueになった時点を解除日として近似する（`src/lib/notifications.ts`）
+- すうじ/空間/変化検出/音・色の4モードにアダプティブ難易度モードを追加。1セット3問と試行数が少ないため、Nバック系の3試行ウィンドウ方式ではなく問題ごとに正解でレベル+1・不正解でレベル-1する即時ステップ調整方式にした（`src/lib/adaptiveDifficulty.ts`の`nextAdaptiveLevel`、各lib（digits/spatial/pattern/tone.ts）に1問単位の生成関数`pick*Question`を追加）
 
 ### Fixed
 

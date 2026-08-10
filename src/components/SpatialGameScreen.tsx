@@ -5,6 +5,7 @@ import { useStepReveal } from '../hooks/useStepReveal'
 import { useSetCompletionRecorder } from '../hooks/useSetCompletionRecorder'
 import { usePauseState } from '../hooks/usePauseState'
 import {
+  pickSpatialQuestion,
   pickSpatialQuestionSet,
   reverseSequence,
   isSpatialAnswerCorrect,
@@ -14,6 +15,7 @@ import {
   READY_MS,
   getAnswerTimeoutMs,
 } from '../lib/spatial'
+import { nextAdaptiveLevel } from '../lib/adaptiveDifficulty'
 import { confirmExit } from '../lib/confirmExit'
 import { getSuggestedLevel } from '../lib/difficulty'
 import { loadSettings } from '../lib/settings'
@@ -25,22 +27,30 @@ import { PausableAnswering } from './PausableAnswering'
 import { useTranslation } from '../contexts/LanguageContext'
 import type {
   BaseGameScreenProps,
+  Level,
   SpatialQuestion,
   SpatialQuestionPhase,
   SpatialQuestionResult,
 } from '../types'
 
-type SpatialGameScreenProps = BaseGameScreenProps
+interface SpatialGameScreenProps extends BaseGameScreenProps {
+  adaptive?: boolean
+}
 
 export function SpatialGameScreen({
   level,
+  adaptive = false,
   onExit,
   onSelectLevel,
 }: SpatialGameScreenProps) {
   const t = useTranslation()
   const [questions, setQuestions] = useState<SpatialQuestion[]>(() =>
-    pickSpatialQuestionSet(level),
+    adaptive ? [pickSpatialQuestion(level, 0)] : pickSpatialQuestionSet(level),
   )
+  const [questionLevels, setQuestionLevels] = useState<Level[]>(() =>
+    adaptive ? [level] : [level, level, level],
+  )
+  const [maxLevelReached, setMaxLevelReached] = useState<Level>(level)
   const [currentIndex, setCurrentIndex] = useState(0)
   const [phase, setPhase] = useState<SpatialQuestionPhase>('ready')
   const [tapped, setTapped] = useState<number[]>([])
@@ -111,7 +121,12 @@ export function SpatialGameScreen({
   function finalizeAnswer(value: number[]) {
     const expectedAnswer = reverseSequence(currentQuestion.sequence)
     const correct = isSpatialAnswerCorrect(value, expectedAnswer)
-    recordSpatialAttempt(level, currentQuestion.sequence, currentQuestion.gridSize, correct)
+    recordSpatialAttempt(
+      questionLevels[currentIndex],
+      currentQuestion.sequence,
+      currentQuestion.gridSize,
+      correct,
+    )
     if (loadSettings().soundEnabled) {
       if (correct) playCorrectSound()
       else playIncorrectSound()
@@ -125,29 +140,47 @@ export function SpatialGameScreen({
     setPhase('result')
   }
 
+  // アダプティブモードでは実際に到達した最大レベルを、統計・実績・レベル提案に使う
+  const recordedLevel = adaptive ? maxLevelReached : level
+
   // 3問セットが完了するたびに結果を記録し、新規実績の解除やレベルアップを演出する
   const { newAchievements, isNewBest, isNewTodayBest, xpGained, leveledUp, newLevel } = useSetCompletionRecorder({
     trigger: finished,
     mode: 'spatial',
-    level,
+    level: recordedLevel,
     correctCount: results.filter((r) => r.correct).length,
     total: results.length,
   })
+
+  const TOTAL_QUESTIONS = 3
 
   function handleNext() {
     if (!currentResult) return
     if (loadSettings().soundEnabled) playButtonTap()
     const updated = [...results, currentResult]
     setResults(updated)
-    if (currentIndex + 1 >= questions.length) {
+    if (currentIndex + 1 >= TOTAL_QUESTIONS) {
       setFinished(true)
-    } else {
-      setCurrentIndex((i) => i + 1)
+      return
     }
+    if (adaptive) {
+      const nextLevel = nextAdaptiveLevel(questionLevels[currentIndex], currentResult.correct)
+      setMaxLevelReached((m) => (nextLevel > m ? nextLevel : m))
+      setQuestions((prev) => [...prev, pickSpatialQuestion(nextLevel, prev.length)])
+      setQuestionLevels((prev) => [...prev, nextLevel])
+    }
+    setCurrentIndex((i) => i + 1)
   }
 
   function handleRetry() {
-    setQuestions(pickSpatialQuestionSet(level))
+    if (adaptive) {
+      setQuestions([pickSpatialQuestion(level, 0)])
+      setQuestionLevels([level])
+      setMaxLevelReached(level)
+    } else {
+      setQuestions(pickSpatialQuestionSet(level))
+      setQuestionLevels([level, level, level])
+    }
     setCurrentIndex(0)
     setResults([])
     setCurrentResult(null)
@@ -158,7 +191,7 @@ export function SpatialGameScreen({
     const correctCount = results.filter((r) => r.correct).length
     const accuracyPercent =
       results.length > 0 ? Math.round((correctCount / results.length) * 100) : 0
-    const suggestedLevel = getSuggestedLevel(level, accuracyPercent)
+    const suggestedLevel = getSuggestedLevel(recordedLevel, accuracyPercent)
     return (
       <SetSummary
         items={results.map((r) => ({
@@ -178,7 +211,7 @@ export function SpatialGameScreen({
           suggestedLevel
             ? {
                 label:
-                  suggestedLevel > level
+                  suggestedLevel > recordedLevel
                     ? t.common.suggestionUp(t.spatial.levelLabel(suggestedLevel))
                     : t.common.suggestionDown(
                         t.spatial.levelLabel(suggestedLevel),
@@ -187,7 +220,9 @@ export function SpatialGameScreen({
               }
             : undefined
         }
-      />
+      >
+        {adaptive && <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">{t.spatial.maxLevelReachedLabel(maxLevelReached)}</p>}
+      </SetSummary>
     )
   }
 
@@ -203,7 +238,7 @@ export function SpatialGameScreen({
           )
         }
         currentIndex={currentIndex}
-        total={questions.length}
+        total={TOTAL_QUESTIONS}
       />
 
       <div
@@ -290,7 +325,7 @@ export function SpatialGameScreen({
               onClick={handleNext}
               className="mt-4 touch-manipulation rounded-lg bg-indigo-500 px-5 py-3 font-semibold text-white shadow-sm transition hover:bg-indigo-400"
             >
-              {currentIndex + 1 >= questions.length
+              {currentIndex + 1 >= TOTAL_QUESTIONS
                 ? t.common.seeResults
                 : t.common.next}
             </button>

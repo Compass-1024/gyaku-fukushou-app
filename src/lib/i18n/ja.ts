@@ -444,6 +444,9 @@ export const ja: Translations = {
     },
     noInput: '（未入力）',
     questionLabel: '出題: ',
+    adaptiveLabel: 'アダプティブ（おすすめ）',
+    adaptiveDescription: '正解が続くと桁数が自動で増え、間違いが続くと減ります',
+    maxLevelReachedLabel: (level) => `到達した最大レベル: ${level}`,
   },
   nback: {
     title: 'Nバックモード',
@@ -514,6 +517,9 @@ export const ja: Translations = {
     cellAriaLabel: (index, tapOrder) =>
       `マス${index}${tapOrder !== null ? `（${tapOrder}番目にタップ）` : ''}`,
     resultLabel: (cellCount) => `${cellCount}マス`,
+    adaptiveLabel: 'アダプティブ（おすすめ）',
+    adaptiveDescription: '正解が続くとレベルが自動で上がり、間違いが続くと下がります',
+    maxLevelReachedLabel: (level) => `到達した最大レベル: ${level}`,
   },
   pattern: {
     title: '変化検出モード',
@@ -531,6 +537,9 @@ export const ja: Translations = {
     submitButton: '回答する',
     cellAriaLabel: (index, selected) =>
       `マス${index}${selected ? '（選択中）' : ''}`,
+    adaptiveLabel: 'アダプティブ（おすすめ）',
+    adaptiveDescription: '正解が続くとレベルが自動で上がり、間違いが続くと下がります',
+    maxLevelReachedLabel: (level) => `到達した最大レベル: ${level}`,
   },
   random: {
     title: 'ランダムモード',
@@ -554,6 +563,9 @@ export const ja: Translations = {
     padColors: ['赤', '青', '緑', '黄'],
     padAriaLabel: (color) => `${color}のパッド`,
     resultLabel: (padCount) => `${padCount}音`,
+    adaptiveLabel: 'アダプティブ（おすすめ）',
+    adaptiveDescription: '正解が続くとレベルが自動で上がり、間違いが続くと下がります',
+    maxLevelReachedLabel: (level) => `到達した最大レベル: ${level}`,
   },
   benchmarks: {
     title: 'ワーキングメモリの伸び',

@@ -5,6 +5,7 @@ import { useStepReveal } from '../hooks/useStepReveal'
 import { useSetCompletionRecorder } from '../hooks/useSetCompletionRecorder'
 import { usePauseState } from '../hooks/usePauseState'
 import {
+  pickDigitQuestion,
   pickDigitQuestionSet,
   reverseDigits,
   sumDigits,
@@ -15,6 +16,7 @@ import {
   READY_MS,
   getAnswerTimeoutMs,
 } from '../lib/digits'
+import { nextAdaptiveLevel } from '../lib/adaptiveDifficulty'
 import { confirmExit } from '../lib/confirmExit'
 import { getSuggestedLevel } from '../lib/difficulty'
 import { loadSettings } from '../lib/settings'
@@ -31,6 +33,7 @@ import type {
   DigitQuestion,
   DigitQuestionPhase,
   DigitQuestionResult,
+  Level,
 } from '../types'
 
 function computeExpectedAnswer(
@@ -44,18 +47,26 @@ function computeExpectedAnswer(
 
 interface DigitGameScreenProps extends BaseGameScreenProps {
   gameType: DigitGameType
+  adaptive?: boolean
 }
 
 export function DigitGameScreen({
   level,
   gameType,
+  adaptive = false,
   onExit,
   onSelectLevel,
 }: DigitGameScreenProps) {
   const t = useTranslation()
   const [questions, setQuestions] = useState<DigitQuestion[]>(() =>
-    pickDigitQuestionSet(level),
+    adaptive ? [pickDigitQuestion(level, 0)] : pickDigitQuestionSet(level),
   )
+  // ④-2: アダプティブモードのみ使う、各問題を生成した時点のレベル。
+  // 非アダプティブ時は常にlevelと同じ
+  const [questionLevels, setQuestionLevels] = useState<Level[]>(() =>
+    adaptive ? [level] : [level, level, level],
+  )
+  const [maxLevelReached, setMaxLevelReached] = useState<Level>(level)
   const [currentIndex, setCurrentIndex] = useState(0)
   const [phase, setPhase] = useState<DigitQuestionPhase>('ready')
   const [typed, setTyped] = useState('')
@@ -164,7 +175,7 @@ export function DigitGameScreen({
   function finalizeAnswer(value: string) {
     const expectedAnswer = computeExpectedAnswer(currentQuestion, gameType)
     const correct = isDigitAnswerCorrect(value, expectedAnswer)
-    recordDigitAttempt(level, currentQuestion.digits, correct)
+    recordDigitAttempt(questionLevels[currentIndex], currentQuestion.digits, correct)
     if (loadSettings().soundEnabled) {
       if (correct) playCorrectSound()
       else playIncorrectSound()
@@ -178,30 +189,49 @@ export function DigitGameScreen({
     setPhase('result')
   }
 
+  // アダプティブモードでは実際に到達した最大レベルを、統計・実績・レベル提案に
+  // 使う（開始レベル固定のままだと上位レベル相当をこなしても反映されないため）
+  const recordedLevel = adaptive ? maxLevelReached : level
+
   // 3問セットが完了するたびに結果を記録し、新規実績の解除やレベルアップを演出する
   const { newAchievements, isNewBest, isNewTodayBest, xpGained, leveledUp, newLevel } = useSetCompletionRecorder({
     trigger: finished,
     mode: 'digit',
     gameType,
-    level,
+    level: recordedLevel,
     correctCount: results.filter((r) => r.correct).length,
     total: results.length,
   })
+
+  const TOTAL_QUESTIONS = 3
 
   function handleNext() {
     if (!currentResult) return
     if (loadSettings().soundEnabled) playButtonTap()
     const updated = [...results, currentResult]
     setResults(updated)
-    if (currentIndex + 1 >= questions.length) {
+    if (currentIndex + 1 >= TOTAL_QUESTIONS) {
       setFinished(true)
-    } else {
-      setCurrentIndex((i) => i + 1)
+      return
     }
+    if (adaptive) {
+      const nextLevel = nextAdaptiveLevel(questionLevels[currentIndex], currentResult.correct)
+      setMaxLevelReached((m) => (nextLevel > m ? nextLevel : m))
+      setQuestions((prev) => [...prev, pickDigitQuestion(nextLevel, prev.length)])
+      setQuestionLevels((prev) => [...prev, nextLevel])
+    }
+    setCurrentIndex((i) => i + 1)
   }
 
   function handleRetry() {
-    setQuestions(pickDigitQuestionSet(level))
+    if (adaptive) {
+      setQuestions([pickDigitQuestion(level, 0)])
+      setQuestionLevels([level])
+      setMaxLevelReached(level)
+    } else {
+      setQuestions(pickDigitQuestionSet(level))
+      setQuestionLevels([level, level, level])
+    }
     setCurrentIndex(0)
     setResults([])
     setCurrentResult(null)
@@ -212,7 +242,7 @@ export function DigitGameScreen({
     const correctCount = results.filter((r) => r.correct).length
     const accuracyPercent =
       results.length > 0 ? Math.round((correctCount / results.length) * 100) : 0
-    const suggestedLevel = getSuggestedLevel(level, accuracyPercent)
+    const suggestedLevel = getSuggestedLevel(recordedLevel, accuracyPercent)
     return (
       <SetSummary
         items={results.map((r) => ({
@@ -232,14 +262,16 @@ export function DigitGameScreen({
           suggestedLevel
             ? {
                 label:
-                  suggestedLevel > level
+                  suggestedLevel > recordedLevel
                     ? t.common.suggestionUp(t.digit.levelLabel(suggestedLevel))
                     : t.common.suggestionDown(t.digit.levelLabel(suggestedLevel)),
                 onSelect: () => onSelectLevel(suggestedLevel),
               }
             : undefined
         }
-      />
+      >
+        {adaptive && <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">{t.digit.maxLevelReachedLabel(maxLevelReached)}</p>}
+      </SetSummary>
     )
   }
 
@@ -255,7 +287,7 @@ export function DigitGameScreen({
           )
         }
         currentIndex={currentIndex}
-        total={questions.length}
+        total={TOTAL_QUESTIONS}
       />
 
       <div
@@ -317,7 +349,7 @@ export function DigitGameScreen({
               onClick={handleNext}
               className="mt-4 touch-manipulation rounded-lg bg-indigo-500 px-5 py-3 font-semibold text-white shadow-sm transition hover:bg-indigo-400"
             >
-              {currentIndex + 1 >= questions.length
+              {currentIndex + 1 >= TOTAL_QUESTIONS
                 ? t.common.seeResults
                 : t.common.next}
             </button>

@@ -19,6 +19,36 @@ test('音・色モード: 出題が始まりパッドをタップして回答で
   )
 })
 
+test('音・色モード: アダプティブ難易度モードで最後まで完走し、到達した最大レベルが結果画面に表示される（④-2）', async ({
+  page,
+}) => {
+  await page.goto('/')
+  await page.getByRole('button', { name: /音・色モード/ }).click()
+  await page.getByRole('checkbox', { name: 'アダプティブ（おすすめ）' }).check()
+  await page.getByRole('button', { name: /レベル1（3音）/ }).click()
+
+  // アダプティブ時は問題ごとに音数(3/4/5)が変わりうるため、決まった回数
+  // ではなく結果フェーズに切り替わるまで同じパッドをタップし続ける
+  async function answerOneQuestion() {
+    for (let i = 0; i < 5; i++) {
+      if (await page.getByText(/^(正解|不正解)$/).isVisible()) return
+      await page.getByRole('button', { name: '赤のパッド' }).click()
+    }
+  }
+
+  for (let q = 0; q < 3; q++) {
+    await expect(
+      page.getByText('同じ順番でパッドをタップしてください'),
+    ).toBeVisible({ timeout: 10_000 })
+    await answerOneQuestion()
+    await expect(page.getByText(/^(正解|不正解)$/)).toBeVisible()
+    await page.getByRole('button', { name: /^(次へ|結果を見る)$/ }).click()
+  }
+
+  await expect(page.getByText(/問正解/)).toBeVisible()
+  await expect(page.getByText(/到達した最大レベル/)).toBeVisible()
+})
+
 test('音・色モード: 回答フェーズを一時停止すると残り時間が保持される', async ({
   page,
 }) => {

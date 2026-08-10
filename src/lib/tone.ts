@@ -18,19 +18,22 @@ function classifyToneSequence(sequence: number[]): string {
   return new Set(sequence).size !== sequence.length ? 'repeat' : 'unique'
 }
 
-// 誤答が多い系列パターンほど選ばれやすい重み付き抽選で出題する
-export function pickToneQuestionSet(level: Level): ToneQuestion[] {
+// 誤答が多い系列パターンほど選ばれやすい重み付き抽選で1問だけ生成する。
+// ④-2: アダプティブ難易度モードは問題ごとにレベルが変わりうるため、
+// 3問セットの一括生成(pickToneQuestionSet)とは別に1問単位の生成が必要
+export function pickToneQuestion(level: Level, idSuffix: string | number = 0): ToneQuestion {
   const length = SEQUENCE_LENGTH[level]
-  const now = Date.now()
   const stats = loadBucketStats(STATS_MODE)
-  return Array.from({ length: QUESTIONS_PER_SET }, (_, i) => {
-    const sequence = pickWeightedCandidate(
-      () => generateSequence(length),
-      (s) => `${level}:${classifyToneSequence(s)}`,
-      stats,
-    )
-    return { id: `${level}-${now}-${i}`, sequence }
-  })
+  const sequence = pickWeightedCandidate(
+    () => generateSequence(length),
+    (s) => `${level}:${classifyToneSequence(s)}`,
+    stats,
+  )
+  return { id: `${level}-${Date.now()}-${idSuffix}`, sequence }
+}
+
+export function pickToneQuestionSet(level: Level): ToneQuestion[] {
+  return Array.from({ length: QUESTIONS_PER_SET }, (_, i) => pickToneQuestion(level, i))
 }
 
 export function recordToneAttempt(

@@ -5,6 +5,7 @@ import { useStepReveal } from '../hooks/useStepReveal'
 import { useSetCompletionRecorder } from '../hooks/useSetCompletionRecorder'
 import { usePauseState } from '../hooks/usePauseState'
 import {
+  pickToneQuestion,
   pickToneQuestionSet,
   isToneAnswerCorrect,
   recordToneAttempt,
@@ -14,6 +15,7 @@ import {
   getAnswerTimeoutMs,
   PAD_COUNT,
 } from '../lib/tone'
+import { nextAdaptiveLevel } from '../lib/adaptiveDifficulty'
 import { confirmExit } from '../lib/confirmExit'
 import { getSuggestedLevel } from '../lib/difficulty'
 import { loadSettings } from '../lib/settings'
@@ -30,6 +32,7 @@ import { PausableAnswering } from './PausableAnswering'
 import { useTranslation } from '../contexts/LanguageContext'
 import type {
   BaseGameScreenProps,
+  Level,
   ToneQuestion,
   ToneQuestionPhase,
   ToneQuestionResult,
@@ -43,17 +46,24 @@ const PAD_COLORS = [
 ]
 const PAD_LIT_COLORS = ['bg-rose-300', 'bg-sky-300', 'bg-emerald-300', 'bg-amber-200']
 
-type ToneGameScreenProps = BaseGameScreenProps
+interface ToneGameScreenProps extends BaseGameScreenProps {
+  adaptive?: boolean
+}
 
 export function ToneGameScreen({
   level,
+  adaptive = false,
   onExit,
   onSelectLevel,
 }: ToneGameScreenProps) {
   const t = useTranslation()
   const [questions, setQuestions] = useState<ToneQuestion[]>(() =>
-    pickToneQuestionSet(level),
+    adaptive ? [pickToneQuestion(level, 0)] : pickToneQuestionSet(level),
   )
+  const [questionLevels, setQuestionLevels] = useState<Level[]>(() =>
+    adaptive ? [level] : [level, level, level],
+  )
+  const [maxLevelReached, setMaxLevelReached] = useState<Level>(level)
   const [currentIndex, setCurrentIndex] = useState(0)
   const [phase, setPhase] = useState<ToneQuestionPhase>('ready')
   const [tapped, setTapped] = useState<number[]>([])
@@ -126,7 +136,7 @@ export function ToneGameScreen({
 
   function finalizeAnswer(value: number[]) {
     const correct = isToneAnswerCorrect(value, currentQuestion.sequence)
-    recordToneAttempt(level, currentQuestion.sequence, correct)
+    recordToneAttempt(questionLevels[currentIndex], currentQuestion.sequence, correct)
     if (loadSettings().soundEnabled) {
       if (correct) playCorrectSound()
       else playIncorrectSound()
@@ -135,29 +145,47 @@ export function ToneGameScreen({
     setPhase('result')
   }
 
+  // アダプティブモードでは実際に到達した最大レベルを、統計・実績・レベル提案に使う
+  const recordedLevel = adaptive ? maxLevelReached : level
+
   // 3問セットが完了するたびに結果を記録し、新規実績の解除やレベルアップを演出する
   const { newAchievements, isNewBest, isNewTodayBest, xpGained, leveledUp, newLevel } = useSetCompletionRecorder({
     trigger: finished,
     mode: 'tone',
-    level,
+    level: recordedLevel,
     correctCount: results.filter((r) => r.correct).length,
     total: results.length,
   })
+
+  const TOTAL_QUESTIONS = 3
 
   function handleNext() {
     if (!currentResult) return
     if (loadSettings().soundEnabled) playButtonTap()
     const updated = [...results, currentResult]
     setResults(updated)
-    if (currentIndex + 1 >= questions.length) {
+    if (currentIndex + 1 >= TOTAL_QUESTIONS) {
       setFinished(true)
-    } else {
-      setCurrentIndex((i) => i + 1)
+      return
     }
+    if (adaptive) {
+      const nextLevel = nextAdaptiveLevel(questionLevels[currentIndex], currentResult.correct)
+      setMaxLevelReached((m) => (nextLevel > m ? nextLevel : m))
+      setQuestions((prev) => [...prev, pickToneQuestion(nextLevel, prev.length)])
+      setQuestionLevels((prev) => [...prev, nextLevel])
+    }
+    setCurrentIndex((i) => i + 1)
   }
 
   function handleRetry() {
-    setQuestions(pickToneQuestionSet(level))
+    if (adaptive) {
+      setQuestions([pickToneQuestion(level, 0)])
+      setQuestionLevels([level])
+      setMaxLevelReached(level)
+    } else {
+      setQuestions(pickToneQuestionSet(level))
+      setQuestionLevels([level, level, level])
+    }
     setCurrentIndex(0)
     setResults([])
     setCurrentResult(null)
@@ -168,7 +196,7 @@ export function ToneGameScreen({
     const correctCount = results.filter((r) => r.correct).length
     const accuracyPercent =
       results.length > 0 ? Math.round((correctCount / results.length) * 100) : 0
-    const suggestedLevel = getSuggestedLevel(level, accuracyPercent)
+    const suggestedLevel = getSuggestedLevel(recordedLevel, accuracyPercent)
     return (
       <SetSummary
         items={results.map((r) => ({
@@ -188,14 +216,16 @@ export function ToneGameScreen({
           suggestedLevel
             ? {
                 label:
-                  suggestedLevel > level
+                  suggestedLevel > recordedLevel
                     ? t.common.suggestionUp(t.tone.levelLabel(suggestedLevel))
                     : t.common.suggestionDown(t.tone.levelLabel(suggestedLevel)),
                 onSelect: () => onSelectLevel(suggestedLevel),
               }
             : undefined
         }
-      />
+      >
+        {adaptive && <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">{t.tone.maxLevelReachedLabel(maxLevelReached)}</p>}
+      </SetSummary>
     )
   }
 
@@ -211,7 +241,7 @@ export function ToneGameScreen({
           )
         }
         currentIndex={currentIndex}
-        total={questions.length}
+        total={TOTAL_QUESTIONS}
       />
 
       <div
@@ -283,7 +313,7 @@ export function ToneGameScreen({
               onClick={handleNext}
               className="mt-4 touch-manipulation rounded-lg bg-indigo-500 px-5 py-3 font-semibold text-white shadow-sm transition hover:bg-indigo-400"
             >
-              {currentIndex + 1 >= questions.length
+              {currentIndex + 1 >= TOTAL_QUESTIONS
                 ? t.common.seeResults
                 : t.common.next}
             </button>

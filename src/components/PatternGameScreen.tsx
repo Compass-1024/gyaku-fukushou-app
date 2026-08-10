@@ -4,6 +4,7 @@ import { useCountdown } from '../hooks/useCountdown'
 import { useSetCompletionRecorder } from '../hooks/useSetCompletionRecorder'
 import { usePauseState } from '../hooks/usePauseState'
 import {
+  pickPatternQuestion,
   pickPatternQuestionSet,
   isPatternSelectionCorrect,
   recordPatternAttempt,
@@ -12,6 +13,7 @@ import {
   READY_MS,
   getAnswerTimeoutMs,
 } from '../lib/pattern'
+import { nextAdaptiveLevel } from '../lib/adaptiveDifficulty'
 import { confirmExit } from '../lib/confirmExit'
 import { getSuggestedLevel } from '../lib/difficulty'
 import { loadSettings } from '../lib/settings'
@@ -23,22 +25,30 @@ import { PausableAnswering } from './PausableAnswering'
 import { useTranslation } from '../contexts/LanguageContext'
 import type {
   BaseGameScreenProps,
+  Level,
   PatternQuestion,
   PatternQuestionPhase,
   PatternQuestionResult,
 } from '../types'
 
-type PatternGameScreenProps = BaseGameScreenProps
+interface PatternGameScreenProps extends BaseGameScreenProps {
+  adaptive?: boolean
+}
 
 export function PatternGameScreen({
   level,
+  adaptive = false,
   onExit,
   onSelectLevel,
 }: PatternGameScreenProps) {
   const t = useTranslation()
   const [questions, setQuestions] = useState<PatternQuestion[]>(() =>
-    pickPatternQuestionSet(level),
+    adaptive ? [pickPatternQuestion(level, 0)] : pickPatternQuestionSet(level),
   )
+  const [questionLevels, setQuestionLevels] = useState<Level[]>(() =>
+    adaptive ? [level] : [level, level, level],
+  )
+  const [maxLevelReached, setMaxLevelReached] = useState<Level>(level)
   const [currentIndex, setCurrentIndex] = useState(0)
   const [phase, setPhase] = useState<PatternQuestionPhase>('ready')
   // 0=模様を表示、1=空白（showingフェーズ内の2ステップ）
@@ -109,7 +119,7 @@ export function PatternGameScreen({
   function finalizeAnswer(value: number[]) {
     const correct = isPatternSelectionCorrect(value, currentQuestion.filledCells)
     recordPatternAttempt(
-      level,
+      questionLevels[currentIndex],
       currentQuestion.filledCells,
       currentQuestion.gridSize,
       correct,
@@ -128,29 +138,47 @@ export function PatternGameScreen({
     finalizeAnswer(selected)
   }
 
+  // アダプティブモードでは実際に到達した最大レベルを、統計・実績・レベル提案に使う
+  const recordedLevel = adaptive ? maxLevelReached : level
+
   // 3問セットが完了するたびに結果を記録し、新規実績の解除やレベルアップを演出する
   const { newAchievements, isNewBest, isNewTodayBest, xpGained, leveledUp, newLevel } = useSetCompletionRecorder({
     trigger: finished,
     mode: 'pattern',
-    level,
+    level: recordedLevel,
     correctCount: results.filter((r) => r.correct).length,
     total: results.length,
   })
+
+  const TOTAL_QUESTIONS = 3
 
   function handleNext() {
     if (!currentResult) return
     if (loadSettings().soundEnabled) playButtonTap()
     const updated = [...results, currentResult]
     setResults(updated)
-    if (currentIndex + 1 >= questions.length) {
+    if (currentIndex + 1 >= TOTAL_QUESTIONS) {
       setFinished(true)
-    } else {
-      setCurrentIndex((i) => i + 1)
+      return
     }
+    if (adaptive) {
+      const nextLevel = nextAdaptiveLevel(questionLevels[currentIndex], currentResult.correct)
+      setMaxLevelReached((m) => (nextLevel > m ? nextLevel : m))
+      setQuestions((prev) => [...prev, pickPatternQuestion(nextLevel, prev.length)])
+      setQuestionLevels((prev) => [...prev, nextLevel])
+    }
+    setCurrentIndex((i) => i + 1)
   }
 
   function handleRetry() {
-    setQuestions(pickPatternQuestionSet(level))
+    if (adaptive) {
+      setQuestions([pickPatternQuestion(level, 0)])
+      setQuestionLevels([level])
+      setMaxLevelReached(level)
+    } else {
+      setQuestions(pickPatternQuestionSet(level))
+      setQuestionLevels([level, level, level])
+    }
     setCurrentIndex(0)
     setResults([])
     setCurrentResult(null)
@@ -161,12 +189,12 @@ export function PatternGameScreen({
     const correctCount = results.filter((r) => r.correct).length
     const accuracyPercent =
       results.length > 0 ? Math.round((correctCount / results.length) * 100) : 0
-    const suggestedLevel = getSuggestedLevel(level, accuracyPercent)
+    const suggestedLevel = getSuggestedLevel(recordedLevel, accuracyPercent)
     return (
       <SetSummary
-        items={results.map((r) => ({
+        items={results.map((r, i) => ({
           key: r.question.id,
-          label: t.pattern.levelLabel(level),
+          label: t.pattern.levelLabel(questionLevels[i]),
           correct: r.correct,
         }))}
         onRetry={handleRetry}
@@ -181,7 +209,7 @@ export function PatternGameScreen({
           suggestedLevel
             ? {
                 label:
-                  suggestedLevel > level
+                  suggestedLevel > recordedLevel
                     ? t.common.suggestionUp(t.pattern.levelLabel(suggestedLevel))
                     : t.common.suggestionDown(
                         t.pattern.levelLabel(suggestedLevel),
@@ -190,7 +218,9 @@ export function PatternGameScreen({
               }
             : undefined
         }
-      />
+      >
+        {adaptive && <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">{t.pattern.maxLevelReachedLabel(maxLevelReached)}</p>}
+      </SetSummary>
     )
   }
 
@@ -209,7 +239,7 @@ export function PatternGameScreen({
           )
         }
         currentIndex={currentIndex}
-        total={questions.length}
+        total={TOTAL_QUESTIONS}
       />
 
       <div
@@ -307,7 +337,7 @@ export function PatternGameScreen({
               onClick={handleNext}
               className="mt-4 touch-manipulation rounded-lg bg-indigo-500 px-5 py-3 font-semibold text-white shadow-sm transition hover:bg-indigo-400"
             >
-              {currentIndex + 1 >= questions.length
+              {currentIndex + 1 >= TOTAL_QUESTIONS
                 ? t.common.seeResults
                 : t.common.next}
             </button>

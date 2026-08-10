@@ -39,21 +39,24 @@ function classifyFilledCells(filledCells: number[], gridSize: number): string {
   return avgDistance <= gridSize / 2 ? 'clustered' : 'scattered'
 }
 
-// 誤答が多い模様パターンほど選ばれやすい重み付き抽選で出題する
-export function pickPatternQuestionSet(level: Level): PatternQuestion[] {
+// 誤答が多い模様パターンほど選ばれやすい重み付き抽選で1問だけ生成する。
+// ④-2: アダプティブ難易度モードは問題ごとにレベルが変わりうるため、
+// 3問セットの一括生成(pickPatternQuestionSet)とは別に1問単位の生成が必要
+export function pickPatternQuestion(level: Level, idSuffix: string | number = 0): PatternQuestion {
   const gridSize = GRID_SIZE[level]
   const totalCells = gridSize * gridSize
   const count = FILLED_COUNT[level]
-  const now = Date.now()
   const stats = loadBucketStats(STATS_MODE)
-  return Array.from({ length: QUESTIONS_PER_SET }, (_, i) => {
-    const filledCells = pickWeightedCandidate(
-      () => pickRandomCells(totalCells, count),
-      (cells) => `${level}:${classifyFilledCells(cells, gridSize)}`,
-      stats,
-    )
-    return { id: `${level}-${now}-${i}`, gridSize, filledCells }
-  })
+  const filledCells = pickWeightedCandidate(
+    () => pickRandomCells(totalCells, count),
+    (cells) => `${level}:${classifyFilledCells(cells, gridSize)}`,
+    stats,
+  )
+  return { id: `${level}-${Date.now()}-${idSuffix}`, gridSize, filledCells }
+}
+
+export function pickPatternQuestionSet(level: Level): PatternQuestion[] {
+  return Array.from({ length: QUESTIONS_PER_SET }, (_, i) => pickPatternQuestion(level, i))
 }
 
 export function recordPatternAttempt(
