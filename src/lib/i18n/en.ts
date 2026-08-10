@@ -577,7 +577,7 @@ export const en: Translations = {
   random: {
     title: 'Random Mode',
     subtitle:
-      'One question each from Digit (reverse/sum), Spatial, Change Detection, and Tone & Color — 5 rounds in a random order.',
+      'Digit (reverse/sum), Spatial, Change Detection, and Tone & Color, in a random order.',
     levelLabel: (level) =>
       ({ 1: 'Level 1', 2: 'Level 2', 3: 'Level 3' })[level],
     roundProgress: (current, total) => `Round ${current} / ${total}`,
@@ -585,6 +585,8 @@ export const en: Translations = {
     weakPointFocusLabel: 'Focus on weak points',
     weakPointFocusDescription:
       "When on, each round's level is set automatically to whichever level has your lowest accuracy for that mode, instead of the level you picked.",
+    roundCountTitle: 'Number of rounds',
+    roundCountLabel: (count) => `${count} rounds`,
   },
   tone: {
     title: 'Tone & Color Mode',

@@ -1,13 +1,15 @@
 import { useState } from 'react'
 import { getLevelStats } from '../lib/history'
 import { LEVEL_STYLES } from '../lib/levelStyles'
+import { ROUND_COUNT_OPTIONS, DEFAULT_ROUND_COUNT } from '../lib/random'
+import type { RoundCount } from '../lib/random'
 import { LevelPicker } from './LevelPicker'
 import { useTranslation } from '../contexts/LanguageContext'
 import type { HistoryEntry, Level } from '../types'
 
 interface RandomLevelSelectProps {
   history: HistoryEntry[]
-  onSelect: (level: Level, weakPointFocus: boolean) => void
+  onSelect: (level: Level, weakPointFocus: boolean, roundCount: RoundCount) => void
   onBack: () => void
 }
 
@@ -20,6 +22,7 @@ export function RandomLevelSelect({
   // ④-2: オンにすると各ラウンドのレベルを一律ではなくモードごとの弱点レベルへ
   // 自動で合わせる（インターリーブ練習を弱点分野に集中させるオプション）
   const [weakPointFocus, setWeakPointFocus] = useState(false)
+  const [roundCount, setRoundCount] = useState<RoundCount>(DEFAULT_ROUND_COUNT)
   return (
     <div className="mx-auto flex w-full max-w-md flex-col gap-6 px-4 py-8 sm:px-6 sm:py-12">
       <button
@@ -37,6 +40,29 @@ export function RandomLevelSelect({
         <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
           {t.random.subtitle}
         </p>
+      </div>
+
+      <div className="flex flex-col gap-2">
+        <p className="text-center text-xs font-semibold text-gray-500 dark:text-gray-400">
+          {t.random.roundCountTitle}
+        </p>
+        <div className="flex gap-2">
+          {ROUND_COUNT_OPTIONS.map((count) => (
+            <button
+              key={count}
+              type="button"
+              onClick={() => setRoundCount(count)}
+              aria-pressed={roundCount === count}
+              className={`flex-1 touch-manipulation rounded-lg px-3 py-2 text-sm font-semibold transition ${
+                roundCount === count
+                  ? 'bg-indigo-500 text-white'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700'
+              }`}
+            >
+              {t.random.roundCountLabel(count)}
+            </button>
+          ))}
+        </div>
       </div>
 
       <label className="flex touch-manipulation items-start gap-3 rounded-lg border border-gray-200 px-4 py-3 dark:border-gray-700">
@@ -60,7 +86,7 @@ export function RandomLevelSelect({
         labelFor={(level) => t.random.levelLabel(level)}
         colorFor={(level) => LEVEL_STYLES[level]}
         statsFor={(level) => getLevelStats(history, level, 'random')}
-        onSelect={(level) => onSelect(level, weakPointFocus)}
+        onSelect={(level) => onSelect(level, weakPointFocus, roundCount)}
       />
     </div>
   )

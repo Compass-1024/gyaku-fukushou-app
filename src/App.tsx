@@ -22,6 +22,7 @@ import { hasSeenOnboarding, markOnboardingSeen } from './lib/onboarding'
 import { DEFAULT_TRIAL_COUNT } from './lib/nback'
 import { DEFAULT_TRIAL_COUNT as DUAL_NBACK_DEFAULT_TRIAL_COUNT } from './lib/dualNback'
 import type { AreaStats } from './lib/history'
+import type { RoundCount } from './lib/random'
 import type { DigitGameType, HistoryEntry, Level } from './types'
 
 // プレイ画面本体（音声合成・音声認識・出題ロジックを含む）は初回表示に
@@ -97,7 +98,12 @@ type View =
   | { screen: 'tone-level' }
   | { screen: 'tone-game'; level: Level; adaptive?: boolean }
   | { screen: 'random-level' }
-  | { screen: 'random-game'; level: Level; weakPointFocus?: boolean }
+  | {
+      screen: 'random-game'
+      level: Level
+      weakPointFocus?: boolean
+      roundCount?: RoundCount
+    }
   | { screen: 'settings' }
   | { screen: 'stats' }
   | { screen: 'privacy' }
@@ -491,8 +497,8 @@ function App() {
       content = (
         <RandomLevelSelect
           history={history}
-          onSelect={(level, weakPointFocus) =>
-            goTo({ screen: 'random-game', level, weakPointFocus })
+          onSelect={(level, weakPointFocus, roundCount) =>
+            goTo({ screen: 'random-game', level, weakPointFocus, roundCount })
           }
           onBack={() => goTo({ screen: 'top' })}
         />
@@ -501,11 +507,19 @@ function App() {
     case 'random-game':
       content = (
         <RandomGameScreen
-          key={view.level}
+          key={`${view.level}-${view.weakPointFocus}-${view.roundCount}`}
           level={view.level}
           weakPointFocus={view.weakPointFocus}
+          roundCount={view.roundCount}
           onExit={() => goTo({ screen: 'random-level' })}
-          onSelectLevel={(level) => goTo({ screen: 'random-game', level })}
+          onSelectLevel={(level) =>
+            goTo({
+              screen: 'random-game',
+              level,
+              weakPointFocus: view.weakPointFocus,
+              roundCount: view.roundCount,
+            })
+          }
         />
       )
       break

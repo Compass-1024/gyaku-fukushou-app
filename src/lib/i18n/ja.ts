@@ -548,7 +548,7 @@ export const ja: Translations = {
   random: {
     title: 'ランダムモード',
     subtitle:
-      'すうじ（逆から/合計）・空間・変化検出・音/色の中から1問ずつ、合計5問がランダムな順番で出題されます。',
+      'すうじ（逆から/合計）・空間・変化検出・音/色の中から、ランダムな順番で出題されます。',
     levelLabel: (level) =>
       ({ 1: 'レベル1', 2: 'レベル2', 3: 'レベル3' })[level],
     roundProgress: (current, total) => `問題 ${current} / ${total}`,
@@ -556,6 +556,8 @@ export const ja: Translations = {
     weakPointFocusLabel: '弱点重視',
     weakPointFocusDescription:
       'オンにすると、各ラウンドのレベルを一律ではなく、モードごとに最も正答率が低いレベルへ自動で合わせます',
+    roundCountTitle: '出題数',
+    roundCountLabel: (count) => `${count}問`,
   },
   tone: {
     title: '音・色モード',

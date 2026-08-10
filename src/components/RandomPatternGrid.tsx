@@ -1,3 +1,4 @@
+import { useTranslation } from '../contexts/LanguageContext'
 import type { RandomQuestionPhase, RandomRound } from '../types'
 
 interface RandomPatternGridProps {
@@ -19,6 +20,7 @@ export function RandomPatternGrid({
   paused,
   onToggle,
 }: RandomPatternGridProps) {
+  const t = useTranslation()
   return (
     <div
       className="grid gap-2"
@@ -40,6 +42,8 @@ export function RandomPatternGrid({
               type="button"
               disabled={phase !== 'answering' || paused}
               onClick={() => onToggle(cell)}
+              aria-pressed={phase === 'answering' ? isSelected : undefined}
+              aria-label={t.pattern.cellAriaLabel(cell + 1, isSelected)}
               className={`aspect-square touch-manipulation rounded-lg transition disabled:cursor-not-allowed ${
                 isShown || isSelected
                   ? 'bg-indigo-500'

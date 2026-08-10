@@ -1,3 +1,4 @@
+import { useTranslation } from '../contexts/LanguageContext'
 import type { RandomQuestionPhase, RandomRound } from '../types'
 
 interface RandomSpatialGridProps {
@@ -21,14 +22,16 @@ export function RandomSpatialGrid({
   paused,
   onTap,
 }: RandomSpatialGridProps) {
+  const t = useTranslation()
   return (
     <div
       className="grid gap-2"
       style={{
         gridTemplateColumns: `repeat(${round.question.gridSize}, minmax(0, 1fr))`,
-        width: round.question.gridSize * 48,
+        width: round.question.gridSize * 56,
         maxWidth: '100%',
       }}
+      aria-label={phase === 'showing' ? t.spatial.litSquaresAriaLabel : undefined}
     >
       {Array.from(
         { length: round.question.gridSize * round.question.gridSize },
@@ -43,6 +46,7 @@ export function RandomSpatialGrid({
               type="button"
               disabled={phase !== 'answering' || paused}
               onClick={() => onTap(cell)}
+              aria-label={t.spatial.cellAriaLabel(cell + 1, isTapped ? tapOrder + 1 : null)}
               className={`aspect-square touch-manipulation rounded-lg text-sm font-bold transition disabled:cursor-not-allowed ${
                 isLit
                   ? 'bg-indigo-500 text-white'

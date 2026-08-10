@@ -4,7 +4,8 @@ import { useCountdown } from '../hooks/useCountdown'
 import { useStepReveal } from '../hooks/useStepReveal'
 import { useSetCompletionRecorder } from '../hooks/useSetCompletionRecorder'
 import { usePauseState } from '../hooks/usePauseState'
-import { buildRandomRounds } from '../lib/random'
+import { buildRandomRounds, DEFAULT_ROUND_COUNT } from '../lib/random'
+import type { RoundCount } from '../lib/random'
 import { loadHistory } from '../lib/history'
 import {
   reverseDigits,
@@ -52,6 +53,7 @@ import { PausableAnswering } from './PausableAnswering'
 import { RandomSpatialGrid } from './RandomSpatialGrid'
 import { RandomPatternGrid } from './RandomPatternGrid'
 import { RandomToneGrid } from './RandomToneGrid'
+import { RandomResultDetail } from './RandomResultDetail'
 import { useTranslation } from '../contexts/LanguageContext'
 import type { Translations } from '../lib/i18n'
 import type {
@@ -65,11 +67,13 @@ type RandomGameScreenProps = BaseGameScreenProps & {
   // ④-2: レベル選択画面の「弱点重視」トグルがオンの場合、各ラウンドの
   // レベルを選択レベル固定ではなくモードごとの弱点レベルに差し替える
   weakPointFocus?: boolean
+  roundCount?: RoundCount
 }
 
-function buildRounds(level: Level, weakPointFocus?: boolean) {
+function buildRounds(level: Level, weakPointFocus?: boolean, roundCount?: RoundCount) {
   return buildRandomRounds(
     level,
+    roundCount ?? DEFAULT_ROUND_COUNT,
     weakPointFocus ? { history: loadHistory() } : undefined,
   )
 }
@@ -77,6 +81,10 @@ function buildRounds(level: Level, weakPointFocus?: boolean) {
 interface RoundOutcome {
   round: RandomRound
   correct: boolean
+  // バグ修正: 結果フェーズで単体モード画面と同じ詳細（正しい答え・自分の回答）
+  // を表示するため、回答内容もラウンドと一緒に保持する
+  typed: string
+  tapped: number[]
 }
 
 function getStepConfig(round: RandomRound) {
@@ -94,6 +102,18 @@ function getStepConfig(round: RandomRound) {
     case 'tone':
       return { itemCount: round.question.sequence.length, shownMs: TONE_SHOWN_MS, gapMs: TONE_GAP_MS }
   }
+}
+
+// バグ修正: 単体のすうじモード画面(DigitGameScreen)では「合計を入力」の
+// 最大文字数は桁数そのものではなく取りうる最大の合計値の桁数
+// （例: 7桁なら最大63、2桁）で計算しているが、ランダムモードは常に
+// 出題の桁数をそのまま最大文字数に使っていたため、合計ラウンドで
+// 本来より長く入力できてしまい、かつ自動採点も本来発生しない桁数
+// （出題の桁数に達した時点）で誤って発生していた
+function getDigitMaxAnswerLength(round: Extract<RandomRound, { mode: 'digit' }>): number {
+  return round.gameType === 'reverse'
+    ? round.question.digits.length
+    : String(9 * round.question.digits.length).length
 }
 
 function getRoundAnswerTimeoutMs(round: RandomRound): number {
@@ -135,10 +155,11 @@ export function RandomGameScreen({
   onExit,
   onSelectLevel,
   weakPointFocus,
+  roundCount,
 }: RandomGameScreenProps) {
   const t = useTranslation()
   const [rounds, setRounds] = useState<RandomRound[]>(() =>
-    buildRounds(level, weakPointFocus),
+    buildRounds(level, weakPointFocus, roundCount),
   )
   const [currentIndex, setCurrentIndex] = useState(0)
   const [phase, setPhase] = useState<RandomQuestionPhase>('ready')
@@ -225,7 +246,12 @@ export function RandomGameScreen({
       if (correct) playCorrectHaptic()
       else playIncorrectHaptic()
     }
-    setCurrentOutcome({ round, correct })
+    setCurrentOutcome({
+      round,
+      correct,
+      typed: typedRef.current,
+      tapped: arrayValueRef.current,
+    })
     setPhase('result')
   }
 
@@ -233,11 +259,17 @@ export function RandomGameScreen({
     if (phase !== 'answering' || paused) return
     if (currentRound.mode !== 'digit') return
     if (loadSettings().soundEnabled) playButtonTap()
-    const maxLength = currentRound.question.digits.length
+    const round = currentRound
+    const maxLength = getDigitMaxAnswerLength(round)
     setTyped((prev) => {
       if (prev.length >= maxLength) return prev
       const next = prev + d
-      if (next.length === maxLength) finalizeAnswer()
+      // 「逆から」ラウンドのみ、正解の桁数が既知のため入力が揃った時点で
+      // 自動採点する（単体のDigitGameScreenと同じ挙動。「合計」ラウンドは
+      // 答えの桁数が定まらないため常に決定ボタンでの確定が必要）
+      if (round.gameType === 'reverse' && next.length === maxLength) {
+        finalizeAnswer()
+      }
       return next
     })
   }
@@ -312,7 +344,7 @@ export function RandomGameScreen({
   }
 
   function handleRetry() {
-    setRounds(buildRounds(level, weakPointFocus))
+    setRounds(buildRounds(level, weakPointFocus, roundCount))
     setCurrentIndex(0)
     setResults([])
     setCurrentOutcome(null)
@@ -436,7 +468,7 @@ export function RandomGameScreen({
             {currentRound.mode === 'digit' && (
               <NumpadInput
                 value={typed}
-                maxLength={currentRound.question.digits.length}
+                maxLength={getDigitMaxAnswerLength(currentRound)}
                 onDigit={handleDigitPress}
                 onBackspace={handleBackspacePress}
                 onSubmit={commitTypedAnswer}
@@ -457,6 +489,11 @@ export function RandomGameScreen({
         {phase === 'result' && currentOutcome && (
           <>
             <ResultBadge correct={currentOutcome.correct} />
+            <RandomResultDetail
+              round={currentOutcome.round}
+              typed={currentOutcome.typed}
+              tapped={currentOutcome.tapped}
+            />
             <button
               type="button"
               onClick={handleNext}

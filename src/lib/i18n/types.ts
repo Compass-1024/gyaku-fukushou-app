@@ -389,6 +389,9 @@ export interface Translations {
     resultLabel: (correct: number, total: number) => string
     weakPointFocusLabel: string
     weakPointFocusDescription: string
+    // 出題数（3/5/7問）の選択
+    roundCountTitle: string
+    roundCountLabel: (count: number) => string
   }
   tone: {
     title: string

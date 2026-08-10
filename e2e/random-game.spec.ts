@@ -29,6 +29,139 @@ test('ランダムモード: 5ラウンド完了までの一連の流れ', async
   ).toBeVisible()
 })
 
+test('ランダムモード: 出題数を3問に変更すると3ラウンドで完了する（バグ修正）', async ({
+  page,
+}) => {
+  test.setTimeout(60_000)
+  await page.goto('/')
+  await page.getByRole('button', { name: /ランダムモード/ }).click()
+  await page.getByRole('button', { name: '3問', exact: true }).click()
+  await page.getByRole('button', { name: /レベル1/ }).click()
+
+  for (let round = 1; round <= 3; round++) {
+    await expect(page.getByText(`問題 ${round} / 3`)).toBeVisible({ timeout: 15_000 })
+    await expect(page.getByText(/^(正解|不正解)$/)).toBeVisible({ timeout: 20_000 })
+    const nextButton = page.getByRole('button', {
+      name: round === 3 ? '結果を見る' : '次へ',
+    })
+    await nextButton.click()
+  }
+
+  await expect(page.getByText(/\/ 3 問正解/)).toBeVisible()
+})
+
+test('ランダムモード: 出題数を7問に変更すると7ラウンドで完了する（バグ修正）', async ({
+  page,
+}) => {
+  test.setTimeout(150_000)
+  await page.goto('/')
+  await page.getByRole('button', { name: /ランダムモード/ }).click()
+  await page.getByRole('button', { name: '7問', exact: true }).click()
+  await page.getByRole('button', { name: /レベル1/ }).click()
+
+  for (let round = 1; round <= 7; round++) {
+    await expect(page.getByText(`問題 ${round} / 7`)).toBeVisible({ timeout: 15_000 })
+    await expect(page.getByText(/^(正解|不正解)$/)).toBeVisible({ timeout: 20_000 })
+    const nextButton = page.getByRole('button', {
+      name: round === 7 ? '結果を見る' : '次へ',
+    })
+    await nextButton.click()
+  }
+
+  await expect(page.getByText(/\/ 7 問正解/)).toBeVisible()
+})
+
+test('ランダムモード: 結果フェーズに単体モード画面と同じ詳細（正しい答え・自分の回答）が表示される（バグ修正）', async ({
+  page,
+}) => {
+  test.setTimeout(90_000)
+  await page.goto('/')
+  await page.getByRole('button', { name: /ランダムモード/ }).click()
+  await page.getByRole('button', { name: /レベル1/ }).click()
+
+  for (let round = 1; round <= 5; round++) {
+    await expect(page.getByText(`問題 ${round} / 5`)).toBeVisible({ timeout: 15_000 })
+
+    if (await page.getByText('逆から入力してください').isVisible().catch(() => false)) {
+      await expect(page.getByText(/^(正解|不正解)$/)).toBeVisible({ timeout: 20_000 })
+      await expect(page.getByText('出題: ')).toBeVisible()
+      await expect(page.getByText('正しい答え: ')).toBeVisible()
+      await expect(page.getByText('あなたの回答: ')).toBeVisible()
+      return
+    }
+
+    await expect(page.getByText(/^(正解|不正解)$/)).toBeVisible({ timeout: 20_000 })
+    const nextButton = page.getByRole('button', {
+      name: round === 5 ? '結果を見る' : '次へ',
+    })
+    await nextButton.click()
+  }
+})
+
+test('ランダムモード: 音・色ラウンドのパッドが単体モード画面と同じ4色で表示される（バグ修正）', async ({
+  page,
+}) => {
+  test.setTimeout(60_000)
+  await page.goto('/')
+  await page.getByRole('button', { name: /ランダムモード/ }).click()
+  await page.getByRole('button', { name: /レベル1/ }).click()
+
+  for (let round = 1; round <= 5; round++) {
+    await expect(page.getByText(`問題 ${round} / 5`)).toBeVisible({ timeout: 15_000 })
+
+    const redPad = page.getByRole('button', { name: '赤のパッド' })
+    if (await redPad.isVisible().catch(() => false)) {
+      const bluePad = page.getByRole('button', { name: '青のパッド' })
+      const redClass = await redPad.getAttribute('class')
+      const blueClass = await bluePad.getAttribute('class')
+      expect(redClass).toContain('rose')
+      expect(blueClass).toContain('sky')
+      expect(redClass).not.toBe(blueClass)
+      return
+    }
+
+    await expect(page.getByText(/^(正解|不正解)$/)).toBeVisible({ timeout: 20_000 })
+    const nextButton = page.getByRole('button', {
+      name: round === 5 ? '結果を見る' : '次へ',
+    })
+    await nextButton.click()
+  }
+})
+
+test('ランダムモード: すうじ（合計）ラウンドは桁数分入力しても自動採点されず、決定ボタンで確定する（バグ修正）', async ({
+  page,
+}) => {
+  test.setTimeout(90_000)
+  await page.goto('/')
+  await page.getByRole('button', { name: /ランダムモード/ }).click()
+  await page.getByRole('button', { name: /レベル1/ }).click()
+
+  for (let round = 1; round <= 5; round++) {
+    await expect(page.getByText(`問題 ${round} / 5`)).toBeVisible({ timeout: 15_000 })
+
+    if (await page.getByText('全部たすといくつ？').isVisible().catch(() => false)) {
+      // レベル1は3桁の出題だが、合計の最大文字数は2桁のはず。3桁分入力しても
+      // 単体のすうじモード（合計）画面と同様に自動採点されず、結果フェーズに
+      // 遷移していないことを確認する
+      await page.getByRole('button', { name: '1', exact: true }).click()
+      await page.getByRole('button', { name: '2', exact: true }).click()
+      await page.getByRole('button', { name: '3', exact: true }).click()
+      await expect(page.getByText(/^(正解|不正解)$/)).toHaveCount(0)
+      await expect(page.getByText('全部たすといくつ？')).toBeVisible()
+
+      await page.getByRole('button', { name: '決定' }).click()
+      await expect(page.getByText(/^(正解|不正解)$/)).toBeVisible({ timeout: 20_000 })
+      return
+    }
+
+    await expect(page.getByText(/^(正解|不正解)$/)).toBeVisible({ timeout: 20_000 })
+    const nextButton = page.getByRole('button', {
+      name: round === 5 ? '結果を見る' : '次へ',
+    })
+    await nextButton.click()
+  }
+})
+
 test('ランダムモード: すうじラウンドで「よく覚えてください」の表示位置が数字の切り替わり中も動かない', async ({
   page,
 }) => {

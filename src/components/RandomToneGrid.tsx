@@ -1,4 +1,5 @@
 import { PAD_COUNT } from '../lib/tone'
+import { TONE_PAD_COLORS, TONE_PAD_LIT_COLORS } from '../lib/tonePadStyles'
 import { useTranslation } from '../contexts/LanguageContext'
 import type { RandomQuestionPhase, RandomRound } from '../types'
 
@@ -38,7 +39,7 @@ export function RandomToneGrid({
             onClick={() => onTap(pad)}
             aria-label={t.tone.padAriaLabel(t.tone.padColors[pad])}
             className={`aspect-square touch-manipulation rounded-xl text-white shadow-sm transition disabled:cursor-not-allowed ${
-              isLit ? 'bg-indigo-300' : 'bg-indigo-500'
+              isLit ? TONE_PAD_LIT_COLORS[pad] : TONE_PAD_COLORS[pad]
             }`}
           >
             {tapOrder !== -1 && <span className="text-sm font-bold">{tapOrder + 1}</span>}

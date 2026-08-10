@@ -27,6 +27,7 @@ import {
   playPadTone,
 } from '../lib/sound'
 import { playCorrectHaptic, playIncorrectHaptic } from '../lib/haptics'
+import { TONE_PAD_COLORS, TONE_PAD_LIT_COLORS } from '../lib/tonePadStyles'
 import { SetSummary } from './SetSummary'
 import { GameHeader } from './GameHeader'
 import { ResultBadge } from './ResultBadge'
@@ -40,13 +41,6 @@ import type {
   ToneQuestionResult,
 } from '../types'
 
-const PAD_COLORS = [
-  'bg-rose-500 hover:enabled:bg-rose-400',
-  'bg-sky-500 hover:enabled:bg-sky-400',
-  'bg-emerald-500 hover:enabled:bg-emerald-400',
-  'bg-amber-400 hover:enabled:bg-amber-300',
-]
-const PAD_LIT_COLORS = ['bg-rose-300', 'bg-sky-300', 'bg-emerald-300', 'bg-amber-200']
 
 interface ToneGameScreenProps extends BaseGameScreenProps {
   adaptive?: boolean
@@ -314,7 +308,7 @@ export function ToneGameScreen({
                   onClick={() => handlePadTap(pad)}
                   aria-label={t.tone.padAriaLabel(t.tone.padColors[pad])}
                   className={`aspect-square touch-manipulation rounded-xl text-white shadow-sm transition disabled:cursor-not-allowed ${
-                    isLit ? PAD_LIT_COLORS[pad] : PAD_COLORS[pad]
+                    isLit ? TONE_PAD_LIT_COLORS[pad] : TONE_PAD_COLORS[pad]
                   }`}
                 >
                   {tapOrder !== -1 && (
