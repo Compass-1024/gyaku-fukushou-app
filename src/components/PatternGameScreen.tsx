@@ -14,6 +14,7 @@ import {
   getAnswerTimeoutMs,
 } from '../lib/pattern'
 import { nextAdaptiveLevel } from '../lib/adaptiveDifficulty'
+import { saveGameSession, loadGameSession, clearGameSession } from '../lib/gameSessionPersistence'
 import { confirmExit } from '../lib/confirmExit'
 import { getSuggestedLevel } from '../lib/difficulty'
 import { loadSettings } from '../lib/settings'
@@ -43,14 +44,26 @@ export function PatternGameScreen({
   onSelectLevel,
 }: PatternGameScreenProps) {
   const t = useTranslation()
-  const [questions, setQuestions] = useState<PatternQuestion[]>(() =>
-    adaptive ? [pickPatternQuestion(level, 0)] : pickPatternQuestionSet(level),
+  // Android実装を見据え、モバイルOSがバックグラウンドでプロセスを再生成した
+  // 場合に回答中のセットが失われないよう、sessionStorageから復元を試みる
+  const sessionKey = `game-session:pattern:${level}:${adaptive}`
+  const [restoredSession] = useState(() =>
+    loadGameSession<PatternQuestion, PatternQuestionResult>(sessionKey),
   )
-  const [questionLevels, setQuestionLevels] = useState<Level[]>(() =>
-    adaptive ? [level] : [level, level, level],
+  const [questions, setQuestions] = useState<PatternQuestion[]>(
+    () =>
+      restoredSession?.questions ??
+      (adaptive ? [pickPatternQuestion(level, 0)] : pickPatternQuestionSet(level)),
   )
-  const [maxLevelReached, setMaxLevelReached] = useState<Level>(level)
-  const [currentIndex, setCurrentIndex] = useState(0)
+  const [questionLevels, setQuestionLevels] = useState<Level[]>(
+    () =>
+      (restoredSession?.questionLevels as Level[] | undefined) ??
+      (adaptive ? [level] : [level, level, level]),
+  )
+  const [maxLevelReached, setMaxLevelReached] = useState<Level>(
+    () => (restoredSession?.maxLevelReached as Level | undefined) ?? level,
+  )
+  const [currentIndex, setCurrentIndex] = useState(() => restoredSession?.currentIndex ?? 0)
   const [phase, setPhase] = useState<PatternQuestionPhase>('ready')
   // 0=模様を表示、1=空白（showingフェーズ内の2ステップ）
   const [step, setStep] = useState(0)
@@ -61,8 +74,24 @@ export function PatternGameScreen({
   selectedRef.current = selected
   const [currentResult, setCurrentResult] =
     useState<PatternQuestionResult | null>(null)
-  const [results, setResults] = useState<PatternQuestionResult[]>([])
+  const [results, setResults] = useState<PatternQuestionResult[]>(
+    () => restoredSession?.results ?? [],
+  )
   const [finished, setFinished] = useState(false)
+
+  useEffect(() => {
+    if (finished) {
+      clearGameSession(sessionKey)
+    } else {
+      saveGameSession(sessionKey, {
+        questions,
+        questionLevels,
+        maxLevelReached,
+        results,
+        currentIndex,
+      })
+    }
+  }, [sessionKey, questions, questionLevels, maxLevelReached, results, currentIndex, finished])
 
   const currentQuestion = questions[currentIndex]
   const cellCount = currentQuestion.gridSize * currentQuestion.gridSize
@@ -239,7 +268,10 @@ export function PatternGameScreen({
         onBack={() =>
           confirmExit(
             results.length > 0 || currentResult !== null,
-            onExit,
+            () => {
+              clearGameSession(sessionKey)
+              onExit()
+            },
             t.common.confirmExitMessage,
           )
         }

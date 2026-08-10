@@ -104,6 +104,46 @@ type View =
 
 const TOP_VIEW: View = { screen: 'top' }
 
+// Android実装を見据えた対応。モバイルOSがバックグラウンドでタブ/TWAの
+// プロセスを再生成する（＝ページ再読み込みと同義）と、通常はSPA内の
+// 画面状態（view）が失われトップ画面に戻ってしまう。ゲーム画面表示中に
+// 限り現在のviewをsessionStorageへ退避し、再読み込み後に同じゲーム画面へ
+// 復元することで、各GameScreen側のセッション永続化（gameSessionPersistence.ts）
+// が効くようにする
+const RESUMED_VIEW_KEY = 'gyaku-fukushou:lastGameView'
+const RESUMED_VIEW_TTL_MS = 30 * 60 * 1000
+
+function saveResumableView(view: View): void {
+  try {
+    sessionStorage.setItem(RESUMED_VIEW_KEY, JSON.stringify({ view, savedAt: Date.now() }))
+  } catch {
+    /* sessionStorage利用不可（プライベートモード等）は無視してよい */
+  }
+}
+
+function clearResumableView(): void {
+  try {
+    sessionStorage.removeItem(RESUMED_VIEW_KEY)
+  } catch {
+    /* sessionStorage利用不可（プライベートモード等）は無視してよい */
+  }
+}
+
+function getResumedGameView(): View | null {
+  try {
+    const raw = sessionStorage.getItem(RESUMED_VIEW_KEY)
+    if (!raw) return null
+    const parsed: unknown = JSON.parse(raw)
+    if (typeof parsed !== 'object' || parsed === null) return null
+    const { view, savedAt } = parsed as { view?: unknown; savedAt?: unknown }
+    if (typeof savedAt !== 'number' || Date.now() - savedAt > RESUMED_VIEW_TTL_MS) return null
+    if (typeof view !== 'object' || view === null) return null
+    return view as View
+  } catch {
+    return null
+  }
+}
+
 // PWAマニフェストのshortcuts（ホーム画面アイコン長押し等）から
 // `?shortcut=<mode>` 付きで開かれた場合に、対応するレベル選択画面へ直接遷移する
 function getShortcutView(): View | null {
@@ -142,7 +182,9 @@ function App() {
   const { language } = useLanguage()
   const t = useTranslation()
   const { supported: recognitionSupported } = useSpeechRecognition()
-  const [view, setView] = useState<View>(() => getShortcutView() ?? TOP_VIEW)
+  const [view, setView] = useState<View>(
+    () => getShortcutView() ?? getResumedGameView() ?? TOP_VIEW,
+  )
   const [history, setHistory] = useState<HistoryEntry[]>(() => loadHistory())
   const [showOnboarding, setShowOnboarding] = useState(() => !hasSeenOnboarding())
   const mainRef = useRef<HTMLElement>(null)
@@ -168,6 +210,16 @@ function App() {
   useEffect(() => {
     setGameplayActive(isGameScreen)
   }, [isGameScreen, setGameplayActive])
+
+  // ゲーム画面表示中のみ現在のviewをsessionStorageへ退避し、再読み込み後に
+  // 同じゲーム画面へ復元できるようにする（Android実装を見据えた対応）
+  useEffect(() => {
+    if (isGameScreen) {
+      saveResumableView(view)
+    } else {
+      clearResumableView()
+    }
+  }, [view, isGameScreen])
 
   // スクリーンリーダー利用者が画面遷移に気づけるよう、遷移のたびに
   // メインコンテンツへフォーカスを移す（初回描画時は移さない）

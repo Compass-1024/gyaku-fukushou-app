@@ -16,6 +16,7 @@ import {
   getAnswerTimeoutMs,
 } from '../lib/spatial'
 import { nextAdaptiveLevel } from '../lib/adaptiveDifficulty'
+import { saveGameSession, loadGameSession, clearGameSession } from '../lib/gameSessionPersistence'
 import { confirmExit } from '../lib/confirmExit'
 import { getSuggestedLevel } from '../lib/difficulty'
 import { loadSettings } from '../lib/settings'
@@ -45,14 +46,26 @@ export function SpatialGameScreen({
   onSelectLevel,
 }: SpatialGameScreenProps) {
   const t = useTranslation()
-  const [questions, setQuestions] = useState<SpatialQuestion[]>(() =>
-    adaptive ? [pickSpatialQuestion(level, 0)] : pickSpatialQuestionSet(level),
+  // Android実装を見据え、モバイルOSがバックグラウンドでプロセスを再生成した
+  // 場合に回答中のセットが失われないよう、sessionStorageから復元を試みる
+  const sessionKey = `game-session:spatial:${level}:${adaptive}`
+  const [restoredSession] = useState(() =>
+    loadGameSession<SpatialQuestion, SpatialQuestionResult>(sessionKey),
   )
-  const [questionLevels, setQuestionLevels] = useState<Level[]>(() =>
-    adaptive ? [level] : [level, level, level],
+  const [questions, setQuestions] = useState<SpatialQuestion[]>(
+    () =>
+      restoredSession?.questions ??
+      (adaptive ? [pickSpatialQuestion(level, 0)] : pickSpatialQuestionSet(level)),
   )
-  const [maxLevelReached, setMaxLevelReached] = useState<Level>(level)
-  const [currentIndex, setCurrentIndex] = useState(0)
+  const [questionLevels, setQuestionLevels] = useState<Level[]>(
+    () =>
+      (restoredSession?.questionLevels as Level[] | undefined) ??
+      (adaptive ? [level] : [level, level, level]),
+  )
+  const [maxLevelReached, setMaxLevelReached] = useState<Level>(
+    () => (restoredSession?.maxLevelReached as Level | undefined) ?? level,
+  )
+  const [currentIndex, setCurrentIndex] = useState(() => restoredSession?.currentIndex ?? 0)
   const [phase, setPhase] = useState<SpatialQuestionPhase>('ready')
   const [tapped, setTapped] = useState<number[]>([])
   // タイムアウト時に最新の入力値を読むための参照(setStateのアップデータ内で
@@ -61,8 +74,24 @@ export function SpatialGameScreen({
   tappedRef.current = tapped
   const [currentResult, setCurrentResult] =
     useState<SpatialQuestionResult | null>(null)
-  const [results, setResults] = useState<SpatialQuestionResult[]>([])
+  const [results, setResults] = useState<SpatialQuestionResult[]>(
+    () => restoredSession?.results ?? [],
+  )
   const [finished, setFinished] = useState(false)
+
+  useEffect(() => {
+    if (finished) {
+      clearGameSession(sessionKey)
+    } else {
+      saveGameSession(sessionKey, {
+        questions,
+        questionLevels,
+        maxLevelReached,
+        results,
+        currentIndex,
+      })
+    }
+  }, [sessionKey, questions, questionLevels, maxLevelReached, results, currentIndex, finished])
 
   const currentQuestion = questions[currentIndex]
   const cellCount = currentQuestion.gridSize * currentQuestion.gridSize
@@ -238,7 +267,10 @@ export function SpatialGameScreen({
         onBack={() =>
           confirmExit(
             results.length > 0 || currentResult !== null,
-            onExit,
+            () => {
+              clearGameSession(sessionKey)
+              onExit()
+            },
             t.common.confirmExitMessage,
           )
         }

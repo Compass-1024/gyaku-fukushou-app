@@ -17,6 +17,7 @@ import {
   getAnswerTimeoutMs,
 } from '../lib/digits'
 import { nextAdaptiveLevel } from '../lib/adaptiveDifficulty'
+import { saveGameSession, loadGameSession, clearGameSession } from '../lib/gameSessionPersistence'
 import { confirmExit } from '../lib/confirmExit'
 import { getSuggestedLevel } from '../lib/difficulty'
 import { loadSettings } from '../lib/settings'
@@ -59,16 +60,29 @@ export function DigitGameScreen({
   onSelectLevel,
 }: DigitGameScreenProps) {
   const t = useTranslation()
-  const [questions, setQuestions] = useState<DigitQuestion[]>(() =>
-    adaptive ? [pickDigitQuestion(level, 0)] : pickDigitQuestionSet(level),
+  // Android実装を見据え、モバイルOSがバックグラウンドでプロセスを再生成した
+  // 場合に回答中のセットが失われないよう、sessionStorageから復元を試みる
+  // （同じレベル・出題タイプ・アダプティブ設定の組み合わせの場合のみ）
+  const sessionKey = `game-session:digit:${gameType}:${level}:${adaptive}`
+  const [restoredSession] = useState(() =>
+    loadGameSession<DigitQuestion, DigitQuestionResult>(sessionKey),
+  )
+  const [questions, setQuestions] = useState<DigitQuestion[]>(
+    () =>
+      restoredSession?.questions ??
+      (adaptive ? [pickDigitQuestion(level, 0)] : pickDigitQuestionSet(level)),
   )
   // ④-2: アダプティブモードのみ使う、各問題を生成した時点のレベル。
   // 非アダプティブ時は常にlevelと同じ
-  const [questionLevels, setQuestionLevels] = useState<Level[]>(() =>
-    adaptive ? [level] : [level, level, level],
+  const [questionLevels, setQuestionLevels] = useState<Level[]>(
+    () =>
+      (restoredSession?.questionLevels as Level[] | undefined) ??
+      (adaptive ? [level] : [level, level, level]),
   )
-  const [maxLevelReached, setMaxLevelReached] = useState<Level>(level)
-  const [currentIndex, setCurrentIndex] = useState(0)
+  const [maxLevelReached, setMaxLevelReached] = useState<Level>(
+    () => (restoredSession?.maxLevelReached as Level | undefined) ?? level,
+  )
+  const [currentIndex, setCurrentIndex] = useState(() => restoredSession?.currentIndex ?? 0)
   const [phase, setPhase] = useState<DigitQuestionPhase>('ready')
   const [typed, setTyped] = useState('')
   // タイムアウト時に最新の入力値を読むための参照(setStateのアップデータ内で
@@ -77,8 +91,27 @@ export function DigitGameScreen({
   typedRef.current = typed
   const [currentResult, setCurrentResult] =
     useState<DigitQuestionResult | null>(null)
-  const [results, setResults] = useState<DigitQuestionResult[]>([])
+  const [results, setResults] = useState<DigitQuestionResult[]>(
+    () => restoredSession?.results ?? [],
+  )
   const [finished, setFinished] = useState(false)
+
+  // セット完了(finished)以外は、状態が変わるたびに最新の途中経過を保存する。
+  // 完了したら不要になった途中経過を消す（handleRetryで新しいセットを始めた
+  // 場合も、次のレンダーでこのeffectが最新の状態を上書き保存するので問題ない）
+  useEffect(() => {
+    if (finished) {
+      clearGameSession(sessionKey)
+    } else {
+      saveGameSession(sessionKey, {
+        questions,
+        questionLevels,
+        maxLevelReached,
+        results,
+        currentIndex,
+      })
+    }
+  }, [sessionKey, questions, questionLevels, maxLevelReached, results, currentIndex, finished])
 
   const currentQuestion = questions[currentIndex]
   const maxAnswerLength =
@@ -287,7 +320,10 @@ export function DigitGameScreen({
         onBack={() =>
           confirmExit(
             results.length > 0 || currentResult !== null,
-            onExit,
+            () => {
+              clearGameSession(sessionKey)
+              onExit()
+            },
             t.common.confirmExitMessage,
           )
         }

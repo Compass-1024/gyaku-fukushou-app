@@ -55,6 +55,7 @@
 - StatsScreen/SettingsScreenを`React.lazy`で遅延読み込み化し、初期バンドルをgzip換算で約103KB→約93KBに削減（低スペックAndroid端末・低速回線での初期表示を意識）
 - ホーム画面にオフラインインジケータを追加。`navigator.onLine`とonline/offlineイベントを監視し、オフライン時にバナー表示する（`src/hooks/useOnlineStatus.ts`。学習履歴はlocalStorageのためオフラインでも記録・閲覧に支障はない）
 - Android実装を見据え、Playwrightにモバイル幅（Pixel 7相当）専用の`mobile`プロジェクトを追加し、主要導線のスモークテスト（`e2e/mobile-smoke.spec.ts`）を実行できるようにした（全E2Eをモバイルでも回すとCI時間が倍増するため対象を絞っている）
+- Android実装を見据え、モバイルOSがバックグラウンドでタブ/TWAのプロセスを再生成した場合に回答中のセットが失われないよう、セッション状態の永続化を追加した。ゲーム画面表示中は現在のview（画面）をsessionStorageへ退避し再読み込み後に同じ画面へ復元する仕組み（App.tsx）に加え、すうじ/空間/変化検出/音・色の4モードでは問題ごとの正誤結果・現在の問題位置も復元する（`src/lib/gameSessionPersistence.ts`）。意図的な退出（← レベル選択）時は復元対象から除外する。ことば/Nバック/デュアルNバック/ランダムモードの問題単位の復元は対象外（ROADMAP候補として記録）
 
 ### Fixed
 

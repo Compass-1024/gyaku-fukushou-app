@@ -16,6 +16,7 @@ import {
   PAD_COUNT,
 } from '../lib/tone'
 import { nextAdaptiveLevel } from '../lib/adaptiveDifficulty'
+import { saveGameSession, loadGameSession, clearGameSession } from '../lib/gameSessionPersistence'
 import { confirmExit } from '../lib/confirmExit'
 import { getSuggestedLevel } from '../lib/difficulty'
 import { loadSettings } from '../lib/settings'
@@ -58,14 +59,26 @@ export function ToneGameScreen({
   onSelectLevel,
 }: ToneGameScreenProps) {
   const t = useTranslation()
-  const [questions, setQuestions] = useState<ToneQuestion[]>(() =>
-    adaptive ? [pickToneQuestion(level, 0)] : pickToneQuestionSet(level),
+  // Android実装を見据え、モバイルOSがバックグラウンドでプロセスを再生成した
+  // 場合に回答中のセットが失われないよう、sessionStorageから復元を試みる
+  const sessionKey = `game-session:tone:${level}:${adaptive}`
+  const [restoredSession] = useState(() =>
+    loadGameSession<ToneQuestion, ToneQuestionResult>(sessionKey),
   )
-  const [questionLevels, setQuestionLevels] = useState<Level[]>(() =>
-    adaptive ? [level] : [level, level, level],
+  const [questions, setQuestions] = useState<ToneQuestion[]>(
+    () =>
+      restoredSession?.questions ??
+      (adaptive ? [pickToneQuestion(level, 0)] : pickToneQuestionSet(level)),
   )
-  const [maxLevelReached, setMaxLevelReached] = useState<Level>(level)
-  const [currentIndex, setCurrentIndex] = useState(0)
+  const [questionLevels, setQuestionLevels] = useState<Level[]>(
+    () =>
+      (restoredSession?.questionLevels as Level[] | undefined) ??
+      (adaptive ? [level] : [level, level, level]),
+  )
+  const [maxLevelReached, setMaxLevelReached] = useState<Level>(
+    () => (restoredSession?.maxLevelReached as Level | undefined) ?? level,
+  )
+  const [currentIndex, setCurrentIndex] = useState(() => restoredSession?.currentIndex ?? 0)
   const [phase, setPhase] = useState<ToneQuestionPhase>('ready')
   const [tapped, setTapped] = useState<number[]>([])
   // タイムアウト時に最新の入力値を読むための参照(setStateのアップデータ内で
@@ -74,8 +87,24 @@ export function ToneGameScreen({
   tappedRef.current = tapped
   const [currentResult, setCurrentResult] =
     useState<ToneQuestionResult | null>(null)
-  const [results, setResults] = useState<ToneQuestionResult[]>([])
+  const [results, setResults] = useState<ToneQuestionResult[]>(
+    () => restoredSession?.results ?? [],
+  )
   const [finished, setFinished] = useState(false)
+
+  useEffect(() => {
+    if (finished) {
+      clearGameSession(sessionKey)
+    } else {
+      saveGameSession(sessionKey, {
+        questions,
+        questionLevels,
+        maxLevelReached,
+        results,
+        currentIndex,
+      })
+    }
+  }, [sessionKey, questions, questionLevels, maxLevelReached, results, currentIndex, finished])
 
   const currentQuestion = questions[currentIndex]
 
@@ -241,7 +270,10 @@ export function ToneGameScreen({
         onBack={() =>
           confirmExit(
             results.length > 0 || currentResult !== null,
-            onExit,
+            () => {
+              clearGameSession(sessionKey)
+              onExit()
+            },
             t.common.confirmExitMessage,
           )
         }
