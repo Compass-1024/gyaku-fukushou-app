@@ -230,29 +230,32 @@ export function RandomGameScreen({
     paused,
   )
 
-  function finalizeAnswer() {
+  // overrideTyped/overrideArrayValueは、入力直後のsetState関数型アップデータ
+  // 内から自動採点する際に使う。ref（typedRef/arrayValueRef）は次のレンダー
+  // まで更新されないため、同期呼び出しだと直前の1手分が欠けた状態で採点して
+  // しまう不具合があった（単体モード画面と同じく最新値を明示的に渡す設計に統一）
+  function finalizeAnswer(overrideTyped?: string, overrideArrayValue?: number[]) {
     const round = currentRound
+    const typedValue = overrideTyped ?? typedRef.current
+    const arrayValue = overrideArrayValue ?? arrayValueRef.current
     let correct = false
     switch (round.mode) {
       case 'digit':
         correct = isDigitAnswerCorrect(
-          typedRef.current,
+          typedValue,
           round.gameType === 'reverse'
             ? reverseDigits(round.question.digits)
             : sumDigits(round.question.digits),
         )
         break
       case 'spatial':
-        correct = isSpatialAnswerCorrect(
-          arrayValueRef.current,
-          reverseSequence(round.question.sequence),
-        )
+        correct = isSpatialAnswerCorrect(arrayValue, reverseSequence(round.question.sequence))
         break
       case 'pattern':
-        correct = isPatternSelectionCorrect(arrayValueRef.current, round.question.filledCells)
+        correct = isPatternSelectionCorrect(arrayValue, round.question.filledCells)
         break
       case 'tone':
-        correct = isToneAnswerCorrect(arrayValueRef.current, round.question.sequence)
+        correct = isToneAnswerCorrect(arrayValue, round.question.sequence)
         break
     }
     if (loadSettings().soundEnabled) {
@@ -266,8 +269,8 @@ export function RandomGameScreen({
     setCurrentOutcome({
       round,
       correct,
-      typed: typedRef.current,
-      tapped: arrayValueRef.current,
+      typed: typedValue,
+      tapped: arrayValue,
     })
     setPhase('result')
   }
@@ -285,7 +288,7 @@ export function RandomGameScreen({
       // 自動採点する（単体のDigitGameScreenと同じ挙動。「合計」ラウンドは
       // 答えの桁数が定まらないため常に決定ボタンでの確定が必要）
       if (round.gameType === 'reverse' && next.length === maxLength) {
-        finalizeAnswer()
+        finalizeAnswer(next)
       }
       return next
     })
@@ -300,7 +303,7 @@ export function RandomGameScreen({
   function commitTypedAnswer() {
     if (paused) return
     setTyped((prev) => {
-      if (prev.length > 0) finalizeAnswer()
+      if (prev.length > 0) finalizeAnswer(prev)
       return prev
     })
   }
@@ -318,7 +321,7 @@ export function RandomGameScreen({
       if (prev.length >= expectedLength) return prev
       if (currentRound.mode === 'spatial' && prev.includes(cell)) return prev
       const next = [...prev, cell]
-      if (next.length === expectedLength) finalizeAnswer()
+      if (next.length === expectedLength) finalizeAnswer(undefined, next)
       return next
     })
   }

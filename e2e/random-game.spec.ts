@@ -162,6 +162,93 @@ test('ランダムモード: すうじ（合計）ラウンドは桁数分入力
   }
 })
 
+test('ランダムモード: 音・色ラウンドで表示された順にすべてタップすると正解になる（バグ修正）', async ({
+  page,
+}) => {
+  // 音・色/空間ラウンドの自動採点が、最後の1タップが状態に反映される前の
+  // 古いref値で判定してしまい、正しい順序でタップしても不正解になる不具合が
+  // あった。実際に表示された順序を記録し、その通りにタップして正解になる
+  // ことを確認する回帰テスト
+  test.setTimeout(90_000)
+  await page.goto('/')
+  await page.getByRole('button', { name: /ランダムモード/ }).click()
+  await page.getByRole('button', { name: /レベル1/ }).click()
+
+  for (let round = 1; round <= 5; round++) {
+    await expect(page.getByText(`問題 ${round} / 5`)).toBeVisible({ timeout: 15_000 })
+
+    const pads = page.getByRole('button', { name: /のパッド$/ })
+    if ((await pads.count()) === 4) {
+      const padLabels = ['赤のパッド', '青のパッド', '緑のパッド', '黄のパッド']
+      // 点灯色（TONE_PAD_LIT_COLORS）を完全一致で判定する。非点灯色のhoverクラス
+      // （例: 黄パッドの`hover:enabled:bg-amber-300`）にも`-300`が部分一致して
+      // しまうため、単純な部分文字列マッチでは誤検出する
+      const litColors = ['bg-rose-300', 'bg-sky-300', 'bg-emerald-300', 'bg-amber-200']
+      const answerPromptText = '同じ順番でパッドをタップしてください'
+      // ポーリングだとCDPラウンドトリップの遅延で点灯の切り替わりを取りこぼす
+      // ため、ブラウザ内のMutationObserverで点灯順序と回答フェーズ突入を検知する
+      await page.evaluate(
+        ({ labels, colors }) => {
+          const w = window as unknown as { __litSequence: string[]; __answeringReady: boolean }
+          w.__litSequence = []
+          w.__answeringReady = false
+          let lastLit: string | null = null
+          const buttons = labels.map((l) =>
+            document.querySelector(`button[aria-label="${l}"]`),
+          )
+          const checkLit = () => {
+            let current: string | null = null
+            for (let i = 0; i < buttons.length; i++) {
+              const classes = (buttons[i]?.className ?? '').split(/\s+/)
+              if (classes.includes(colors[i])) {
+                current = labels[i]
+                break
+              }
+            }
+            if (current && current !== lastLit) w.__litSequence.push(current)
+            lastLit = current
+          }
+          const litObserver = new MutationObserver(checkLit)
+          buttons.forEach((b) => {
+            if (b) litObserver.observe(b, { attributes: true, attributeFilter: ['class'] })
+          })
+          const promptObserver = new MutationObserver(() => {
+            if (document.body.textContent?.includes('同じ順番でパッドをタップしてください')) {
+              w.__answeringReady = true
+              litObserver.disconnect()
+              promptObserver.disconnect()
+            }
+          })
+          promptObserver.observe(document.body, { childList: true, subtree: true, characterData: true })
+        },
+        { labels: padLabels, colors: litColors },
+      )
+
+      await page.waitForFunction(
+        () => (window as unknown as { __answeringReady: boolean }).__answeringReady === true,
+        { timeout: 6_000 },
+      )
+      const litSequence = await page.evaluate(
+        () => (window as unknown as { __litSequence: string[] }).__litSequence,
+      )
+
+      await expect(page.getByText(answerPromptText)).toBeVisible({ timeout: 5_000 })
+      expect(litSequence.length).toBeGreaterThanOrEqual(3)
+      for (const label of litSequence) {
+        await page.getByRole('button', { name: label }).click()
+      }
+      await expect(page.getByText('正解')).toBeVisible({ timeout: 5_000 })
+      return
+    }
+
+    await expect(page.getByText(/^(正解|不正解)$/)).toBeVisible({ timeout: 20_000 })
+    const nextButton = page.getByRole('button', {
+      name: round === 5 ? '結果を見る' : '次へ',
+    })
+    await nextButton.click()
+  }
+})
+
 test('ランダムモード: セット途中でページを再読み込みしても、それまでの結果を保持して再開できる（Android対応⑨）', async ({
   page,
 }) => {
