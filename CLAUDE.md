@@ -236,12 +236,13 @@ flowchart TD
 
 ### ランダムモード（`src/lib/random.ts`）
 
-すうじ（逆から入力・合計を入力）・空間・変化検出・音/色の5ラウンド（いずれも「単発質問→回答」型の構造を持つ）から1問ずつ集め、シャッフルした順で5ラウンドを出題するミックス練習モード。Nバック系（連続試行方式）とことばモード（音声入出力）は構造が大きく異なるため対象外。
+すうじ（逆から入力・合計を入力）・空間・変化検出・音/色の「単発質問→回答」型5候補から出題数分を集め、シャッフルした順で出題するミックス練習モード。Nバック系（連続試行方式）とことばモード（音声入出力）は構造が大きく異なるため対象外。
 
-- **出題方式**: `buildRandomRounds(level)`が「すうじ（逆から入力）」「すうじ（合計を入力）」「空間」「変化検出」「音/色」の5ラウンド分を1問ずつ集め、Fisher-Yatesでシャッフルする。ちょうど5ラウンドのため、重複（同じラウンド種別が2回出る）は構造上発生しない。すうじの2ラウンドは`RandomRound`型の`gameType: 'reverse' | 'sum'`で区別する。
-- **1ラウンドの流れ**: 各ラウンドの出題生成・正誤判定ロジックは対応する`lib/*.ts`をそのまま呼び出す（重複実装なし）。表示・入力UIのみラウンド種別ごとに`RandomGameScreen.tsx`内で切り替える。
-- **正誤判定**: 各ラウンドは元モードの判定関数（`isDigitAnswerCorrect`/`isSpatialAnswerCorrect`/`isPatternSelectionCorrect`/`isToneAnswerCorrect`）をそのまま使う。
-- `HistoryEntry`は`mode: 'random'`、`correct`＝5問中の正解数、`total`＝5として記録する。`src/lib/history.ts`の`ALL_AREAS`には**含めない**（単一スキル指標ではないため、苦手分野判定・ベンチマークの対象外）。累計セット数・実績等、履歴全体を見る集計には自動的にカウントされる。
+- **出題方式**: `buildRandomRounds(level, roundCount, options?)`が候補ラウンド生成関数を5種類（すうじ・逆から/合計/空間/変化検出/音・色）組み立て、`roundCount`が5以下ならその中から重複無く`roundCount`種類を選び、5を超える場合（7問等）は超過分だけランダムに重複させたうえでFisher-Yatesでシャッフルする。すうじの2ラウンドは`RandomRound`型の`gameType: 'reverse' | 'sum'`で区別する。出題数は`ROUND_COUNT_OPTIONS`（3/5/7、既定5）から選べる（`RandomLevelSelect.tsx`のNバックと同様の出題数ピッカー）。
+- **1ラウンドの流れ**: 各ラウンドの出題生成・正誤判定ロジックは対応する`lib/*.ts`をそのまま呼び出す（重複実装なし）。表示・入力UIのみラウンド種別ごとに`RandomGameScreen.tsx`内で切り替える。結果フェーズの詳細表示（出題・正しい答え・自分の回答）は`RandomResultDetail.tsx`が単体モード画面と同じ内容をラウンド種別ごとに出し分ける。音・色ラウンドのパッド配色は`src/lib/tonePadStyles.ts`（`ToneGameScreen.tsx`と共有）を使う。
+- **正誤判定**: 各ラウンドは元モードの判定関数（`isDigitAnswerCorrect`/`isSpatialAnswerCorrect`/`isPatternSelectionCorrect`/`isToneAnswerCorrect`）をそのまま使う。すうじ（合計）ラウンドの最大入力文字数・自動採点判定は単体のDigitGameScreenと同じ`getDigitMaxAnswerLength`相当のロジックを使う（「逆から」のみ桁数到達で自動採点、「合計」は常に決定ボタンでの明示確定）。
+- `HistoryEntry`は`mode: 'random'`、`correct`＝出題数中の正解数、`total`＝出題数として記録する。`src/lib/history.ts`の`ALL_AREAS`には**含めない**（単一スキル指標ではないため、苦手分野判定・ベンチマークの対象外）。累計セット数・実績等、履歴全体を見る集計には自動的にカウントされる。
+- Android実装を見据えたセッション状態復元（`src/lib/gameSessionPersistence.ts`）に対応済み。詳細は「Data model」内の「セッション状態の一時保存」を参照。
 
 ### 出題重み付け（すうじ/空間/変化検出/音・色、`src/lib/questionWeighting.ts`）
 
@@ -468,9 +469,9 @@ interface AppSettings {
 | キー | 用途 | 読み書き |
 |---|---|---|
 | `gyaku-fukushou:lastGameView` | 直前に表示していたゲーム画面（`View`オブジェクト、30分TTL） | `src/App.tsx`が単独で担う（`getResumedGameView`/`saveResumableView`/`clearResumableView`） |
-| `game-session:<mode>:...` | すうじ/空間/変化検出/音・色モードの、問題ごとの正誤結果・現在の問題位置（30分TTL） | `src/lib/gameSessionPersistence.ts`（`saveGameSession`/`loadGameSession`/`clearGameSession`）。各GameScreenが自身のsessionKey（例: `` `game-session:digit:${gameType}:${level}:${adaptive}` ``）で呼び出す |
+| `game-session:<mode>:...` | すうじ/空間/変化検出/音・色/ランダムモードの、問題（ラウンド）ごとの正誤結果・現在の問題位置（30分TTL） | `src/lib/gameSessionPersistence.ts`（`saveGameSession`/`loadGameSession`/`clearGameSession`）。各GameScreenが自身のsessionKey（例: `` `game-session:digit:${gameType}:${level}:${adaptive}` ``）で呼び出す |
 
-回答途中の入力内容やカウントダウンの残り時間までは対象外（復元後は該当問題をready状態からやり直す）。「← レベル選択」等の意図的な退出時はクリアする。ことば/Nバック/デュアルNバック/ランダムモードは対象外（[ROADMAP.md](ROADMAP.md)の候補欄を参照）。
+回答途中の入力内容やカウントダウンの残り時間までは対象外（復元後は該当問題をready状態からやり直す）。「← レベル選択」等の意図的な退出時はクリアする。ことば/Nバック/デュアルNバックモードは対象外（[ROADMAP.md](ROADMAP.md)の候補欄を参照。ことばモードは音声認識のライブストリームが絡み恩恵が小さく、Nバック系は試行位置が`useStepReveal`内部のタイマー駆動stateから導出され外部から復元できないため）。
 
 ## Non-functional requirements
 
