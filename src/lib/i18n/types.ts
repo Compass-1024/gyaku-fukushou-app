@@ -147,6 +147,9 @@ export interface Translations {
     autoExpandChipTitle: string
     autoExpandChipDescription: string
     autoExpandChipNone: string
+    // Android実装を見据えたハプティックフィードバック設定
+    hapticsTitle: string
+    hapticsDescription: string
     notifications: {
       title: string
       unsupported: string

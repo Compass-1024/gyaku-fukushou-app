@@ -15,6 +15,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   notificationsEnabled: false,
   focusModeEnabled: false,
   autoExpandChip: 'none',
+  hapticsEnabled: false,
 }
 
 export function loadSettings(): AppSettings {

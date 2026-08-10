@@ -8,6 +8,7 @@ import { SettingsSoundSection } from './SettingsSoundSection'
 import { SettingsBgmSection } from './SettingsBgmSection'
 import { SettingsFocusModeSection } from './SettingsFocusModeSection'
 import { SettingsAutoExpandChipSection } from './SettingsAutoExpandChipSection'
+import { SettingsHapticsSection } from './SettingsHapticsSection'
 import { SettingsNotificationSection } from './SettingsNotificationSection'
 import { SettingsDataSection } from './SettingsDataSection'
 import { useLanguage, useTranslation } from '../contexts/LanguageContext'
@@ -119,6 +120,11 @@ export function SettingsScreen({
       <SettingsAutoExpandChipSection
         autoExpandChip={settings.autoExpandChip}
         onChange={(autoExpandChip) => updateSettings({ autoExpandChip })}
+      />
+
+      <SettingsHapticsSection
+        hapticsEnabled={settings.hapticsEnabled}
+        onToggle={() => updateSettings({ hapticsEnabled: !settings.hapticsEnabled })}
       />
 
       <SettingsNotificationSection

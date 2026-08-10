@@ -42,6 +42,41 @@ test('設定画面: BGMと効果音の音量スライダーが独立して切り
   await expect(soundSection.getByText('オン')).toBeVisible()
 })
 
+test('設定画面: バイブレーションをオンにすると正誤判定時にnavigator.vibrateが呼ばれる（Android対応①）', async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    ;(window as unknown as { __vibrateCalls: unknown[] }).__vibrateCalls = []
+    Object.defineProperty(window.navigator, 'vibrate', {
+      configurable: true,
+      value: (pattern: unknown) => {
+        ;(window as unknown as { __vibrateCalls: unknown[] }).__vibrateCalls.push(pattern)
+        return true
+      },
+    })
+  })
+  await page.goto('/')
+  await page.getByRole('button', { name: '設定' }).click()
+  const hapticsSection = page.locator('section', { has: page.getByText('📳 バイブレーション') })
+  await expect(hapticsSection.getByText('オフ')).toBeVisible()
+  await hapticsSection.getByRole('button', { name: 'オフ' }).click()
+  await expect(hapticsSection.getByText('オン')).toBeVisible()
+  await page.getByRole('button', { name: '← 戻る' }).click()
+
+  await page.getByRole('button', { name: /すうじモード（逆から入力）/ }).click()
+  await page.getByRole('button', { name: /レベル1（3桁）/ }).click()
+  await expect(page.getByText('逆から入力してください')).toBeVisible({ timeout: 15_000 })
+  await page.getByRole('button', { name: '1', exact: true }).click()
+  await page.getByRole('button', { name: '2', exact: true }).click()
+  await page.getByRole('button', { name: '3', exact: true }).click()
+  await expect(page.getByText(/^(正解|不正解)$/)).toBeVisible()
+
+  const callCount = await page.evaluate(
+    () => (window as unknown as { __vibrateCalls: unknown[] }).__vibrateCalls.length,
+  )
+  expect(callCount).toBeGreaterThan(0)
+})
+
 test('設定画面: 集中モードをオンにするとゲーム画面の背景装飾が非表示になる（④-6）', async ({
   page,
 }) => {

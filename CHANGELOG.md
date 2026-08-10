@@ -50,6 +50,8 @@
 - すうじ/空間/変化検出/音・色の4モードにアダプティブ難易度モードを追加。1セット3問と試行数が少ないため、Nバック系の3試行ウィンドウ方式ではなく問題ごとに正解でレベル+1・不正解でレベル-1する即時ステップ調整方式にした（`src/lib/adaptiveDifficulty.ts`の`nextAdaptiveLevel`、各lib（digits/spatial/pattern/tone.ts）に1問単位の生成関数`pick*Question`を追加）
 - Android実装（TWA方式）を見据え、Web Manifestに`id`・`orientation: portrait`・`display_override`を明示指定（`vite.config.ts`）
 - 開発サーバー（`npm run dev`）でもmanifest/Service Workerの挙動を確認できるよう`devOptions.enabled`を有効化
+- Android実装を見据え、Wake Lock APIによる回答中の画面スリープ防止を追加（`src/hooks/useWakeLock.ts`、非対応環境では単に無効化されるだけで害はない）
+- Android実装を見据え、正解/不正解・実績解除・レベルアップ時のハプティックフィードバック（`navigator.vibrate`）を追加。設定画面から独立してON/OFF切替可能（既定オフ、`src/lib/haptics.ts`）
 
 ### Fixed
 

@@ -75,6 +75,8 @@ export interface AppSettings {
   focusModeEnabled: boolean
   // ④-7: ホーム画面表示時に自動展開するチップ（'none'は自動展開しない）
   autoExpandChip: 'none' | 'mission' | 'challenge' | 'program'
+  // Android実装を見据えたハプティックフィードバック（既定オフ）
+  hapticsEnabled: boolean
 }
 
 export interface NBackTrial {

@@ -14,6 +14,7 @@ import {
   playLevelUp,
   playAchievementUnlock,
 } from '../lib/sound'
+import { playCorrectHaptic, playIncorrectHaptic, playAchievementHaptic } from '../lib/haptics'
 import { getNewlyUnlockedAchievements } from '../lib/achievements'
 import type { Achievement } from '../lib/achievements'
 import {
@@ -108,10 +109,22 @@ export function useSetCompletionRecorder({
       }
       if (newly.length > 0) playAchievementUnlock()
       if (newMissionCompletions > 0) playAchievementUnlock()
-      const suggestedLevel = getSuggestedLevel(level, accuracyPercent)
-      if ((suggestedLevel && suggestedLevel > level) || levelAfter > levelBefore) {
-        playLevelUp()
+    }
+    if (loadSettings().hapticsEnabled) {
+      if (playAccuracySound) {
+        if (accuracyPercent >= 70) playCorrectHaptic()
+        else playIncorrectHaptic()
       }
+      if (newly.length > 0) playAchievementHaptic()
+      if (newMissionCompletions > 0) playAchievementHaptic()
+    }
+    const suggestedLevel = getSuggestedLevel(level, accuracyPercent)
+    const isLevelUpMoment = (suggestedLevel && suggestedLevel > level) || levelAfter > levelBefore
+    if (loadSettings().soundEnabled && isLevelUpMoment) {
+      playLevelUp()
+    }
+    if (loadSettings().hapticsEnabled && isLevelUpMoment) {
+      playAchievementHaptic()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [trigger, mode, level, gameType, correctCount, total, playAccuracySound])

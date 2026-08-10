@@ -16,6 +16,7 @@ import { useSpeechRecognition } from './hooks/useSpeechRecognition'
 import { useThemeMode } from './hooks/useThemeMode'
 import { useBackgroundMusic } from './hooks/useBackgroundMusic'
 import { useFocusMode } from './hooks/useFocusMode'
+import { useWakeLock } from './hooks/useWakeLock'
 import { useLanguage, useTranslation } from './contexts/LanguageContext'
 import { loadHistory } from './lib/history'
 import { loadSettings } from './lib/settings'
@@ -138,6 +139,10 @@ function App() {
   const [showOnboarding, setShowOnboarding] = useState(() => !hasSeenOnboarding())
   const mainRef = useRef<HTMLElement>(null)
   const isFirstRender = useRef(true)
+  const isGameScreen = view.screen.endsWith('-game')
+
+  // Android実装を見据え、ゲーム画面表示中は画面消灯によるタイムアウトを防ぐ
+  useWakeLock(isGameScreen)
 
   // 英語版ではことばモードを提供しないため、ブラウザの戻る/進む操作で
   // ことばモードの画面状態が復元されてしまった場合もトップへ逃がす
@@ -153,8 +158,8 @@ function App() {
   // 問題を解いている間（ゲーム画面表示中）はBGMを一時停止し、集中を
   // 妨げないようにする。それ以外の画面（トップ・レベル選択・結果画面等）では鳴らす
   useEffect(() => {
-    setGameplayActive(view.screen.endsWith('-game'))
-  }, [view.screen, setGameplayActive])
+    setGameplayActive(isGameScreen)
+  }, [isGameScreen, setGameplayActive])
 
   // スクリーンリーダー利用者が画面遷移に気づけるよう、遷移のたびに
   // メインコンテンツへフォーカスを移す（初回描画時は移さない）
@@ -474,7 +479,6 @@ function App() {
 
   // ④-6: 集中モード。回答中は視覚的な気を散らす要素（カラフルな背景グラデーション・
   // 装飾のぼかし円）を非表示にし、ニュートラルな単色背景にする没入UIテーマ
-  const isGameScreen = view.screen.endsWith('-game')
   const isFocusModeActive = focusModeEnabled && isGameScreen
 
   return (

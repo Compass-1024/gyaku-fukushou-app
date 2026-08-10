@@ -179,6 +179,9 @@ export const en: Translations = {
     autoExpandChipDescription:
       'Automatically opens the chosen item’s details whenever you open the home screen',
     autoExpandChipNone: 'None',
+    hapticsTitle: '📳 Vibration',
+    hapticsDescription:
+      'Briefly vibrates the device on correct/incorrect answers and achievement unlocks (supported devices only)',
     notifications: {
       title: 'Reminder notifications',
       unsupported:

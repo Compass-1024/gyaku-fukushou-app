@@ -43,6 +43,7 @@ import {
   playButtonTap,
   playPadTone,
 } from '../lib/sound'
+import { playCorrectHaptic, playIncorrectHaptic } from '../lib/haptics'
 import { NumpadInput } from './NumpadInput'
 import { SetSummary } from './SetSummary'
 import { GameHeader } from './GameHeader'
@@ -219,6 +220,10 @@ export function RandomGameScreen({
     if (loadSettings().soundEnabled) {
       if (correct) playCorrectSound()
       else playIncorrectSound()
+    }
+    if (loadSettings().hapticsEnabled) {
+      if (correct) playCorrectHaptic()
+      else playIncorrectHaptic()
     }
     setCurrentOutcome({ round, correct })
     setPhase('result')

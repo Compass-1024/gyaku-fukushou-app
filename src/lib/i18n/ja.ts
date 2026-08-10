@@ -172,6 +172,9 @@ export const ja: Translations = {
     autoExpandChipDescription:
       'ホーム画面を開いたときに、選んだ項目の詳細を自動的に開いた状態で表示します',
     autoExpandChipNone: 'なし',
+    hapticsTitle: '📳 バイブレーション',
+    hapticsDescription:
+      '正解/不正解や実績解除のタイミングで端末を短く振動させます（対応端末・環境のみ）',
     notifications: {
       title: 'リマインド通知',
       unsupported:

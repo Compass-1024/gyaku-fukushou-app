@@ -18,6 +18,7 @@ import { confirmExit } from '../lib/confirmExit'
 import { getSuggestedLevel } from '../lib/difficulty'
 import { loadSettings } from '../lib/settings'
 import { playCorrectSound, playIncorrectSound, playButtonTap } from '../lib/sound'
+import { playCorrectHaptic, playIncorrectHaptic } from '../lib/haptics'
 import { SetSummary } from './SetSummary'
 import { GameHeader } from './GameHeader'
 import { ResultBadge } from './ResultBadge'
@@ -127,6 +128,10 @@ export function PatternGameScreen({
     if (loadSettings().soundEnabled) {
       if (correct) playCorrectSound()
       else playIncorrectSound()
+    }
+    if (loadSettings().hapticsEnabled) {
+      if (correct) playCorrectHaptic()
+      else playIncorrectHaptic()
     }
     setCurrentResult({ question: currentQuestion, selectedCells: value, correct })
     setPhase('result')
