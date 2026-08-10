@@ -27,6 +27,15 @@ export default defineConfig({
     {
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
+      testIgnore: /mobile-smoke\.spec\.ts/,
+    },
+    // Android実装を見据え、モバイル幅でのレイアウト崩れ・タップ領域の
+    // 問題を自動検知する。全E2Eをモバイルでも回すとCI時間が倍増するため、
+    // 対象はe2e/mobile-smoke.spec.tsの主要導線スモークテストに絞る
+    {
+      name: 'mobile',
+      use: { ...devices['Pixel 7'] },
+      testMatch: /mobile-smoke\.spec\.ts/,
     },
   ],
   webServer: {

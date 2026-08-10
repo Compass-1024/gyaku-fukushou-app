@@ -54,6 +54,7 @@
 - Android実装を見据え、正解/不正解・実績解除・レベルアップ時のハプティックフィードバック（`navigator.vibrate`）を追加。設定画面から独立してON/OFF切替可能（既定オフ、`src/lib/haptics.ts`）
 - StatsScreen/SettingsScreenを`React.lazy`で遅延読み込み化し、初期バンドルをgzip換算で約103KB→約93KBに削減（低スペックAndroid端末・低速回線での初期表示を意識）
 - ホーム画面にオフラインインジケータを追加。`navigator.onLine`とonline/offlineイベントを監視し、オフライン時にバナー表示する（`src/hooks/useOnlineStatus.ts`。学習履歴はlocalStorageのためオフラインでも記録・閲覧に支障はない）
+- Android実装を見据え、Playwrightにモバイル幅（Pixel 7相当）専用の`mobile`プロジェクトを追加し、主要導線のスモークテスト（`e2e/mobile-smoke.spec.ts`）を実行できるようにした（全E2Eをモバイルでも回すとCI時間が倍増するため対象を絞っている）
 
 ### Fixed
 
