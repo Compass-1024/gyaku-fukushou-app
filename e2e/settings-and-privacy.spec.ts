@@ -63,6 +63,7 @@ test('設定画面: バイブレーションをオンにすると正誤判定時
   await expect(hapticsSection.getByText('オン')).toBeVisible()
   await page.getByRole('button', { name: '← 戻る' }).click()
 
+  await page.getByRole('button', { name: /個別選択モード/ }).click()
   await page.getByRole('button', { name: /すうじモード（逆から入力）/ }).click()
   await page.getByRole('button', { name: /レベル1（3桁）/ }).click()
   await expect(page.getByText('逆から入力してください')).toBeVisible({ timeout: 15_000 })
@@ -81,6 +82,7 @@ test('設定画面: 集中モードをオンにするとゲーム画面の背景
   page,
 }) => {
   await page.goto('/')
+  await page.getByRole('button', { name: /個別選択モード/ }).click()
   await page.getByRole('button', { name: /すうじモード（逆から入力）/ }).click()
   await page.getByRole('button', { name: /レベル1（3桁）/ }).click()
   await expect(page.getByText('逆から入力してください')).toBeVisible({ timeout: 15_000 })
@@ -89,12 +91,14 @@ test('設定画面: 集中モードをオンにするとゲーム画面の背景
 
   await page.getByRole('button', { name: '← レベル選択' }).click()
   await page.getByRole('button', { name: '← モード選択' }).click()
+  await page.getByRole('button', { name: '← ホーム' }).click()
   await page.getByRole('button', { name: '設定' }).click()
   const focusModeSection = page.locator('section', { has: page.getByText('🎯 集中モード') })
   await focusModeSection.getByRole('button', { name: 'オフ' }).click()
   await expect(focusModeSection.getByRole('button', { name: 'オン' })).toBeVisible()
   await page.getByRole('button', { name: '← 戻る' }).click()
 
+  await page.getByRole('button', { name: /個別選択モード/ }).click()
   await page.getByRole('button', { name: /すうじモード（逆から入力）/ }).click()
   await page.getByRole('button', { name: /レベル1（3桁）/ }).click()
   await expect(page.getByText('逆から入力してください')).toBeVisible({ timeout: 15_000 })
@@ -140,31 +144,31 @@ test('統計画面: 記録がない場合の案内が表示される', async ({ 
   ).toBeVisible()
 })
 
-test('統計画面: 十分な記録があると「ワーキングメモリの伸び」が表示される', async ({
+test('統計画面: 十分な記録があると「トレーニングスコア」が総合・カテゴリ別に表示される（統計画面のシンプル化）', async ({
   page,
 }) => {
   await page.addInitScript(() => {
     const now = Date.now()
-    // 前半2件・後半2件、計4件（自己比較の最低要件）を古い順に生成する
-    const history = Array.from({ length: 4 }, (_, i) => ({
-      mode: 'spatial',
-      level: 2,
-      correct: 3,
-      total: 3,
-      timestamp: new Date(now - (4 - i) * 86400000).toISOString(),
-    }))
+    // 前半2件（不正解）・後半2件（正解）、計4件（自己比較の最低要件）を古い順に生成する
+    const history = [
+      { mode: 'spatial', level: 2, correct: 0, total: 3, timestamp: new Date(now - 4 * 86400000).toISOString() },
+      { mode: 'spatial', level: 2, correct: 0, total: 3, timestamp: new Date(now - 3 * 86400000).toISOString() },
+      { mode: 'spatial', level: 2, correct: 3, total: 3, timestamp: new Date(now - 2 * 86400000).toISOString() },
+      { mode: 'spatial', level: 2, correct: 3, total: 3, timestamp: new Date(now - 1 * 86400000).toISOString() },
+    ]
     window.localStorage.setItem('gyaku-fukushou:history', JSON.stringify(history))
   })
   await page.goto('/')
   await page.getByRole('button', { name: '統計' }).click()
 
-  const benchmarkSection = page.locator('section', {
-    has: page.getByRole('heading', { name: 'ワーキングメモリの伸び' }),
+  const scoreSection = page.locator('section', {
+    has: page.getByRole('heading', { name: '📊 トレーニングスコア' }),
   })
-  await expect(benchmarkSection).toBeVisible()
-  await expect(benchmarkSection.getByText('空間モード')).toBeVisible()
-  await expect(benchmarkSection.getByText('→ 100%')).toBeVisible()
-  await expect(benchmarkSection.getByText('横ばい')).toBeVisible()
+  await expect(scoreSection).toBeVisible()
+  await expect(scoreSection.getByText('総合トレーニングスコア')).toBeVisible()
+  await expect(scoreSection.getByText('空間記憶')).toBeVisible()
+  // spatialは前半0%→後半100%なので、総合・空間記憶とも100%＋前回比+100ptになる
+  await expect(scoreSection.getByText('前回比 +100pt', { exact: false })).toHaveCount(2)
   await expect(
     page.getByText('医学的な診断や公式な認知機能評価ではなく', { exact: false }),
   ).toBeVisible()
@@ -174,13 +178,24 @@ test('統計画面: 実績・達成の通知センターに実績解除とミッ
   page,
 }) => {
   await page.addInitScript(() => {
+    // 通知センターは解除から3日超経過した項目を除外するため、
+    // 「今日」を基準にした相対日付を使う
+    const now = new Date()
+    const todayKey = now.toISOString().slice(0, 10)
+    const yesterday = new Date(now.getTime() - 86400000)
     const history = [
-      { mode: 'word', level: 1, correct: 1, total: 3, timestamp: '2026-01-01T00:00:00.000Z' },
+      {
+        mode: 'word',
+        level: 1,
+        correct: 1,
+        total: 3,
+        timestamp: new Date(yesterday.setUTCHours(0, 0, 0, 0)).toISOString(),
+      },
     ]
     window.localStorage.setItem('gyaku-fukushou:history', JSON.stringify(history))
     window.localStorage.setItem(
       'gyaku-fukushou:missionCompletions',
-      JSON.stringify([{ dateKey: '2026-01-05', missionId: 'digit-2' }]),
+      JSON.stringify([{ dateKey: todayKey, missionId: 'digit-2' }]),
     )
   })
   await page.goto('/')
@@ -190,7 +205,7 @@ test('統計画面: 実績・達成の通知センターに実績解除とミッ
     has: page.getByRole('heading', { name: '🔔 実績・達成の通知センター' }),
   })
   await expect(section).toBeVisible()
-  // ミッション達成(2026-01-05)の方が実績解除(2026-01-01)より新しいため先に表示される
+  // ミッション達成(今日)の方が実績解除(昨日)より新しいため先に表示される
   const items = section.locator('li')
   await expect(items.first()).toContainText('🎯 ミッション達成')
   await expect(items.nth(1)).toContainText('🏆 実績解除')

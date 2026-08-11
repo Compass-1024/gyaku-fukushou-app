@@ -10,7 +10,7 @@ test('モバイル幅: トップ画面の主要ボタンが表示され、最小
 }) => {
   await page.goto('/')
 
-  const modeButton = page.getByRole('button', { name: /すうじモード（逆から入力）/ })
+  const modeButton = page.getByRole('button', { name: /個別選択モード/ })
   await expect(modeButton).toBeVisible()
 
   const box = await modeButton.boundingBox()
@@ -29,6 +29,7 @@ test('モバイル幅: すうじモードの出題→回答→結果表示まで
   page,
 }) => {
   await page.goto('/')
+  await page.getByRole('button', { name: /個別選択モード/ }).click()
   await page.getByRole('button', { name: /すうじモード（逆から入力）/ }).click()
   await page.getByRole('button', { name: /レベル1（3桁）/ }).click()
 

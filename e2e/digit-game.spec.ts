@@ -4,6 +4,7 @@ test('すうじモード（逆から入力）: 出題→回答→結果表示ま
   page,
 }) => {
   await page.goto('/')
+  await page.getByRole('button', { name: /個別選択モード/ }).click()
   await page.getByRole('button', { name: /すうじモード（逆から入力）/ }).click()
   await page.getByRole('button', { name: /レベル1（3桁）/ }).click()
 
@@ -27,6 +28,7 @@ test('すうじモード: セット途中でページを再読み込みしても
   page,
 }) => {
   await page.goto('/')
+  await page.getByRole('button', { name: /個別選択モード/ }).click()
   await page.getByRole('button', { name: /すうじモード（逆から入力）/ }).click()
   await page.getByRole('button', { name: /レベル1（3桁）/ }).click()
   await expect(
@@ -54,6 +56,7 @@ test('すうじモード: 意図的に「← レベル選択」で退出した�
   page,
 }) => {
   await page.goto('/')
+  await page.getByRole('button', { name: /個別選択モード/ }).click()
   await page.getByRole('button', { name: /すうじモード（逆から入力）/ }).click()
   await page.getByRole('button', { name: /レベル1（3桁）/ }).click()
   await expect(
@@ -81,6 +84,7 @@ test('すうじモード: モードを途中でやめて再挑戦すると、や
   page,
 }) => {
   await page.goto('/')
+  await page.getByRole('button', { name: /個別選択モード/ }).click()
   await page.getByRole('button', { name: /すうじモード（逆から入力）/ }).click()
   await page.getByRole('button', { name: /レベル1（3桁）/ }).click()
   await expect(
@@ -115,6 +119,7 @@ test('すうじモード: アダプティブ難易度モードで最後まで完
   page,
 }) => {
   await page.goto('/')
+  await page.getByRole('button', { name: /個別選択モード/ }).click()
   await page.getByRole('button', { name: /すうじモード（逆から入力）/ }).click()
   await page.getByRole('checkbox', { name: 'アダプティブ（おすすめ）' }).check()
   await page.getByRole('button', { name: /レベル1（3桁）/ }).click()
@@ -145,6 +150,7 @@ test('すうじモード: 回答フェーズを一時停止すると残り時間
   page,
 }) => {
   await page.goto('/')
+  await page.getByRole('button', { name: /個別選択モード/ }).click()
   await page.getByRole('button', { name: /すうじモード（逆から入力）/ }).click()
   await page.getByRole('button', { name: /レベル1（3桁）/ }).click()
 
@@ -178,6 +184,7 @@ test('すうじモード: 結果表示中はEnterキーでも次の問題へ進�
   page,
 }) => {
   await page.goto('/')
+  await page.getByRole('button', { name: /個別選択モード/ }).click()
   await page.getByRole('button', { name: /すうじモード（逆から入力）/ }).click()
   await page.getByRole('button', { name: /レベル1（3桁）/ }).click()
 
@@ -201,6 +208,7 @@ test('すうじモード: SetSummary（3問完了後）でもEnterキーで主�
   page,
 }) => {
   await page.goto('/')
+  await page.getByRole('button', { name: /個別選択モード/ }).click()
   await page.getByRole('button', { name: /すうじモード（逆から入力）/ }).click()
   await page.getByRole('button', { name: /レベル1（3桁）/ }).click()
 

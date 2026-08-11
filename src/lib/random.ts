@@ -14,6 +14,17 @@ export const ROUND_COUNT_OPTIONS = [3, 5, 7] as const
 export type RoundCount = (typeof ROUND_COUNT_OPTIONS)[number]
 export const DEFAULT_ROUND_COUNT: RoundCount = 5
 
+// 出題数に加え、出題する候補ラウンドの種類も選べるようにする。
+// 既定（未指定）では全種類を対象にし、従来どおりの挙動を維持する
+export const ALL_ROUND_TYPES = [
+  'digit-reverse',
+  'digit-sum',
+  'spatial',
+  'pattern',
+  'tone',
+] as const
+export type RandomRoundType = (typeof ALL_ROUND_TYPES)[number]
+
 const ALL_LEVELS: readonly Level[] = [1, 2, 3]
 
 // 弱点重視モード用: そのモード（+すうじの場合はgameType）の中で、挑戦履歴が
@@ -66,49 +77,58 @@ function shuffled<T>(items: readonly T[]): T[] {
 
 // すうじ（逆から入力/合計を入力）・空間・変化検出・音/色の「単発質問→回答」型
 // 5種類から1問ずつのラウンド生成関数を組み立てる。Nバック系（連続試行）と
-// ことばモード（音声入出力）は構造が大きく異なるため対象外
+// ことばモード（音声入出力）は構造が大きく異なるため対象外。enabledTypesを
+// 渡すと、そのうち選ばれた種類のみを候補にする（出題するモードを選ぶ機能）
 function buildRoundGenerators(
   level: Level,
   options?: BuildRandomRoundsOptions,
   exclude?: RandomRoundExcludeSets,
+  enabledTypes: readonly RandomRoundType[] = ALL_ROUND_TYPES,
 ): (() => RandomRound)[] {
   const levelFor = (mode: Mode, gameType?: DigitGameType): Level =>
     options ? pickFocusedLevel(options.history, mode, gameType, level) : level
 
-  return [
-    () => ({
+  const generatorByType: Record<RandomRoundType, () => RandomRound> = {
+    'digit-reverse': () => ({
       mode: 'digit',
       gameType: 'reverse',
       question: pickDigitQuestion(levelFor('digit', 'reverse'), 0, exclude?.digit),
     }),
-    () => ({
+    'digit-sum': () => ({
       mode: 'digit',
       gameType: 'sum',
       question: pickDigitQuestion(levelFor('digit', 'sum'), 0, exclude?.digit),
     }),
-    () => ({
+    spatial: () => ({
       mode: 'spatial',
       question: pickSpatialQuestion(levelFor('spatial'), 0, exclude?.spatial),
     }),
-    () => ({
+    pattern: () => ({
       mode: 'pattern',
       question: pickPatternQuestion(levelFor('pattern'), 0, exclude?.pattern),
     }),
-    () => ({ mode: 'tone', question: pickToneQuestion(levelFor('tone'), 0, exclude?.tone) }),
-  ]
+    tone: () => ({ mode: 'tone', question: pickToneQuestion(levelFor('tone'), 0, exclude?.tone) }),
+  }
+
+  // 空配列（すべて選択解除）が渡された場合は、出題不能になるのを避けるため
+  // 全種類にフォールバックする（呼び出し側のUIでも最低1件選択を強制する想定）
+  const types = enabledTypes.length > 0 ? enabledTypes : ALL_ROUND_TYPES
+  return types.map((type) => generatorByType[type])
 }
 
-// roundCount問のミックス練習を組み立てる。候補は5種類（すうじ・逆から/合計/
-// 空間/変化検出/音・色）で、roundCountがそれ以下なら重複無しでその中から
-// roundCount種類を選び、それを超える場合（7問等）は超過分だけランダムに
-// 重複させる。最終的な出題順はシャッフルする
+// roundCount問のミックス練習を組み立てる。候補はenabledTypesで選んだ種類
+// （既定は5種類全て: すうじ・逆から/合計/空間/変化検出/音・色）で、
+// roundCountがそれ以下なら重複無しでその中からroundCount種類を選び、
+// それを超える場合（7問等、または選択種類数を超える場合）は超過分だけ
+// ランダムに重複させる。最終的な出題順はシャッフルする
 export function buildRandomRounds(
   level: Level,
   roundCount: RoundCount = DEFAULT_ROUND_COUNT,
   options?: BuildRandomRoundsOptions,
   exclude?: RandomRoundExcludeSets,
+  enabledTypes?: readonly RandomRoundType[],
 ): RandomRound[] {
-  const generators = buildRoundGenerators(level, options, exclude)
+  const generators = buildRoundGenerators(level, options, exclude, enabledTypes)
   let selected: (() => RandomRound)[]
   if (roundCount <= generators.length) {
     selected = shuffled(generators).slice(0, roundCount)

@@ -4,7 +4,6 @@
 import type { ShareTemplates } from '../share'
 import type { ParseBackupError } from '../backup'
 import type { AchievementId } from '../achievements'
-import type { BenchmarkBand } from '../benchmarks'
 
 export interface ModeCopy {
   title: string
@@ -26,6 +25,10 @@ export interface Translations {
     next: string
     backToModeSelect: string
     backToLevelSelect: string
+    // ③: ホーム画面の3ボタン化に伴い、個別選択モード画面・今日のミッション画面
+    // からホームへ戻るボタン用（各モードのレベル選択画面からは引き続き
+    // backToModeSelectで個別選択モード画面へ戻る）
+    backToHome: string
     suggestionUp: (levelLabel: string) => string
     suggestionDown: (levelLabel: string) => string
     rememberPrompt: string
@@ -115,6 +118,13 @@ export interface Translations {
     playerLevel: (level: number) => string
     xpToNextLevel: (xp: number) => string
     growingBadgeLabel: string
+    // ホーム画面の3ボタン化（ランダム/個別選択/今日のミッション）で使う文言
+    modeSelectTitle: string
+    buttons: {
+      random: ModeCopy
+      modeSelect: ModeCopy
+      dailyMission: ModeCopy
+    }
   }
   missions: {
     cardTitle: string
@@ -124,6 +134,16 @@ export interface Translations {
     accuracyLabel: (percent: number) => string
     // ホーム画面のコンパクトチップ表示用の短いラベル
     chipLabel: string
+  }
+  // ホーム画面の「今日のミッション」ボタンから入る専用画面。過去の正答率から
+  // 自動選定した弱点モード・レベルを1日3セット達成するとXPがもらえる
+  dailyMission: {
+    title: string
+    subtitle: string
+    progressLabel: (progress: number, required: number) => string
+    startButton: string
+    completedLabel: string
+    xpReward: (xp: number) => string
   }
   settings: {
     heading: string
@@ -202,11 +222,6 @@ export interface Translations {
       accuracyPercent: number,
     ) => string
     dayDetailCloseButton: string
-    trendTitle: (days: number) => string
-    trendAriaLabel: (days: number) => string
-    trendNoRecord: (dateKey: string) => string
-    trendDaysAgo: (days: number) => string
-    trendToday: string
     achievementsTitle: string
     achievementsCountLabel: (unlocked: number, total: number) => string
     achievementUnlocked: string
@@ -226,9 +241,22 @@ export interface Translations {
     // ④-3: 出題重み付け統計(バケット)から見える誤答パターンの質的フィードバック
     bucketWeaknessLabels: Record<string, string>
     bucketWeaknessSummary: (label: string, accuracyPercent: number) => string
-    // ④-6: モード別正答率の時系列グラフ
-    modeTrendTitle: string
-    modeTrendNotEnoughData: string
+    // 統計画面のシンプル化: 個別モードのグラフ類の代わりに、総合トレーニング
+    // スコア＋3カテゴリ（数字記憶/空間記憶/注意制御）の数値で示す
+    scoreTitle: string
+    scoreCategoryLabels: {
+      overall: string
+      numeric: string
+      spatial: string
+      attention: string
+    }
+    scoreValue: (score: number) => string
+    scoreDeltaUp: (delta: number) => string
+    scoreDeltaDown: (delta: number) => string
+    scoreDeltaFlat: string
+    scoreNoComparisonYet: string
+    scoreNotAttempted: string
+    scoreDisclaimer: string
     // ④-10: 実績・達成の通知センター
     notificationCenterTitle: string
     notificationCenterEmpty: string
@@ -396,6 +424,9 @@ export interface Translations {
     // 出題数（3/5/7問）の選択
     roundCountTitle: string
     roundCountLabel: (count: number) => string
+    // 出題するモードの選択（すうじ・逆から/合計・空間・変化検出・音/色から選ぶ）
+    roundTypeTitle: string
+    roundTypeAllOffWarning: string
   }
   tone: {
     title: string
@@ -409,21 +440,5 @@ export interface Translations {
     adaptiveLabel: string
     adaptiveDescription: string
     maxLevelReachedLabel: (level: 1 | 2 | 3) => string
-  }
-  benchmarks: {
-    title: string
-    disclaimer: string
-    bandLabels: Record<BenchmarkBand, string>
-    recentLabel: (accuracyPercent: number) => string
-    previousLabel: (accuracyPercent: number) => string
-    digit: { label: string }
-    'digit-sum': { label: string }
-    spatial: { label: string }
-    nback: { label: string }
-    pattern: { label: string }
-    'dual-nback': { label: string }
-    random: { label: string }
-    word: { label: string }
-    tone: { label: string }
   }
 }

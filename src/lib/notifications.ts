@@ -48,11 +48,17 @@ export function findMissionDefinition(missionId: string) {
   return MISSION_DEFINITIONS.find((m) => m.id === missionId)
 }
 
+// 統計画面をシンプルに保つため、解除から3日を超えて経過した項目は
+// 一覧から除外する（直近の達成に絞ることで一覧が際限なく伸びるのを防ぐ）
+const MAX_AGE_DAYS = 3
+const MAX_AGE_MS = MAX_AGE_DAYS * 24 * 60 * 60 * 1000
+
 // 実績（timestamp）とミッション達成（dateKeyのみ）を統合し、新しい順に並べる。
 // ソート単位が日付までしかないミッション側は、その日の23:59:59として扱う
 export function getCombinedNotificationLog(
   history: HistoryEntry[],
   missionCompletionCount: number,
+  now: Date = new Date(),
 ): NotificationEntry[] {
   const achievementEntries: NotificationEntry[] = getAchievementUnlockLog(
     history,
@@ -71,5 +77,8 @@ export function getCombinedNotificationLog(
       : new Date(`${entry.dateKey}T23:59:59`).getTime()
   }
 
-  return [...achievementEntries, ...missionEntries].sort((a, b) => sortKey(b) - sortKey(a))
+  const nowMs = now.getTime()
+  return [...achievementEntries, ...missionEntries]
+    .filter((entry) => nowMs - sortKey(entry) <= MAX_AGE_MS)
+    .sort((a, b) => sortKey(b) - sortKey(a))
 }

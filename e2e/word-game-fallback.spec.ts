@@ -16,6 +16,7 @@ test.describe('ことばモード: SpeechRecognition非対応ブラウザ向け�
     page,
   }) => {
     await page.goto('/')
+    await page.getByRole('button', { name: /個別選択モード/ }).click()
     await page.getByRole('button', { name: /ことばモード/ }).click()
 
     await expect(

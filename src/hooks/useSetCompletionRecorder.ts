@@ -21,6 +21,7 @@ import {
   checkAndRecordMissionCompletion,
   loadMissionCompletions,
 } from '../lib/missions'
+import { getDailyMissionTarget, checkAndRecordDailyMissionCompletion } from '../lib/dailyMission'
 import { computeTotalXp, getXpProgress } from '../lib/xp'
 import type { DigitGameType, Level, Mode } from '../types'
 
@@ -82,6 +83,13 @@ export function useSetCompletionRecorder({
     // 今日のミッションがこのセット完了により初めて達成されたかを判定し、
     // 達成していればXP付与用のミッション完了ログに記録する
     const newMissionCompletions = checkAndRecordMissionCompletion(after, language)
+    // 新・今日のミッション（弱点自動選定+3セット達成）も同じログを共有して判定する
+    const dailyMissionTarget = getDailyMissionTarget(after, language)
+    const newDailyMissionCompletion = checkAndRecordDailyMissionCompletion(
+      before,
+      after,
+      dailyMissionTarget,
+    )
     const completionsAfter = loadMissionCompletions()
     const newly = getNewlyUnlockedAchievements(
       before,
@@ -108,7 +116,7 @@ export function useSetCompletionRecorder({
         else playIncorrectSound()
       }
       if (newly.length > 0) playAchievementUnlock()
-      if (newMissionCompletions > 0) playAchievementUnlock()
+      if (newMissionCompletions > 0 || newDailyMissionCompletion) playAchievementUnlock()
     }
     if (loadSettings().hapticsEnabled) {
       if (playAccuracySound) {
@@ -116,7 +124,7 @@ export function useSetCompletionRecorder({
         else playIncorrectHaptic()
       }
       if (newly.length > 0) playAchievementHaptic()
-      if (newMissionCompletions > 0) playAchievementHaptic()
+      if (newMissionCompletions > 0 || newDailyMissionCompletion) playAchievementHaptic()
     }
     const suggestedLevel = getSuggestedLevel(level, accuracyPercent)
     const isLevelUpMoment = (suggestedLevel && suggestedLevel > level) || levelAfter > levelBefore

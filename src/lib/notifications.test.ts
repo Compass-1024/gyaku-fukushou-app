@@ -73,16 +73,29 @@ describe('findMissionDefinition', () => {
 describe('getCombinedNotificationLog', () => {
   it('merges achievement and mission entries sorted newest first', () => {
     const history: HistoryEntry[] = [
-      { mode: 'word', level: 1, correct: 1, total: 3, timestamp: '2026-01-01T00:00:00.000Z' },
+      { mode: 'word', level: 1, correct: 1, total: 3, timestamp: '2026-01-05T00:00:00.000Z' },
     ]
     localStorage.setItem(
       'gyaku-fukushou:missionCompletions',
       JSON.stringify([{ dateKey: '2026-01-05', missionId: 'digit-2' }]),
     )
-    const log = getCombinedNotificationLog(history, 1)
+    const log = getCombinedNotificationLog(history, 1, new Date('2026-01-06T00:00:00.000Z'))
     expect(log[0]).toEqual({ kind: 'mission', missionId: 'digit-2', dateKey: '2026-01-05' })
     expect(log.some((e) => e.kind === 'achievement' && e.achievementId === 'first-session')).toBe(
       true,
     )
+  })
+
+  it('excludes entries older than 3 days from now（統計画面のシンプル化）', () => {
+    const history: HistoryEntry[] = [
+      { mode: 'word', level: 1, correct: 1, total: 3, timestamp: '2026-01-01T00:00:00.000Z' },
+    ]
+    localStorage.setItem(
+      'gyaku-fukushou:missionCompletions',
+      JSON.stringify([{ dateKey: '2026-01-01', missionId: 'digit-2' }]),
+    )
+    // 5日後（3日超過）を「今」として判定すると両方とも除外される
+    const log = getCombinedNotificationLog(history, 1, new Date('2026-01-06T00:00:00.000Z'))
+    expect(log).toEqual([])
   })
 })

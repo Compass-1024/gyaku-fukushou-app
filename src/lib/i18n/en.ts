@@ -14,6 +14,7 @@ export const en: Translations = {
     seeResults: 'See results',
     next: 'Next',
     backToModeSelect: '← Mode select',
+    backToHome: '← Home',
     backToLevelSelect: '← Level select',
     suggestionUp: (levelLabel) => `🎉 Try ${levelLabel}`,
     suggestionDown: (levelLabel) => `Practice at ${levelLabel} again`,
@@ -114,6 +115,21 @@ export const en: Translations = {
     playerLevel: (level) => `Player Lv.${level}`,
     xpToNextLevel: (xp) => `${xp} XP to next level`,
     growingBadgeLabel: 'Accuracy improving',
+    modeSelectTitle: 'Choose a mode',
+    buttons: {
+      random: {
+        title: '🎲 Random Mode',
+        description: 'A mixed practice across 5 modes',
+      },
+      modeSelect: {
+        title: '📋 Choose a Mode',
+        description: 'Pick one of 9 modes to practice',
+      },
+      dailyMission: {
+        title: "🎯 Today's Mission",
+        description: 'Picked for you today',
+      },
+    },
   },
   missions: {
     cardTitle: "🎯 Today's Mission",
@@ -122,6 +138,14 @@ export const en: Translations = {
     playCountLabel: (areaLabel, count) => `Play ${areaLabel} ${count} times`,
     accuracyLabel: (percent) => `Reach ${percent}%+ accuracy`,
     chipLabel: 'Mission',
+  },
+  dailyMission: {
+    title: "🎯 Today's Mission",
+    subtitle: "Picked for you based on your accuracy",
+    progressLabel: (progress, required) => `${progress} / ${required} sets completed`,
+    startButton: 'Start',
+    completedLabel: "✅ Today's mission is complete. See you tomorrow!",
+    xpReward: (xp) => `+${xp} XP on completion`,
   },
   share: {
     resultLine: (correct, total) => `I scored ${correct}/${total} on Oboe-Tore!`,
@@ -245,11 +269,6 @@ export const en: Translations = {
     dayDetailEntry: (label, level, correct, total, accuracyPercent) =>
       `${label} Lv.${level} — ${correct}/${total} correct (${accuracyPercent}%)`,
     dayDetailCloseButton: 'Close',
-    trendTitle: (days) => `Accuracy trend (last ${days} days)`,
-    trendAriaLabel: (days) => `Accuracy trend over the last ${days} days`,
-    trendNoRecord: (dateKey) => `${dateKey}: no record`,
-    trendDaysAgo: (days) => `${days}d ago`,
-    trendToday: 'Today',
     achievementsTitle: 'Achievements',
     achievementsCountLabel: (unlocked, total) => `${unlocked} / ${total} unlocked`,
     achievementUnlocked: 'Unlocked',
@@ -276,8 +295,21 @@ export const en: Translations = {
     },
     bucketWeaknessSummary: (label, accuracyPercent) =>
       `You struggle with ${label} (${accuracyPercent}% correct)`,
-    modeTrendTitle: 'Accuracy trend by mode',
-    modeTrendNotEnoughData: 'Shown once you have more attempts',
+    scoreTitle: '📊 Training Score',
+    scoreCategoryLabels: {
+      overall: 'Overall Training Score',
+      numeric: 'Numeric Memory',
+      spatial: 'Spatial Memory',
+      attention: 'Attention Control',
+    },
+    scoreValue: (score) => `${score}%`,
+    scoreDeltaUp: (delta) => `↑ +${delta}pt vs. before`,
+    scoreDeltaDown: (delta) => `↓ ${delta}pt vs. before`,
+    scoreDeltaFlat: '→ about the same as before',
+    scoreNoComparisonYet: 'A comparison will show once you have more attempts',
+    scoreNotAttempted: 'Not attempted yet',
+    scoreDisclaimer:
+      "This score compares your own recent accuracy to your earlier accuracy — it is not a standardized psychological benchmark. It updates as you play more, and it isn't a medical diagnosis or an official cognitive assessment.",
     notificationCenterTitle: '🔔 Achievement & mission log',
     notificationCenterEmpty: 'No achievements or mission completions yet',
     notificationAchievementLabel: (icon, label) => `🏆 Achievement unlocked: ${icon} ${label}`,
@@ -449,6 +481,14 @@ export const en: Translations = {
       label: 'Master Trainer',
       description: 'Reached Player Lv.20',
     },
+    'score-80': {
+      label: 'Score Master',
+      description: 'Reached an overall training score of 80%',
+    },
+    'all-categories': {
+      label: 'Balanced Trainer',
+      description: 'Tried all 3 categories: numeric, spatial, and attention',
+    },
   },
   digit: {
     title: 'Digit Mode',
@@ -588,6 +628,8 @@ export const en: Translations = {
       "When on, each round's level is set automatically to whichever level has your lowest accuracy for that mode, instead of the level you picked.",
     roundCountTitle: 'Number of rounds',
     roundCountLabel: (count) => `${count} rounds`,
+    roundTypeTitle: 'Modes to include',
+    roundTypeAllOffWarning: 'Select at least one mode',
   },
   tone: {
     title: 'Tone & Color Mode',
@@ -604,26 +646,5 @@ export const en: Translations = {
     adaptiveLabel: 'Adaptive (recommended)',
     adaptiveDescription: 'The level rises automatically after correct answers and drops after mistakes',
     maxLevelReachedLabel: (level) => `Highest level reached: ${level}`,
-  },
-  benchmarks: {
-    title: 'Working Memory Progress',
-    disclaimer:
-      "Instead of comparing you to general population norms, this compares your own accuracy from earlier attempts to your more recent attempts (split into two halves chronologically). It updates as you play more. This is not a medical diagnosis or a formal cognitive assessment — take it as a rough reference only.",
-    bandLabels: {
-      below: 'Trending down',
-      average: 'About the same',
-      above: 'Improving',
-    },
-    recentLabel: (accuracyPercent) => `Recent accuracy: ${accuracyPercent}%`,
-    previousLabel: (accuracyPercent) => `Earlier accuracy: ${accuracyPercent}%`,
-    digit: { label: 'Digit Mode (Reverse)' },
-    'digit-sum': { label: 'Digit Mode (Sum)' },
-    spatial: { label: 'Spatial Mode' },
-    nback: { label: 'N-Back Mode' },
-    pattern: { label: 'Change Detection Mode' },
-    'dual-nback': { label: 'Dual N-Back Mode' },
-    random: { label: 'Random Mode' },
-    word: { label: 'Word Mode' },
-    tone: { label: 'Tone & Color Mode' },
   },
 }

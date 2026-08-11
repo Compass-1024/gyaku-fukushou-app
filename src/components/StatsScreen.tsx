@@ -1,20 +1,13 @@
 import { useMemo } from 'react'
-import {
-  getAllAreaStats,
-  getWeakestAreas,
-  getDailyAccuracyTrend,
-  getActivityCalendar,
-} from '../lib/history'
+import { getAllAreaStats, getWeakestAreas, getActivityCalendar } from '../lib/history'
 import { ACHIEVEMENTS, getUnlockedCount } from '../lib/achievements'
 import { loadMissionCompletions } from '../lib/missions'
 import { loadPhraseStats, getWeakestPhrases } from '../lib/phraseStats'
-import { getAllBenchmarks } from '../lib/benchmarks'
+import { getTrainingScores } from '../lib/trainingScore'
 import { StatsCalendarSection } from './StatsCalendarSection'
-import { StatsTrendSection } from './StatsTrendSection'
+import { StatsScoreSection } from './StatsScoreSection'
 import { StatsAchievementsSection } from './StatsAchievementsSection'
 import { StatsAreaAccuracySection } from './StatsAreaAccuracySection'
-import { StatsModeTrendSection } from './StatsModeTrendSection'
-import { StatsBenchmarkSection } from './StatsBenchmarkSection'
 import { StatsWeakPhrasesSection } from './StatsWeakPhrasesSection'
 import { StatsSummaryImageSection } from './StatsSummaryImageSection'
 import { StatsNotificationCenterSection } from './StatsNotificationCenterSection'
@@ -27,8 +20,9 @@ interface StatsScreenProps {
   onBack: () => void
 }
 
-const TREND_DAYS = 14
-const ACTIVITY_WEEKS = 18
+// 学習カレンダーは直近1ヶ月のみ表示する（統計画面のシンプル化）。
+// 週境界を含めて1ヶ月をカバーするため5週間分にする
+const ACTIVITY_WEEKS = 5
 
 function areaKey(area: { mode: Mode; gameType?: DigitGameType }): string {
   return area.gameType ? `${area.mode}-${area.gameType}` : area.mode
@@ -76,8 +70,7 @@ export function StatsScreen({ history, onBack }: StatsScreenProps) {
     return Array.from(groups.entries())
   }, [areas])
   const hasAnyAttempts = areas.some((a) => a.stats.attempts > 0)
-  const benchmarks = useMemo(() => getAllBenchmarks(history), [history])
-  const trend = useMemo(() => getDailyAccuracyTrend(history, TREND_DAYS), [history])
+  const scores = useMemo(() => getTrainingScores(history, language), [history, language])
   const weakPhrases = useMemo(
     () => (language === 'ja' ? getWeakestPhrases(loadPhraseStats(), 5) : []),
     // historyの更新に連動してlocalStorageを読み直す
@@ -114,7 +107,7 @@ export function StatsScreen({ history, onBack }: StatsScreenProps) {
             missionCompletionCount={missionCompletionCount}
           />
           <StatsCalendarSection calendar={activityCalendar} history={history} />
-          <StatsTrendSection trend={trend} days={TREND_DAYS} />
+          <StatsScoreSection scores={scores} />
           <StatsAchievementsSection
             history={history}
             achievements={achievements}
@@ -122,8 +115,6 @@ export function StatsScreen({ history, onBack }: StatsScreenProps) {
             missionCompletionCount={missionCompletionCount}
           />
           <StatsAreaAccuracySection areaGroups={areaGroups} weakestKeys={weakestKeys} />
-          <StatsModeTrendSection history={history} days={TREND_DAYS} />
-          <StatsBenchmarkSection benchmarks={benchmarks} />
           <StatsWeakPhrasesSection weakPhrases={weakPhrases} />
           <StatsSummaryImageSection history={history} />
         </>

@@ -4,6 +4,7 @@ test('音・色モード: 出題が始まりパッドをタップして回答で
   page,
 }) => {
   await page.goto('/')
+  await page.getByRole('button', { name: /個別選択モード/ }).click()
   await page.getByRole('button', { name: /音・色モード/ }).click()
   await page.getByRole('button', { name: /レベル1（3音）/ }).click()
 
@@ -23,6 +24,7 @@ test('音・色モード: アダプティブ難易度モードで最後まで完
   page,
 }) => {
   await page.goto('/')
+  await page.getByRole('button', { name: /個別選択モード/ }).click()
   await page.getByRole('button', { name: /音・色モード/ }).click()
   await page.getByRole('checkbox', { name: 'アダプティブ（おすすめ）' }).check()
   await page.getByRole('button', { name: /レベル1（3音）/ }).click()
@@ -53,6 +55,7 @@ test('音・色モード: 回答フェーズを一時停止すると残り時間
   page,
 }) => {
   await page.goto('/')
+  await page.getByRole('button', { name: /個別選択モード/ }).click()
   await page.getByRole('button', { name: /音・色モード/ }).click()
   await page.getByRole('button', { name: /レベル1（3音）/ }).click()
 

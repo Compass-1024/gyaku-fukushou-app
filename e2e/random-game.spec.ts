@@ -29,6 +29,35 @@ test('ランダムモード: 5ラウンド完了までの一連の流れ', async
   ).toBeVisible()
 })
 
+test('ランダムモード: 出題するモードを選ぶと、選んだモードのみが出題される（新機能）', async ({
+  page,
+}) => {
+  test.setTimeout(60_000)
+  await page.goto('/')
+  await page.getByRole('button', { name: /ランダムモード/ }).click()
+  await page.getByRole('button', { name: '3問', exact: true }).click()
+
+  // 「空間」「音・色の順番」以外を選択解除し、2種類だけを対象にする
+  await page.getByRole('button', { name: 'すうじ（逆から）', exact: true }).click()
+  await page.getByRole('button', { name: 'すうじ（合計）', exact: true }).click()
+  await page.getByRole('button', { name: '変化検出', exact: true }).click()
+
+  await page.getByRole('button', { name: /レベル1/ }).click()
+
+  for (let round = 1; round <= 3; round++) {
+    await expect(page.getByText(`問題 ${round} / 3`)).toBeVisible({ timeout: 15_000 })
+    const roundLabel = await page
+      .locator('p.text-center.text-xs.font-semibold.text-indigo-500')
+      .innerText()
+    expect(['空間', '音・色の順番']).toContain(roundLabel)
+    await expect(page.getByText(/^(正解|不正解)$/)).toBeVisible({ timeout: 20_000 })
+    const nextButton = page.getByRole('button', {
+      name: round === 3 ? '結果を見る' : '次へ',
+    })
+    await nextButton.click()
+  }
+})
+
 test('ランダムモード: 出題数を3問に変更すると3ラウンドで完了する（バグ修正）', async ({
   page,
 }) => {
@@ -260,11 +289,18 @@ test('ランダムモード: モードを途中でやめて再挑戦すると、
   await expect(page.getByText('問題 1 / 5')).toBeVisible({ timeout: 15_000 })
 
   // 1問目のラウンド種別を特定する（saveGameSessionのuseEffectが実行される
-  // までわずかにラグがありうるため、ポーリングして待つ）
+  // までわずかにラグがありうるため、ポーリングして待つ。セッションキーは
+  // 出題するモードの選択状態も含むため、接頭辞で検索する）
   const roundMode = await page.waitForFunction(() => {
-    const raw = sessionStorage.getItem('game-session:random:1:false:5')
-    const parsed = raw ? JSON.parse(raw) : null
-    return parsed?.questions?.[0]?.mode ?? null
+    for (let i = 0; i < sessionStorage.length; i++) {
+      const key = sessionStorage.key(i)
+      if (!key?.startsWith('game-session:random:1:false:5')) continue
+      const raw = sessionStorage.getItem(key)
+      const parsed = raw ? JSON.parse(raw) : null
+      const mode = parsed?.questions?.[0]?.mode
+      if (mode) return mode
+    }
+    return null
   }, { timeout: 5_000 }).then((handle) => handle.jsonValue() as Promise<string>)
   expect(roundMode).toBeTruthy()
 

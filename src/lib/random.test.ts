@@ -69,6 +69,43 @@ describe('buildRandomRounds', () => {
     }
   })
 
+  describe('enabledTypes（出題するモードを選ぶ機能）', () => {
+    it('選んだ種類のみが出題される', () => {
+      const rounds = buildRandomRounds(1, 5, undefined, undefined, ['spatial', 'tone'])
+      for (const round of rounds) {
+        expect(['spatial', 'tone']).toContain(round.mode)
+      }
+    })
+
+    it('選択した種類の数がroundCountより少ない場合は超過分だけ重複する', () => {
+      const rounds = buildRandomRounds(1, 5, undefined, undefined, ['spatial'])
+      expect(rounds).toHaveLength(5)
+      for (const round of rounds) {
+        expect(round.mode).toBe('spatial')
+      }
+    })
+
+    it('選択した種類の数がroundCount以上なら重複しない', () => {
+      const rounds = buildRandomRounds(1, 3, undefined, undefined, ['spatial', 'tone', 'pattern'])
+      const modes = rounds.map((r) => r.mode)
+      expect(new Set(modes).size).toBe(3)
+    })
+
+    it('空配列（すべて選択解除）が渡された場合は全種類にフォールバックする', () => {
+      const rounds = buildRandomRounds(1, 5, undefined, undefined, [])
+      const modes = new Set(rounds.map((r) => r.mode))
+      expect(modes.size).toBeGreaterThan(1)
+    })
+
+    it('未指定時は従来どおり全5種類が候補になる', () => {
+      const rounds = buildRandomRounds(1, 7)
+      const keys = new Set(
+        rounds.map((r) => (r.mode === 'digit' ? `${r.mode}-${r.gameType}` : r.mode)),
+      )
+      expect(keys.size).toBe(5)
+    })
+  })
+
   describe('roundCount', () => {
     for (const count of ROUND_COUNT_OPTIONS) {
       it(`generates exactly ${count} rounds`, () => {

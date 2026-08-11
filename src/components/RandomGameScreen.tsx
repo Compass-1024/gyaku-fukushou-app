@@ -5,7 +5,7 @@ import { useStepReveal } from '../hooks/useStepReveal'
 import { useSetCompletionRecorder } from '../hooks/useSetCompletionRecorder'
 import { usePauseState } from '../hooks/usePauseState'
 import { buildRandomRounds, DEFAULT_ROUND_COUNT } from '../lib/random'
-import type { RoundCount, RandomRoundExcludeSets } from '../lib/random'
+import type { RoundCount, RandomRoundExcludeSets, RandomRoundType } from '../lib/random'
 import { loadHistory } from '../lib/history'
 import { saveRecentQuestions, consumeRecentQuestions } from '../lib/recentQuestions'
 import {
@@ -70,6 +70,8 @@ type RandomGameScreenProps = BaseGameScreenProps & {
   // レベルを選択レベル固定ではなくモードごとの弱点レベルに差し替える
   weakPointFocus?: boolean
   roundCount?: RoundCount
+  // 出題するモードの選択（未指定時は全種類が対象になる）
+  enabledTypes?: RandomRoundType[]
 }
 
 function buildRounds(
@@ -77,12 +79,14 @@ function buildRounds(
   weakPointFocus?: boolean,
   roundCount?: RoundCount,
   exclude?: RandomRoundExcludeSets,
+  enabledTypes?: RandomRoundType[],
 ) {
   return buildRandomRounds(
     level,
     roundCount ?? DEFAULT_ROUND_COUNT,
     weakPointFocus ? { history: loadHistory() } : undefined,
     exclude,
+    enabledTypes,
   )
 }
 
@@ -216,11 +220,12 @@ export function RandomGameScreen({
   onSelectLevel,
   weakPointFocus,
   roundCount,
+  enabledTypes,
 }: RandomGameScreenProps) {
   const t = useTranslation()
   // Android実装を見据え、モバイルOSがバックグラウンドでプロセスを再生成した
   // 場合に回答中のセットが失われないよう、sessionStorageから復元を試みる
-  const sessionKey = `game-session:random:${level}:${weakPointFocus}:${roundCount ?? DEFAULT_ROUND_COUNT}`
+  const sessionKey = `game-session:random:${level}:${weakPointFocus}:${roundCount ?? DEFAULT_ROUND_COUNT}:${(enabledTypes ?? []).join(',')}`
   const [restoredSession] = useState(() =>
     loadGameSession<RandomRound, RoundOutcome>(sessionKey),
   )
@@ -230,7 +235,7 @@ export function RandomGameScreen({
   // 同じ試行の続きなので除外しない
   const [rounds, setRounds] = useState<RandomRound[]>(() => {
     if (restoredSession?.questions) return restoredSession.questions
-    return buildRounds(level, weakPointFocus, roundCount, consumeRandomExcludeSets())
+    return buildRounds(level, weakPointFocus, roundCount, consumeRandomExcludeSets(), enabledTypes)
   })
   const [currentIndex, setCurrentIndex] = useState(() => restoredSession?.currentIndex ?? 0)
   const [phase, setPhase] = useState<RandomQuestionPhase>('ready')
@@ -447,7 +452,7 @@ export function RandomGameScreen({
   }
 
   function handleRetry() {
-    setRounds(buildRounds(level, weakPointFocus, roundCount))
+    setRounds(buildRounds(level, weakPointFocus, roundCount, undefined, enabledTypes))
     setCurrentIndex(0)
     setResults([])
     setCurrentOutcome(null)

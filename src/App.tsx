@@ -1,6 +1,8 @@
 import { lazy, Suspense, useEffect, useRef, useState } from 'react'
 import { TopScreen } from './components/TopScreen'
 import { OnboardingGuide } from './components/OnboardingGuide'
+import { ModeSelectScreen } from './components/ModeSelectScreen'
+import { DailyMissionScreen } from './components/DailyMissionScreen'
 import { LevelSelect } from './components/LevelSelect'
 import { DigitLevelSelect } from './components/DigitLevelSelect'
 import { NBackLevelSelect } from './components/NBackLevelSelect'
@@ -21,8 +23,8 @@ import { loadSettings } from './lib/settings'
 import { hasSeenOnboarding, markOnboardingSeen } from './lib/onboarding'
 import { DEFAULT_TRIAL_COUNT } from './lib/nback'
 import { DEFAULT_TRIAL_COUNT as DUAL_NBACK_DEFAULT_TRIAL_COUNT } from './lib/dualNback'
-import type { AreaStats } from './lib/history'
-import type { RoundCount } from './lib/random'
+import type { RoundCount, RandomRoundType } from './lib/random'
+import type { DailyMissionTarget } from './lib/dailyMission'
 import type { DigitGameType, HistoryEntry, Level } from './types'
 
 // プレイ画面本体（音声合成・音声認識・出題ロジックを含む）は初回表示に
@@ -78,6 +80,8 @@ const StatsScreen = lazy(() =>
 
 type View =
   | { screen: 'top' }
+  | { screen: 'mode-select' }
+  | { screen: 'daily-mission' }
   | { screen: 'word-level' }
   | { screen: 'word-game'; level: Level }
   | { screen: 'digit-level'; gameType: DigitGameType }
@@ -103,6 +107,7 @@ type View =
       level: Level
       weakPointFocus?: boolean
       roundCount?: RoundCount
+      enabledTypes?: RandomRoundType[]
     }
   | { screen: 'settings' }
   | { screen: 'stats' }
@@ -256,6 +261,8 @@ function App() {
     // 履歴を表示する画面に戻るときだけ再読み込みする（それ以外では不要な読み込みになる）
     if (
       next.screen === 'top' ||
+      next.screen === 'mode-select' ||
+      next.screen === 'daily-mission' ||
       next.screen === 'word-level' ||
       next.screen === 'digit-level' ||
       next.screen === 'nback-level' ||
@@ -272,11 +279,51 @@ function App() {
     setView(next)
   }
 
+  // ③: ホーム画面の「今日のミッション」から、対象モード・レベルへ直接
+  // ゲーム画面まで遷移する（旧「今日のおすすめ」の遷移ロジックを流用）
+  function goToDailyMissionGame(target: DailyMissionTarget) {
+    if (target.mode === 'word') {
+      goTo({ screen: 'word-game', level: target.level })
+    } else if (target.mode === 'digit') {
+      goTo({
+        screen: 'digit-game',
+        gameType: target.gameType ?? 'reverse',
+        level: target.level,
+      })
+    } else if (target.mode === 'nback') {
+      goTo({ screen: 'nback-game', level: target.level, trialCount: DEFAULT_TRIAL_COUNT })
+    } else if (target.mode === 'dual-nback') {
+      goTo({
+        screen: 'dual-nback-game',
+        level: target.level,
+        trialCount: DUAL_NBACK_DEFAULT_TRIAL_COUNT,
+      })
+    } else if (target.mode === 'spatial') {
+      goTo({ screen: 'spatial-game', level: target.level })
+    } else if (target.mode === 'pattern') {
+      goTo({ screen: 'pattern-game', level: target.level })
+    } else if (target.mode === 'tone') {
+      goTo({ screen: 'tone-game', level: target.level })
+    }
+  }
+
   let content
   switch (view.screen) {
     case 'top':
       content = (
         <TopScreen
+          history={history}
+          onSelectRandom={() => goTo({ screen: 'random-level' })}
+          onSelectModeSelect={() => goTo({ screen: 'mode-select' })}
+          onSelectDailyMission={() => goTo({ screen: 'daily-mission' })}
+          onOpenSettings={() => goTo({ screen: 'settings' })}
+          onOpenStats={() => goTo({ screen: 'stats' })}
+        />
+      )
+      break
+    case 'mode-select':
+      content = (
+        <ModeSelectScreen
           history={history}
           onSelect={(mode) => {
             if (mode === 'word') goTo({ screen: 'word-level' })
@@ -289,39 +336,17 @@ function App() {
             else if (mode === 'spatial') goTo({ screen: 'spatial-level' })
             else if (mode === 'pattern') goTo({ screen: 'pattern-level' })
             else if (mode === 'tone') goTo({ screen: 'tone-level' })
-            else if (mode === 'random') goTo({ screen: 'random-level' })
           }}
-          onOpenSettings={() => goTo({ screen: 'settings' })}
-          onOpenStats={() => goTo({ screen: 'stats' })}
-          onStartRecommended={(area: AreaStats) => {
-            if (area.mode === 'word') {
-              goTo({ screen: 'word-game', level: area.level })
-            } else if (area.mode === 'digit') {
-              goTo({
-                screen: 'digit-game',
-                gameType: area.gameType ?? 'reverse',
-                level: area.level,
-              })
-            } else if (area.mode === 'nback') {
-              goTo({
-                screen: 'nback-game',
-                level: area.level,
-                trialCount: DEFAULT_TRIAL_COUNT,
-              })
-            } else if (area.mode === 'dual-nback') {
-              goTo({
-                screen: 'dual-nback-game',
-                level: area.level,
-                trialCount: DUAL_NBACK_DEFAULT_TRIAL_COUNT,
-              })
-            } else if (area.mode === 'spatial') {
-              goTo({ screen: 'spatial-game', level: area.level })
-            } else if (area.mode === 'pattern') {
-              goTo({ screen: 'pattern-game', level: area.level })
-            } else if (area.mode === 'tone') {
-              goTo({ screen: 'tone-game', level: area.level })
-            }
-          }}
+          onBack={() => goTo({ screen: 'top' })}
+        />
+      )
+      break
+    case 'daily-mission':
+      content = (
+        <DailyMissionScreen
+          history={history}
+          onStart={goToDailyMissionGame}
+          onBack={() => goTo({ screen: 'top' })}
         />
       )
       break
@@ -331,7 +356,7 @@ function App() {
           recognitionSupported={recognitionSupported}
           history={history}
           onSelect={(level) => goTo({ screen: 'word-game', level })}
-          onBack={() => goTo({ screen: 'top' })}
+          onBack={() => goTo({ screen: 'mode-select' })}
         />
       )
       break
@@ -353,7 +378,7 @@ function App() {
           onSelect={(level, adaptive) =>
             goTo({ screen: 'digit-game', gameType: view.gameType, level, adaptive })
           }
-          onBack={() => goTo({ screen: 'top' })}
+          onBack={() => goTo({ screen: 'mode-select' })}
         />
       )
       break
@@ -380,7 +405,7 @@ function App() {
           onSelect={(level, trialCount, adaptive) =>
             goTo({ screen: 'nback-game', level, trialCount, adaptive })
           }
-          onBack={() => goTo({ screen: 'top' })}
+          onBack={() => goTo({ screen: 'mode-select' })}
         />
       )
       break
@@ -410,7 +435,7 @@ function App() {
           onSelect={(level, trialCount, adaptive) =>
             goTo({ screen: 'dual-nback-game', level, trialCount, adaptive })
           }
-          onBack={() => goTo({ screen: 'top' })}
+          onBack={() => goTo({ screen: 'mode-select' })}
         />
       )
       break
@@ -438,7 +463,7 @@ function App() {
         <SpatialLevelSelect
           history={history}
           onSelect={(level, adaptive) => goTo({ screen: 'spatial-game', level, adaptive })}
-          onBack={() => goTo({ screen: 'top' })}
+          onBack={() => goTo({ screen: 'mode-select' })}
         />
       )
       break
@@ -458,7 +483,7 @@ function App() {
         <PatternLevelSelect
           history={history}
           onSelect={(level, adaptive) => goTo({ screen: 'pattern-game', level, adaptive })}
-          onBack={() => goTo({ screen: 'top' })}
+          onBack={() => goTo({ screen: 'mode-select' })}
         />
       )
       break
@@ -478,7 +503,7 @@ function App() {
         <ToneLevelSelect
           history={history}
           onSelect={(level, adaptive) => goTo({ screen: 'tone-game', level, adaptive })}
-          onBack={() => goTo({ screen: 'top' })}
+          onBack={() => goTo({ screen: 'mode-select' })}
         />
       )
       break
@@ -497,8 +522,8 @@ function App() {
       content = (
         <RandomLevelSelect
           history={history}
-          onSelect={(level, weakPointFocus, roundCount) =>
-            goTo({ screen: 'random-game', level, weakPointFocus, roundCount })
+          onSelect={(level, weakPointFocus, roundCount, enabledTypes) =>
+            goTo({ screen: 'random-game', level, weakPointFocus, roundCount, enabledTypes })
           }
           onBack={() => goTo({ screen: 'top' })}
         />
@@ -507,10 +532,11 @@ function App() {
     case 'random-game':
       content = (
         <RandomGameScreen
-          key={`${view.level}-${view.weakPointFocus}-${view.roundCount}`}
+          key={`${view.level}-${view.weakPointFocus}-${view.roundCount}-${(view.enabledTypes ?? []).join(',')}`}
           level={view.level}
           weakPointFocus={view.weakPointFocus}
           roundCount={view.roundCount}
+          enabledTypes={view.enabledTypes}
           onExit={() => goTo({ screen: 'random-level' })}
           onSelectLevel={(level) =>
             goTo({
@@ -518,6 +544,7 @@ function App() {
               level,
               weakPointFocus: view.weakPointFocus,
               roundCount: view.roundCount,
+              enabledTypes: view.enabledTypes,
             })
           }
         />

@@ -1,7 +1,15 @@
 import { getStreakDays } from './history'
 import { getAllBenchmarks } from './benchmarks'
+import { getTrainingScores } from './trainingScore'
 import { computeTotalXp, getXpProgress } from './xp'
 import type { HistoryEntry, Mode } from '../types'
+
+// 実績の判定はhistory配列のみから導出する（missionCompletionsのような
+// localStorageの直接参照は、セット完了直後の新規解除演出（before/after比較、
+// useSetCompletionRecorder参照）で常に「解除済み」と誤判定されるため使えない）。
+// trainingScore.tsのoverallスコアはカテゴリ分類にlanguageを使わないため、
+// 実績判定用に'ja'固定で呼び出しても結果は変わらない
+const ACHIEVEMENT_SCORE_LANGUAGE = 'ja'
 
 // 「成長中」実績の判定に使う、正答率が向上中(band: 'above')と判定される
 // モード数のしきい値
@@ -30,6 +38,8 @@ export type AchievementId =
   | 'player-level-5'
   | 'player-level-10'
   | 'player-level-20'
+  | 'score-80'
+  | 'all-categories'
 
 export interface Achievement {
   id: AchievementId
@@ -203,6 +213,27 @@ export const ACHIEVEMENTS: Achievement[] = [
     icon: '🥇',
     isUnlocked: (h, missionCompletionCount = 0) =>
       getXpProgress(computeTotalXp(h, missionCompletionCount)).level >= 20,
+  },
+  {
+    id: 'score-80',
+    icon: '🎖️',
+    // 統計画面の「総合トレーニングスコア」（trainingScore.ts）が80%に到達したら
+    // 解除する。overallスコアはlanguageに依存しないため、固定値で呼び出せる
+    isUnlocked: (h) => {
+      const score = getTrainingScores(h, ACHIEVEMENT_SCORE_LANGUAGE).overall.score
+      return score !== null && score >= 80
+    },
+  },
+  {
+    id: 'all-categories',
+    icon: '🧭',
+    // 統計画面の3カテゴリ（数字記憶/空間記憶/注意制御）それぞれに含まれる
+    // モードを最低1つずつ挑戦していれば解除する。languageに依存しないよう
+    // trainingScore.tsのカテゴリ分けそのものではなく、hasModeの論理和で判定する
+    isUnlocked: (h) =>
+      (hasMode(h, 'word') || hasMode(h, 'digit')) &&
+      (hasMode(h, 'spatial') || hasMode(h, 'pattern') || hasMode(h, 'nback')) &&
+      (hasMode(h, 'dual-nback') || hasMode(h, 'tone') || hasMode(h, 'random')),
   },
 ]
 

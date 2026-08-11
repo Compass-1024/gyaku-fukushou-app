@@ -2,6 +2,7 @@ import { test, expect } from '@playwright/test'
 
 test('変化検出モード: 出題が始まりマスを選択して回答できる', async ({ page }) => {
   await page.goto('/')
+  await page.getByRole('button', { name: /個別選択モード/ }).click()
   await page.getByRole('button', { name: /変化検出モード/ }).click()
   await page.getByRole('button', { name: /レベル1（4×4・4マス）/ }).click()
 
@@ -23,6 +24,7 @@ test('変化検出モード: アダプティブ難易度モードで最後まで
   page,
 }) => {
   await page.goto('/')
+  await page.getByRole('button', { name: /個別選択モード/ }).click()
   await page.getByRole('button', { name: /変化検出モード/ }).click()
   await page.getByRole('checkbox', { name: 'アダプティブ（おすすめ）' }).check()
   await page.getByRole('button', { name: /レベル1（4×4・4マス）/ }).click()
@@ -47,6 +49,7 @@ test('変化検出モード: 回答フェーズを一時停止すると残り時
   page,
 }) => {
   await page.goto('/')
+  await page.getByRole('button', { name: /個別選択モード/ }).click()
   await page.getByRole('button', { name: /変化検出モード/ }).click()
   await page.getByRole('button', { name: /レベル1（4×4・4マス）/ }).click()
 

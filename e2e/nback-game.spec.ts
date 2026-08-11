@@ -2,6 +2,7 @@ import { test, expect } from '@playwright/test'
 
 test('Nバックモード: 出題が始まり「一致」ボタンを押せる', async ({ page }) => {
   await page.goto('/')
+  await page.getByRole('button', { name: /個別選択モード/ }).click()
   await page.getByRole('button', { name: /^Nバックモード/ }).click()
   await page.getByRole('button', { name: /レベル1（1つ前と比較）/ }).click()
 
@@ -20,6 +21,7 @@ test('Nバックモード: アダプティブ難易度モードで最後まで�
   page,
 }) => {
   await page.goto('/')
+  await page.getByRole('button', { name: /個別選択モード/ }).click()
   await page.getByRole('button', { name: /^Nバックモード/ }).click()
 
   // 出題数を最小(10問)にしてテストを短時間で終わらせる
@@ -40,6 +42,7 @@ test('Nバックモード: 結果画面の全試行内訳は既定で折りた�
 }) => {
   test.setTimeout(60_000)
   await page.goto('/')
+  await page.getByRole('button', { name: /個別選択モード/ }).click()
   await page.getByRole('button', { name: /^Nバックモード/ }).click()
   await page.getByRole('button', { name: '10問' }).click()
   await page.getByRole('button', { name: /レベル1（1つ前と比較）/ }).click()

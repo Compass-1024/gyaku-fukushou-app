@@ -15,6 +15,7 @@ export const ja: Translations = {
     seeResults: '結果を見る',
     next: '次へ',
     backToModeSelect: '← モード選択',
+    backToHome: '← ホーム',
     backToLevelSelect: '← レベル選択',
     suggestionUp: (levelLabel) => `🎉 ${levelLabel}に挑戦する`,
     suggestionDown: (levelLabel) => `${levelLabel}に戻って練習する`,
@@ -114,6 +115,21 @@ export const ja: Translations = {
     playerLevel: (level) => `プレイヤーLv.${level}`,
     xpToNextLevel: (xp) => `次のレベルまで あと${xp}XP`,
     growingBadgeLabel: '正答率が向上中',
+    modeSelectTitle: 'モードを選ぶ',
+    buttons: {
+      random: {
+        title: '🎲 ランダムモード',
+        description: '5モードを一気に、ミックス練習',
+      },
+      modeSelect: {
+        title: '📋 個別選択モード',
+        description: '9モードから選んでじっくり練習',
+      },
+      dailyMission: {
+        title: '🎯 今日のミッション',
+        description: '今日のあなたへのおすすめ',
+      },
+    },
   },
   missions: {
     cardTitle: '🎯 今日のミッション',
@@ -122,6 +138,14 @@ export const ja: Translations = {
     playCountLabel: (areaLabel, count) => `${areaLabel}を${count}回プレイ`,
     accuracyLabel: (percent) => `正答率${percent}%以上を達成`,
     chipLabel: 'ミッション',
+  },
+  dailyMission: {
+    title: '🎯 今日のミッション',
+    subtitle: 'あなたの正答率から選んだ、今日のおすすめです',
+    progressLabel: (progress, required) => `${progress} / ${required} セット達成`,
+    startButton: 'はじめる',
+    completedLabel: '✅ 今日のミッションは達成済みです。また明日！',
+    xpReward: (xp) => `達成で +${xp}XP`,
   },
   share: JA_SHARE_TEMPLATES,
   setSummary: {
@@ -238,11 +262,6 @@ export const ja: Translations = {
     dayDetailEntry: (label, level, correct, total, accuracyPercent) =>
       `${label} Lv.${level} — ${correct}/${total}問正解（${accuracyPercent}%）`,
     dayDetailCloseButton: '閉じる',
-    trendTitle: (days) => `正答率の推移（直近${days}日間）`,
-    trendAriaLabel: (days) => `直近${days}日間の正答率の推移`,
-    trendNoRecord: (dateKey) => `${dateKey}: 記録なし`,
-    trendDaysAgo: (days) => `${days}日前`,
-    trendToday: '今日',
     achievementsTitle: '実績',
     achievementsCountLabel: (unlocked, total) => `${unlocked} / ${total} 解除`,
     achievementUnlocked: '解除済み',
@@ -269,8 +288,21 @@ export const ja: Translations = {
     },
     bucketWeaknessSummary: (label, accuracyPercent) =>
       `${label}が苦手（正答率${accuracyPercent}%）`,
-    modeTrendTitle: 'モード別の正答率推移',
-    modeTrendNotEnoughData: '挑戦回数が増えると表示されます',
+    scoreTitle: '📊 トレーニングスコア',
+    scoreCategoryLabels: {
+      overall: '総合トレーニングスコア',
+      numeric: '数字記憶',
+      spatial: '空間記憶',
+      attention: '注意制御',
+    },
+    scoreValue: (score) => `${score}%`,
+    scoreDeltaUp: (delta) => `↑ 前回比 +${delta}pt`,
+    scoreDeltaDown: (delta) => `↓ 前回比 ${delta}pt`,
+    scoreDeltaFlat: '→ 前回と同程度',
+    scoreNoComparisonYet: '挑戦回数が増えると前回との比較が表示されます',
+    scoreNotAttempted: '未挑戦',
+    scoreDisclaimer:
+      'このスコアは、一般的な心理学的基準ではなく、あなた自身の直近の正答率をそれ以前の正答率と比較したものです。挑戦回数が増えると内容が更新されます。医学的な診断や公式な認知機能評価ではなく、参考程度にご覧ください。',
     notificationCenterTitle: '🔔 実績・達成の通知センター',
     notificationCenterEmpty: 'まだ実績やミッション達成の記録がありません',
     notificationAchievementLabel: (icon, label) => `🏆 実績解除: ${icon} ${label}`,
@@ -427,6 +459,14 @@ export const ja: Translations = {
       label: 'マスタートレーナー',
       description: 'プレイヤーLv.20に到達した',
     },
+    'score-80': {
+      label: 'スコアマスター',
+      description: '総合トレーニングスコアが80%に到達した',
+    },
+    'all-categories': {
+      label: 'バランストレーナー',
+      description: '数字記憶・空間記憶・注意制御の3カテゴリすべてに挑戦した',
+    },
   },
   digit: {
     title: 'すうじモード',
@@ -560,6 +600,8 @@ export const ja: Translations = {
       'オンにすると、各ラウンドのレベルを一律ではなく、モードごとに最も正答率が低いレベルへ自動で合わせます',
     roundCountTitle: '出題数',
     roundCountLabel: (count) => `${count}問`,
+    roundTypeTitle: '出題するモード',
+    roundTypeAllOffWarning: '少なくとも1つは選んでください',
   },
   tone: {
     title: '音・色モード',
@@ -574,26 +616,5 @@ export const ja: Translations = {
     adaptiveLabel: 'アダプティブ（おすすめ）',
     adaptiveDescription: '正解が続くとレベルが自動で上がり、間違いが続くと下がります',
     maxLevelReachedLabel: (level) => `到達した最大レベル: ${level}`,
-  },
-  benchmarks: {
-    title: 'ワーキングメモリの伸び',
-    disclaimer:
-      'この目安は、一般的な心理学的基準ではなく、あなた自身のこれまでの挑戦履歴を前半・後半に分けて正答率を比較したものです。挑戦回数が十分に増えると内容が更新されます。医学的な診断や公式な認知機能評価ではなく、参考程度にご覧ください。',
-    bandLabels: {
-      below: '低下ぎみ',
-      average: '横ばい',
-      above: '向上中',
-    },
-    recentLabel: (accuracyPercent) => `直近の正答率: ${accuracyPercent}%`,
-    previousLabel: (accuracyPercent) => `以前の正答率: ${accuracyPercent}%`,
-    digit: { label: 'すうじモード（逆から入力）' },
-    'digit-sum': { label: 'すうじモード（合計を入力）' },
-    spatial: { label: '空間モード' },
-    nback: { label: 'Nバックモード' },
-    pattern: { label: '変化検出モード' },
-    'dual-nback': { label: 'デュアルNバックモード' },
-    random: { label: 'ランダムモード' },
-    word: { label: 'ことばモード' },
-    tone: { label: '音・色モード' },
   },
 }

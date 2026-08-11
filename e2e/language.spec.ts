@@ -12,13 +12,18 @@ test.describe('英語UI（language: en）', () => {
     })
   })
 
-  test('トップ画面が英語表示になり、ことばモードボタンが存在しない', async ({
+  test('個別選択モード画面が英語表示になり、ことばモードボタンが存在しない', async ({
     page,
   }) => {
     await page.goto('/')
 
     await expect(
       page.getByRole('heading', { name: 'Working Memory Training' }),
+    ).toBeVisible()
+
+    await page.getByRole('button', { name: /Choose a Mode/ }).click()
+    await expect(
+      page.getByRole('heading', { name: 'Choose a mode' }),
     ).toBeVisible()
     await expect(
       page.getByRole('button', { name: /Word Mode/ }),
@@ -44,9 +49,10 @@ test.describe('英語UI（language: en）', () => {
     await expect(
       page.getByRole('button', { name: /Tone & Color Mode/ }),
     ).toBeVisible()
+    // ランダムモードはホーム画面の専用ボタンにあるため、ここには表示しない
     await expect(
       page.getByRole('button', { name: /Random Mode/ }),
-    ).toBeVisible()
+    ).toHaveCount(0)
   })
 
   test('?shortcut=wordで開いても、英語版ではトップ画面のままになる', async ({
@@ -64,8 +70,10 @@ test('設定画面から言語を英語に切り替えると、ことばモー�
   page,
 }) => {
   await page.goto('/')
+  await page.getByRole('button', { name: /個別選択モード/ }).click()
   await expect(page.getByRole('button', { name: /ことばモード/ })).toBeVisible()
 
+  await page.getByRole('button', { name: '← ホーム' }).click()
   await page.getByRole('button', { name: '設定' }).click()
   await page.getByRole('button', { name: 'English' }).click()
 
@@ -79,6 +87,8 @@ test('設定画面から言語を英語に切り替えると、ことばモー�
   await expect(
     page.getByRole('heading', { name: 'Working Memory Training' }),
   ).toBeVisible()
+
+  await page.getByRole('button', { name: /Choose a Mode/ }).click()
   await expect(
     page.getByRole('button', { name: /Word Mode/ }),
   ).not.toBeVisible()

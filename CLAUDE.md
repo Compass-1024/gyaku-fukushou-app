@@ -38,7 +38,9 @@ Claude Codeがこのリポジトリで作業する際の、ツール呼び出し
 
 ```mermaid
 flowchart TD
-    top["top（トップ画面）"]
+    top["top（トップ画面: ランダム/個別選択モード/今日のミッションの3ボタン）"]
+    modeSelect["mode-select（個別選択モード画面、9モードカードグリッドからランダムを除く8モード）"]
+    dailyMission["daily-mission（今日のミッション画面）"]
     stats["stats（統計画面）"]
     settings["settings（設定画面）"]
 
@@ -60,21 +62,30 @@ flowchart TD
 
     top -->|📊 統計| stats
     top -->|⚙️ 設定| settings
-    top -->|ことばモード| wordLevel --> wordGame --> wordResult
+    top -->|📋 個別選択モード| modeSelect
+    top -->|🎯 今日のミッション| dailyMission
+    dailyMission -->|自動選定した弱点モード・レベルへ直接| digitGame
+    dailyMission -->|← ホーム| top
+
+    modeSelect -->|ことばモード| wordLevel --> wordGame --> wordResult
     wordResult -->|同レベルで再挑戦| wordGame
     wordResult -->|戻る| wordLevel
+    wordLevel -->|← モード選択| modeSelect
 
-    top -->|すうじモード（逆から入力/合計を入力）カードから直接| digitLevel --> digitGame --> digitResult
+    modeSelect -->|すうじモード（逆から入力/合計を入力）カードから直接| digitLevel --> digitGame --> digitResult
     digitResult -->|同条件で再挑戦| digitGame
     digitResult -->|戻る| digitLevel
+    digitLevel -->|← モード選択| modeSelect
 
-    top -->|Nバックモード| nbackLevel --> nbackGame --> nbackResult
+    modeSelect -->|Nバックモード| nbackLevel --> nbackGame --> nbackResult
     nbackResult -->|同レベルで再挑戦| nbackGame
     nbackResult -->|戻る| nbackLevel
+    nbackLevel -->|← モード選択| modeSelect
 
-    top -->|デュアルNバックモード| dualNbackLevel --> dualNbackGame --> dualNbackResult
+    modeSelect -->|デュアルNバックモード| dualNbackLevel --> dualNbackGame --> dualNbackResult
     dualNbackResult -->|同レベルで再挑戦| dualNbackGame
     dualNbackResult -->|戻る| dualNbackLevel
+    dualNbackLevel -->|← モード選択| modeSelect
 
     spatialLevel["spatial-level（レベル選択）"]
     spatialGame["spatial-game（ゲーム画面）"]
@@ -88,30 +99,35 @@ flowchart TD
     toneGame["tone-game（ゲーム画面）"]
     toneResult["結果表示"]
 
-    top -->|空間モード| spatialLevel --> spatialGame --> spatialResult
+    modeSelect -->|空間モード| spatialLevel --> spatialGame --> spatialResult
     spatialResult -->|同レベルで再挑戦| spatialGame
     spatialResult -->|戻る| spatialLevel
+    spatialLevel -->|← モード選択| modeSelect
 
-    top -->|変化検出モード| patternLevel --> patternGame --> patternResult
+    modeSelect -->|変化検出モード| patternLevel --> patternGame --> patternResult
     patternResult -->|同レベルで再挑戦| patternGame
     patternResult -->|戻る| patternLevel
+    patternLevel -->|← モード選択| modeSelect
 
-    top -->|音・色モード| toneLevel --> toneGame --> toneResult
+    modeSelect -->|音・色モード| toneLevel --> toneGame --> toneResult
     toneResult -->|同レベルで再挑戦| toneGame
     toneResult -->|戻る| toneLevel
+    toneLevel -->|← モード選択| modeSelect
 
-    randomLevel["random-level（レベル選択）"]
+    randomLevel["random-level（レベル選択、出題数・出題モード選択）"]
     randomGame["random-game（ゲーム画面）"]
     randomResult["結果表示"]
 
-    top -->|ランダムモード| randomLevel --> randomGame --> randomResult
+    top -->|🎲 ランダムモード| randomLevel --> randomGame --> randomResult
     randomResult -->|同レベルで再挑戦| randomGame
     randomResult -->|戻る| randomLevel
+    randomLevel -->|← ホーム| top
 ```
 
-- 各レベル選択・ゲーム画面には「← 戻る」ボタンがある。
+- 各レベル選択・ゲーム画面には「← 戻る」ボタンがある。個別選択モード配下の各モードのレベル選択画面は「← モード選択」で`mode-select`画面へ、ランダムモードのレベル選択画面と`mode-select`/`daily-mission`画面自体は「← ホーム」で`top`へ戻る。
 - 回答途中で離脱しようとすると`confirmExit`（`window.confirm`）で「回答中のセットが破棄されます。よろしいですか？」の確認ダイアログを表示する。
-- 履歴を表示する画面（top / word-level / digit-level / nback-level / dual-nback-level / spatial-level / pattern-level / tone-level / random-level / stats）に遷移するたびにlocalStorageの履歴を再読み込みする。
+- 履歴を表示する画面（top / mode-select / daily-mission / word-level / digit-level / nback-level / dual-nback-level / spatial-level / pattern-level / tone-level / random-level / stats）に遷移するたびにlocalStorageの履歴を再読み込みする。
+- `src/components/TopEngagementChips.tsx`（旧ミッション/デイリーチャレンジ/プログラムのカードをまとめて表示していたコンポーネント。内部で`DailyChallengeCard.tsx`を使用）は、ホーム画面の3ボタン化に伴い`TopScreen.tsx`から呼び出されなくなり、現在はどこからもimportされていない（コードは削除せず残置。[今日のミッション旧版](#今日のミッション旧版srclibmissionsts-ui非表示)と同じ「非表示化のみ、コードは残す」方針による）。
 
 ## Feature requirements
 
@@ -238,7 +254,8 @@ flowchart TD
 
 すうじ（逆から入力・合計を入力）・空間・変化検出・音/色の「単発質問→回答」型5候補から出題数分を集め、シャッフルした順で出題するミックス練習モード。Nバック系（連続試行方式）とことばモード（音声入出力）は構造が大きく異なるため対象外。
 
-- **出題方式**: `buildRandomRounds(level, roundCount, options?)`が候補ラウンド生成関数を5種類（すうじ・逆から/合計/空間/変化検出/音・色）組み立て、`roundCount`が5以下ならその中から重複無く`roundCount`種類を選び、5を超える場合（7問等）は超過分だけランダムに重複させたうえでFisher-Yatesでシャッフルする。すうじの2ラウンドは`RandomRound`型の`gameType: 'reverse' | 'sum'`で区別する。出題数は`ROUND_COUNT_OPTIONS`（3/5/7、既定5）から選べる（`RandomLevelSelect.tsx`のNバックと同様の出題数ピッカー）。
+- **出題方式**: `buildRandomRounds(level, roundCount, options?, exclude?, enabledTypes?)`が候補ラウンド生成関数を組み立て、`roundCount`が候補数以下ならその中から重複無く`roundCount`種類を選び、候補数を超える場合（7問等）は超過分だけランダムに重複させたうえでFisher-Yatesでシャッフルする。すうじの2ラウンドは`RandomRound`型の`gameType: 'reverse' | 'sum'`で区別する。出題数は`ROUND_COUNT_OPTIONS`（3/5/7、既定5）から選べる（`RandomLevelSelect.tsx`のNバックと同様の出題数ピッカー）。
+- **出題するモードの選択**: `RandomLevelSelect.tsx`で5候補（すうじ・逆から/合計/空間/変化検出/音・色）のうちどれを対象にするかトグルボタンで選べる（`RandomRoundType`、既定は全種類）。最後の1つは選択解除できない（`buildRoundGenerators`の`enabledTypes`が空配列になると出題不能になるため、UI側で最小1件を強制する二重防御）。選択状態は`View`（`App.tsx`）の`enabledTypes`として保持し、レベル選択・結果画面間の遷移をまたいで維持される。
 - **1ラウンドの流れ**: 各ラウンドの出題生成・正誤判定ロジックは対応する`lib/*.ts`をそのまま呼び出す（重複実装なし）。表示・入力UIのみラウンド種別ごとに`RandomGameScreen.tsx`内で切り替える。結果フェーズの詳細表示（出題・正しい答え・自分の回答）は`RandomResultDetail.tsx`が単体モード画面と同じ内容をラウンド種別ごとに出し分ける。音・色ラウンドのパッド配色は`src/lib/tonePadStyles.ts`（`ToneGameScreen.tsx`と共有）を使う。
 - **正誤判定**: 各ラウンドは元モードの判定関数（`isDigitAnswerCorrect`/`isSpatialAnswerCorrect`/`isPatternSelectionCorrect`/`isToneAnswerCorrect`）をそのまま使う。すうじ（合計）ラウンドの最大入力文字数・自動採点判定は単体のDigitGameScreenと同じ`getDigitMaxAnswerLength`相当のロジックを使う（「逆から」のみ桁数到達で自動採点、「合計」は常に決定ボタンでの明示確定）。
 - `HistoryEntry`は`mode: 'random'`、`correct`＝出題数中の正解数、`total`＝出題数として記録する。`src/lib/history.ts`の`ALL_AREAS`には**含めない**（単一スキル指標ではないため、苦手分野判定・ベンチマークの対象外）。累計セット数・実績等、履歴全体を見る集計には自動的にカウントされる。
@@ -266,7 +283,7 @@ flowchart TD
 
 ### 実績（アチーブメント）システム（`src/lib/achievements.ts`）
 
-21種類。判定はすべて履歴データから都度動的に計算する（永続化された「解除済みフラグ」は存在しない）。プレイヤーLv系実績のみXP計算にミッション達成ログ件数が必要なため、`isUnlocked(history, missionCompletionCount?)`は第2引数を受け取る（省略時は0扱い）。
+24種類。判定はすべて履歴データから都度動的に計算する（永続化された「解除済みフラグ」は存在しない）。プレイヤーLv系実績のみXP計算にミッション達成ログ件数が必要なため、`isUnlocked(history, missionCompletionCount?)`は第2引数を受け取る（省略時は0扱い）。
 
 | アイコン | ラベル | 解除条件 |
 |---|---|---|
@@ -284,7 +301,7 @@ flowchart TD
 | 🧠🧠 | デュアルNバック上級者 | デュアルNバックモードのレベル3に挑戦履歴あり |
 | 📈 | 継続力 | 累計セット数 ≥ 10 |
 | 🏆 | 継続力（上級） | 累計セット数 ≥ 50 |
-| 🌱 | 成長中 | 「ワーキングメモリの伸び」で正答率が向上中（band: 'above'）のモードが2つ以上 |
+| 🌱 | 成長中 | 自己比較ベンチマーク（`benchmarks.ts`）で正答率が向上中（band: 'above'）のモードが2つ以上 |
 | 🌟 | オールラウンダー | word/digit/nback（従来3モード）に挑戦履歴あり（後方互換のため対象は変更していない） |
 | 🌈 | 全モード制覇 | ことば・すうじ・Nバック・空間・変化検出・音の従来6モードに挑戦履歴あり（後方互換のため対象は変更していない） |
 | 🌠 | コンプリート | デュアルNバック・ランダムを含む全8モード（`Mode`型の全種類）に挑戦履歴あり |
@@ -292,7 +309,10 @@ flowchart TD
 | 🥉 | 駆け出しトレーナー | プレイヤーLv（XPシステム）が5に到達 |
 | 🥈 | 熟練トレーナー | プレイヤーLvが10に到達 |
 | 🥇 | マスタートレーナー | プレイヤーLvが20に到達 |
+| 🎖️ | スコアマスター | 統計画面の「トレーニングスコア」の総合スコアが80%に到達（`src/lib/trainingScore.ts`） |
+| 🧭 | バランストレーナー | 数字記憶・空間記憶・注意制御の3カテゴリすべてに1回以上挑戦履歴あり |
 
+- `isUnlocked`はhistory配列のみから解除判定を導出する設計を徹底している（`missionCompletions`のようなlocalStorageの直接参照はセット完了直後の新規解除演出で常に「解除済み」と誤判定されるため使えない。詳細は`achievements.ts`冒頭のコメント参照）。
 - セット完了直前・直後の履歴を比較し、新規解除された実績を検出する（`getNewlyUnlockedAchievements`）。検出時は効果音＋結果画面に「🎉 新しい実績を獲得しました！」バッジを表示。
 - 統計画面では全実績を常時コンパクトなグリッド表示し、未解除は半透明表示。見出しに「n / 全件数 解除」の解除数を表示する。各実績カードは`<button>`で、タップ（クリック）すると選択状態になりカード下にラベル・解除状況・説明文を表示するインラインの詳細パネルが開く（PCの`title`属性ホバーに加え、スマホでも詳細が確認できるようにするため）。
 
@@ -300,17 +320,24 @@ flowchart TD
 
 全モード共通の経験値付与ルール。実績・自己ベストと同じ「履歴から動的計算」の哲学に倣い、XP専用の可変ストアは持たず`computeTotalXp(history, missionCompletionCount)`で都度計算する。
 
-- **XP付与ルール**: 正解1問につき+10XP、1セット全問正解につきさらに+50XP、今日のミッション達成につき+100XP（達成回数は後述の`missionCompletions`ログから取得）。
+- **XP付与ルール**: 正解1問につき+10XP、1セット全問正解につきさらに+50XP、今日のミッション達成につき+100XP（達成回数は後述の`missionCompletions`ログから取得。旧ミッション`missions.ts`と新ミッション`dailyMission.ts`は同じログを`missionId`で区別しながら共有しており、どちらの達成もこのログ件数に加算される）。
 - **レベル**: プレイヤーはLv1から開始し、`xpNeededToLevelUp(L) = 100 + (L-1)*50`（Lv1→2は100XP、Lv2→3は150XP、Lv3→4は200XP…と徐々に増加）の累積しきい値でレベルアップする。`getXpProgress(totalXp)`が`{level, currentLevelXp, xpToNextLevel}`を返す。
-- **UI**: `useSetCompletionRecorder`がセット完了ごとに`xpGained`/`leveledUp`/`newLevel`を計算し、`SetSummary`に「獲得XP」表示とレベルアップ時の演出（既存の`playLevelUp()`効果音を流用）を追加する。`TopScreen`にプレイヤーLv・XPバー・次のレベルまでの残りXPを常時表示する。既存の各モードの「難易度レベル(Lv1〜3)」とは別概念のため、UI文言では「プレイヤーLv」として区別している。
+- **UI**: `useSetCompletionRecorder`がセット完了ごとに`xpGained`/`leveledUp`/`newLevel`を計算し、`SetSummary`に「獲得XP」表示とレベルアップ時の演出（既存の`playLevelUp()`効果音を流用）を追加する。ホーム画面（`TopScreen`）にプレイヤーLv・XPバー・次のレベルまでの残りXPを常時表示する。既存の各モードの「難易度レベル(Lv1〜3)」とは別概念のため、UI文言では「プレイヤーLv」として区別している。
 
-### 今日のミッション（`src/lib/missions.ts`）
+### 今日のミッション旧版（`src/lib/missions.ts`、UI非表示）
 
-継続利用率向上のための日替わりミニタスク。日付キー（`localDateKey`）からハッシュで決定的に1件選ぶため、選択結果自体は永続化不要（同じ日は常に同じミッションになる）。
+継続利用率向上のための日替わりミニタスク。日付キー（`localDateKey`）からハッシュで決定的に1件選ぶため、選択結果自体は永続化不要（同じ日は常に同じミッションになる）。**ホーム画面の3ボタン化に伴いUIからは非表示にした（`TopScreen`に旧「🎯 今日のミッション」カードは表示しない）が、コードと`missionCompletions`ログによるXP付与ロジックはそのまま残している**（後方互換のため。ユーザーの決定により「非表示化のみ、コードは残す」方針）。新たにホーム画面から到達できるのは後述の「今日のミッション（v2）」。
 
 - **ミッション定義**: 「(モード)を2回プレイ」×8モード分（`Mode`型の全8種類、ことばは日本語版のみ対象）＋「正答率80%以上を達成」の計9種類。プレイ回数系は`Mode`と閾値回数を持つ`{kind:'playCount', mode, count}`、正答率系は`{kind:'accuracy', percent}`という判別可能ユニオンで表現する。
 - **達成判定**: `isTodayMissionComplete(history, language)`が今日の履歴に対して判定する。`checkAndRecordMissionCompletion`はセット完了時に呼ばれ、今日初めて達成した場合のみ`gyaku-fukushou:missionCompletions`（達成ログ、`{dateKey, missionId}[]`）に記録してXPボーナスを1回だけ付与する（同日内の再判定は二重付与しない）。
-- **UI**: `TopScreen`に「🎯 今日のミッション」カードを表示し、達成済みかどうかで見た目を変える。
+
+### 今日のミッションv2（`src/lib/dailyMission.ts`、ホーム画面から到達可能）
+
+ホーム画面の3ボタン（[ランダムモード]／[個別選択モード]／[今日のミッション]）の1つとして提供する、弱点克服に特化した日替わりミニゲーム。旧版（`missions.ts`）とは「対象を弱点分野から自動選定する」「3セット達成が条件」という点で異なるが、XP付与の仕組み（`missionCompletions`ログ）は共有している。
+
+- **対象の自動選定**: `getDailyMissionTarget(history, language, now)`が、過去の履歴から正答率が低いモード・レベルの組み合わせ（`{mode, level, gameType?}`）を弱点として選ぶ。選定結果は`gyaku-fukushou:dailyMissionTargets`（`{dateKey, mode, level, gameType?}[]`、最大60件）に日付キー付きで記録し、同じ日に再訪しても同じ対象を返す（選定基準はセット完了ごとに変わりうるため、当日の一貫性を保つために必要）。ことばモードは英語UIでは選定対象から除外する。
+- **進捗・達成判定**: `getDailyMissionProgress(history, target, now)`が当日の対象一致セット数（`DAILY_MISSION_REQUIRED_SETS = 3`）をカウントし、`isDailyMissionComplete`が達成可否を返す。`checkAndRecordDailyMissionCompletion(historyBefore, historyAfter, target, now)`はセット完了時に呼ばれ、今日初めて3セット達成した場合のみ`missionCompletions`ログへ`missionId: DAILY_MISSION_ID`（`'daily-target'`）で記録しXPボーナスを1回だけ付与する（旧版と`missionId`で区別されるため、同日に両方が達成されればそれぞれ独立してボーナスが付く）。
+- **UI**: `DailyMissionScreen.tsx`が対象モード・レベルと進捗（n/3）を表示し、「挑戦する」ボタンで対応するゲーム画面へ直接遷移する（`App.tsx`の`goToDailyMissionGame(target)`）。達成済みの場合はボタンをグレーアウトし達成済み表示に切り替える（`TopScreen`側でも達成有無に応じてホーム画面の「今日のミッション」ボタンをグレーアウトする）。
 
 ### 週間振り返りカード（`src/lib/recap.ts`）
 
@@ -413,7 +440,8 @@ Web Audio APIによる完全プログラム生成のシンセサイザー方式�
 | `gyaku-fukushou:settings` | アプリ設定 | `AppSettings`のJSONオブジェクト |
 | `gyaku-fukushou:lastRecapWeekKey` | 週間振り返りカードの表示済み週（[週間振り返りカード](#週間振り返りカードsrclibrecapts)参照。読み書きは`src/lib/recap.ts`が単独で担い、上記2ファイルには集約していない） | 週の月曜日を表す日付キー文字列 |
 | `gyaku-fukushou:phraseStats` | ことばモードのフレーズ単位の正誤履歴（[ことばモード](#ことばモードsrclibreversets-srclibkanats-srclibphrasests-srclibphrasestatsts)参照。読み書きは`src/lib/phraseStats.ts`が単独で担う） | `Record<phraseId, { correct: number; total: number }>`のJSONオブジェクト |
-| `gyaku-fukushou:missionCompletions` | 今日のミッションの達成ログ（[今日のミッション](#今日のミッションsrclibmissionsts)参照。読み書きは`src/lib/missions.ts`が単独で担う。プレイヤーXP計算にも使う） | `{ dateKey: string; missionId: string }[]`のJSON配列（最大200件） |
+| `gyaku-fukushou:missionCompletions` | 今日のミッション（旧版・v2共通）の達成ログ（[今日のミッション旧版](#今日のミッション旧版srclibmissionsts-ui非表示)・[今日のミッションv2](#今日のミッションv2srclibdailymissionts-ホーム画面から到達可能)参照。読み書きは`src/lib/missions.ts`が単独で担い`dailyMission.ts`もこれを共有する。プレイヤーXP計算にも使う） | `{ dateKey: string; missionId: string }[]`のJSON配列（最大200件） |
+| `gyaku-fukushou:dailyMissionTargets` | 今日のミッションv2の日替わり選定対象ログ（[今日のミッションv2](#今日のミッションv2srclibdailymissionts-ホーム画面から到達可能)参照。読み書きは`src/lib/dailyMission.ts`が単独で担う） | `{ dateKey: string; mode: Mode; level: Level; gameType?: DigitGameType }[]`のJSON配列（最大60件） |
 | `gyaku-fukushou:questionStats:<mode>` | すうじ/空間/変化検出/音・色モードの系列パターン単位の正誤統計（[出題重み付け](#出題重み付けすうじ空間変化検出音色srclibquestionweightingts)参照。`<mode>`は`digit`/`spatial`/`pattern`/`tone`。読み書きは`src/lib/questionWeighting.ts`が単独で担う） | `Record<"<level>:<bucket>", { correct: number; total: number }>`のJSONオブジェクト |
 | `gyaku-fukushou:dailyChallengeCompletions` | デイリーチャレンジの完了ログ（読み書きは`src/lib/dailyChallenge.ts`が単独で担う。バックアップ対象、`BACKUP_VERSION: 3`） | `{ dateKey: string; correct: boolean }[]`のJSON配列（最大60件） |
 

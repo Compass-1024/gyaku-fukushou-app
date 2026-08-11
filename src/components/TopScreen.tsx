@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
-import { getStreakDays, getTodayCount, getWeakestAreas } from '../lib/history'
-import type { AreaStats } from '../lib/history'
+import { getStreakDays, getTodayCount } from '../lib/history'
 import { loadSettings } from '../lib/settings'
 import { playButtonTap } from '../lib/sound'
 import {
@@ -9,95 +8,56 @@ import {
   markRecapShown,
 } from '../lib/recap'
 import type { WeeklyRecap } from '../lib/recap'
-import {
-  getTodayMission,
-  isTodayMissionComplete,
-  loadMissionCompletions,
-} from '../lib/missions'
 import { computeTotalXp, getXpProgress } from '../lib/xp'
-import { getRollingProgramProgress } from '../lib/program'
-import {
-  hasCompletedTodayChallenge,
-  loadDailyChallengeCompletions,
-} from '../lib/dailyChallenge'
-import { getAllBenchmarks } from '../lib/benchmarks'
-import type { Benchmark } from '../lib/benchmarks'
-import { getModeCards } from '../lib/modeCardsConfig'
-import type { TopModeSelection } from '../lib/modeCardsConfig'
-import { TopEngagementChips } from './TopEngagementChips'
+import { loadMissionCompletions } from '../lib/missions'
+import { getDailyMissionTarget, isDailyMissionComplete } from '../lib/dailyMission'
+import { loadDailyChallengeCompletions } from '../lib/dailyChallenge'
 import { useOnlineStatus } from '../hooks/useOnlineStatus'
 import { useLanguage, useTranslation } from '../contexts/LanguageContext'
 import type { HistoryEntry } from '../types'
 
-export type { TopModeSelection } from '../lib/modeCardsConfig'
-
-// ベンチマークのモードキーとホームカードの選択キーの対応
-// （すうじの逆から入力のみキーが異なる: 'digit' → 'digit-reverse'）
-const BENCHMARK_MODE_TO_CARD_MODE: Record<Benchmark['mode'], TopModeSelection> = {
-  digit: 'digit-reverse',
-  'digit-sum': 'digit-sum',
-  spatial: 'spatial',
-  nback: 'nback',
-  pattern: 'pattern',
-  'dual-nback': 'dual-nback',
-  random: 'random',
-  word: 'word',
-  tone: 'tone',
-}
-
 interface TopScreenProps {
   history: HistoryEntry[]
-  onSelect: (mode: TopModeSelection) => void
+  onSelectRandom: () => void
+  onSelectModeSelect: () => void
+  onSelectDailyMission: () => void
   onOpenSettings: () => void
   onOpenStats: () => void
-  onStartRecommended: (area: AreaStats) => void
 }
 
+// ホーム画面。③: ランダムモード/個別選択モード/今日のミッションの3ボタンに
+// シンプル化した（旧版の3×3・9モードグリッドはModeSelectScreen.tsxへ、
+// 今日のミッション/本日のお題/7日間チャレンジの3チップ行は撤去し、
+// 今日のミッションはDailyMissionScreen.tsxとして独立した画面にした）
 export function TopScreen({
   history,
-  onSelect,
+  onSelectRandom,
+  onSelectModeSelect,
+  onSelectDailyMission,
   onOpenSettings,
   onOpenStats,
-  onStartRecommended,
 }: TopScreenProps) {
   const t = useTranslation()
   const { language } = useLanguage()
   const isOnline = useOnlineStatus()
 
-  // ホーム画面の3×3グリッドに表示するモードカード。ことばモードのみ
-  // 英語版では選択できないため対象外にする
-  const modeCards = getModeCards(t).filter(
-    (card) => card.mode !== 'word' || language === 'ja',
-  )
-
-  // 「ワーキングメモリの伸び」で正答率が向上中（band: 'above'）のモードには、
-  // 統計画面を開かなくても気づけるようホームカードに🌱バッジを表示する
-  const growingCardModes = new Set(
-    getAllBenchmarks(history)
-      .filter((b) => b.band === 'above')
-      .map((b) => BENCHMARK_MODE_TO_CARD_MODE[b.mode]),
-  )
-
   // fix③-5: デイリーチャレンジはhistoryに記録しない（4桁固定という出題
   // 特性上、既存モードの正答率統計に混ぜると数値が歪むため）が、その分
-  // 「プレイした日」としてはストリーク・7日間チャレンジに反映されるべき
-  // なので、日付キーの集合として別経路で連携する
+  // 「プレイした日」としてはストリークに反映されるべきなので、日付キーの
+  // 集合として別経路で連携する
   const dailyChallengeDateKeys = new Set(
     loadDailyChallengeCompletions().map((c) => c.dateKey),
   )
   const streakDays = getStreakDays(history, new Date(), dailyChallengeDateKeys)
   const todayCount = getTodayCount(history)
-  const challengeCompletedToday = hasCompletedTodayChallenge()
   const dailyGoal = loadSettings().dailyGoal
   const goalProgress =
     dailyGoal > 0 ? Math.min(100, Math.round((todayCount / dailyGoal) * 100)) : 0
-  // 英語版ではことばモードは選択できないため、過去（日本語版利用時）の
-  // ことばモード履歴がおすすめ候補に出てこないよう除外する
-  const recommended = getWeakestAreas(history, language === 'en' ? 8 : 1).find(
-    (area) => language === 'ja' || area.mode !== 'word',
+  const dailyMissionCompleted = isDailyMissionComplete(
+    history,
+    getDailyMissionTarget(history, language),
   )
-  const streakAtRisk =
-    streakDays > 0 && todayCount === 0 && !challengeCompletedToday
+  const streakAtRisk = streakDays > 0 && todayCount === 0 && !dailyMissionCompleted
 
   // プレイヤーレベル/経験値は履歴＋ミッション達成ログから都度計算する
   // （実績と同じ哲学。専用の可変ストアは持たない）
@@ -107,35 +67,6 @@ export function TopScreen({
   const xpBarPercent = Math.round(
     (xpProgress.currentLevelXp / xpProgress.xpForCurrentLevel) * 100,
   )
-
-  const todayMission = getTodayMission(language)
-  const missionLabel =
-    todayMission.spec.kind === 'playCount'
-      ? t.missions.playCountLabel(
-          t.common.areaLabels[
-            (todayMission.spec.mode === 'digit'
-              ? 'digit-reverse'
-              : todayMission.spec.mode) as keyof typeof t.common.areaLabels
-          ],
-          todayMission.spec.count,
-        )
-      : t.missions.accuracyLabel(todayMission.spec.percent)
-  const missionCompleted = isTodayMissionComplete(history, language)
-
-  // ミッションカードをクリックしたら該当モードへ直接遷移する。プレイ回数系
-  // ミッションはモードが決まっているためそのモードの選択画面へ、正答率系
-  // ミッションは対象モードを問わないため「今日のおすすめ」があればそちらへ飛ぶ
-  function handleMissionClick() {
-    if (loadSettings().soundEnabled) playButtonTap()
-    if (todayMission.spec.kind === 'playCount') {
-      const mode = todayMission.spec.mode
-      onSelect(mode === 'digit' ? 'digit-reverse' : (mode as TopModeSelection))
-    } else if (recommended) {
-      onStartRecommended(recommended)
-    }
-  }
-  const missionClickable =
-    todayMission.spec.kind === 'playCount' || recommended !== undefined
 
   // 週が変わるたびに、直近に完了した週の振り返りを1回だけ表示する
   const [recap, setRecap] = useState<WeeklyRecap | null>(null)
@@ -154,15 +85,10 @@ export function TopScreen({
     setRecap(null)
   }
 
-  // ④-4: 「今日のミッション」（単日完結）を補う、複数日にまたがる目標。
-  // データが無い新規ユーザーにいきなり「0/7」を見せないよう、履歴が
-  // あるユーザーにのみ表示する
-  const programProgress = getRollingProgramProgress(
-    history,
-    new Date(),
-    dailyChallengeDateKeys,
-  )
-  const showProgramCard = history.length > 0 || dailyChallengeDateKeys.size > 0
+  function withTap(fn: () => void) {
+    if (loadSettings().soundEnabled) playButtonTap()
+    fn()
+  }
 
   return (
     <div className="mx-auto flex w-full max-w-md flex-col gap-6 px-4 py-6 sm:gap-8 sm:px-6 sm:py-10">
@@ -207,8 +133,6 @@ export function TopScreen({
           </div>
         )}
 
-        {/* ③: プレイヤーLv・今日の目標を縦積みの2ブロックから横並び2カラムの
-            1行にまとめ、高さを圧縮する。詳細（あと何XP等）はtitle属性に retain */}
         <div className="mt-4 flex gap-3">
           <div
             className="min-w-0 flex-1"
@@ -249,57 +173,44 @@ export function TopScreen({
         )}
       </div>
 
-      {/* モード選択はアプリの主目的の操作なので、ゲーミフィケーション要素
-          （ミッション・週間振り返り・おすすめ）より先にファーストビューへ入るよう
-          このグリッドを上に配置する（③-10: 旧レイアウトはこの下に4つのカードが
-          積み上がりモード選択がスクロールしないと見えなかった） */}
-      <div className="grid grid-cols-3 gap-2 sm:gap-3">
-        {modeCards.map((card) => (
-          <button
-            key={card.mode}
-            type="button"
-            onClick={() => {
-              if (loadSettings().soundEnabled) playButtonTap()
-              onSelect(card.mode)
-            }}
-            aria-label={
-              growingCardModes.has(card.mode)
-                ? `${card.title}: ${card.description} (${t.top.growingBadgeLabel})`
-                : `${card.title}: ${card.description}`
-            }
-            className={`relative touch-manipulation flex aspect-square flex-col items-center justify-center gap-1 rounded-2xl bg-gradient-to-br ${card.gradient} p-2 text-center text-white shadow-md ring-1 ring-white/10 transition hover:scale-[1.04] hover:shadow-lg active:scale-[0.98] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white sm:p-3`}
-          >
-            {growingCardModes.has(card.mode) && (
-              <span
-                aria-hidden="true"
-                title={t.top.growingBadgeLabel}
-                className="absolute top-1 right-1 text-xs drop-shadow"
-              >
-                🌱
-              </span>
-            )}
-            <span className="text-2xl sm:text-3xl" aria-hidden="true">
-              {card.icon}
-            </span>
-            <span className="text-[11px] leading-tight font-bold sm:text-xs">
-              {card.title}
-            </span>
-            <span className="line-clamp-1 w-full text-[9px] leading-snug opacity-90 sm:text-[10px]">
-              {card.description}
-            </span>
-          </button>
-        ))}
-      </div>
+      <div className="flex flex-col gap-3">
+        <button
+          type="button"
+          onClick={() => withTap(onSelectRandom)}
+          className="touch-manipulation rounded-2xl bg-gradient-to-br from-fuchsia-500 to-orange-400 px-5 py-5 text-left text-white shadow-md transition hover:scale-[1.02] hover:shadow-lg active:scale-[0.99]"
+        >
+          <p className="text-lg font-bold">{t.top.buttons.random.title}</p>
+          <p className="mt-1 text-sm opacity-90">{t.top.buttons.random.description}</p>
+        </button>
 
-      <TopEngagementChips
-        missionLabel={missionLabel}
-        missionCompleted={missionCompleted}
-        missionClickable={missionClickable}
-        onMissionClick={handleMissionClick}
-        challengeCompletedToday={challengeCompletedToday}
-        showProgramCard={showProgramCard}
-        programProgress={programProgress}
-      />
+        <button
+          type="button"
+          onClick={() => withTap(onSelectModeSelect)}
+          className="touch-manipulation rounded-2xl bg-gradient-to-br from-indigo-500 to-sky-500 px-5 py-5 text-left text-white shadow-md transition hover:scale-[1.02] hover:shadow-lg active:scale-[0.99]"
+        >
+          <p className="text-lg font-bold">{t.top.buttons.modeSelect.title}</p>
+          <p className="mt-1 text-sm opacity-90">{t.top.buttons.modeSelect.description}</p>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => withTap(onSelectDailyMission)}
+          className={`touch-manipulation rounded-2xl px-5 py-5 text-left shadow-md transition hover:scale-[1.02] hover:shadow-lg active:scale-[0.99] ${
+            dailyMissionCompleted
+              ? 'bg-gray-100 text-gray-500 grayscale dark:bg-gray-800 dark:text-gray-400'
+              : 'bg-gradient-to-br from-emerald-500 to-teal-500 text-white'
+          }`}
+        >
+          <p className="text-lg font-bold">
+            {dailyMissionCompleted ? '✅' : t.top.buttons.dailyMission.title}
+          </p>
+          <p className="mt-1 text-sm opacity-90">
+            {dailyMissionCompleted
+              ? t.missions.completedBadge
+              : t.top.buttons.dailyMission.description}
+          </p>
+        </button>
+      </div>
 
       {recap && (
         <div className="animate-pop relative rounded-xl border border-sky-200 bg-sky-50 px-4 py-3 dark:border-sky-800 dark:bg-sky-900/20">

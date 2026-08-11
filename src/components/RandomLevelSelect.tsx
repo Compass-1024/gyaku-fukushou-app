@@ -1,15 +1,20 @@
 import { useState } from 'react'
 import { getLevelStats } from '../lib/history'
 import { LEVEL_STYLES } from '../lib/levelStyles'
-import { ROUND_COUNT_OPTIONS, DEFAULT_ROUND_COUNT } from '../lib/random'
-import type { RoundCount } from '../lib/random'
+import { ROUND_COUNT_OPTIONS, DEFAULT_ROUND_COUNT, ALL_ROUND_TYPES } from '../lib/random'
+import type { RoundCount, RandomRoundType } from '../lib/random'
 import { LevelPicker } from './LevelPicker'
 import { useTranslation } from '../contexts/LanguageContext'
 import type { HistoryEntry, Level } from '../types'
 
 interface RandomLevelSelectProps {
   history: HistoryEntry[]
-  onSelect: (level: Level, weakPointFocus: boolean, roundCount: RoundCount) => void
+  onSelect: (
+    level: Level,
+    weakPointFocus: boolean,
+    roundCount: RoundCount,
+    enabledTypes: RandomRoundType[],
+  ) => void
   onBack: () => void
 }
 
@@ -23,6 +28,20 @@ export function RandomLevelSelect({
   // 自動で合わせる（インターリーブ練習を弱点分野に集中させるオプション）
   const [weakPointFocus, setWeakPointFocus] = useState(false)
   const [roundCount, setRoundCount] = useState<RoundCount>(DEFAULT_ROUND_COUNT)
+  // 出題するモードの選択。既定は全種類（従来どおりの挙動）
+  const [enabledTypes, setEnabledTypes] = useState<RandomRoundType[]>([...ALL_ROUND_TYPES])
+
+  function toggleType(type: RandomRoundType) {
+    setEnabledTypes((prev) => {
+      if (prev.includes(type)) {
+        // 最後の1つは選択解除できないようにする（出題不能状態を防ぐ）
+        if (prev.length === 1) return prev
+        return prev.filter((t2) => t2 !== type)
+      }
+      return [...prev, type]
+    })
+  }
+
   return (
     <div className="mx-auto flex w-full max-w-md flex-col gap-6 px-4 py-8 sm:px-6 sm:py-12">
       <button
@@ -65,6 +84,37 @@ export function RandomLevelSelect({
         </div>
       </div>
 
+      <div className="flex flex-col gap-2">
+        <p className="text-center text-xs font-semibold text-gray-500 dark:text-gray-400">
+          {t.random.roundTypeTitle}
+        </p>
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+          {ALL_ROUND_TYPES.map((type) => {
+            const checked = enabledTypes.includes(type)
+            return (
+              <button
+                key={type}
+                type="button"
+                onClick={() => toggleType(type)}
+                aria-pressed={checked}
+                className={`touch-manipulation rounded-lg px-3 py-2 text-xs font-semibold transition ${
+                  checked
+                    ? 'bg-indigo-500 text-white'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700'
+                }`}
+              >
+                {t.common.areaLabels[type]}
+              </button>
+            )
+          })}
+        </div>
+        {enabledTypes.length === 1 && (
+          <p className="text-center text-[11px] text-gray-400 dark:text-gray-500">
+            {t.random.roundTypeAllOffWarning}
+          </p>
+        )}
+      </div>
+
       <label className="flex touch-manipulation items-start gap-3 rounded-lg border border-gray-200 px-4 py-3 dark:border-gray-700">
         <input
           type="checkbox"
@@ -86,7 +136,7 @@ export function RandomLevelSelect({
         labelFor={(level) => t.random.levelLabel(level)}
         colorFor={(level) => LEVEL_STYLES[level]}
         statsFor={(level) => getLevelStats(history, level, 'random')}
-        onSelect={(level) => onSelect(level, weakPointFocus, roundCount)}
+        onSelect={(level) => onSelect(level, weakPointFocus, roundCount, enabledTypes)}
       />
     </div>
   )

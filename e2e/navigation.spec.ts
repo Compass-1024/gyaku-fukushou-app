@@ -1,9 +1,10 @@
 import { test, expect } from '@playwright/test'
 
-test('ことばモード: レベル選択画面へ遷移し、戻るボタンでトップに戻れる', async ({
+test('ことばモード: レベル選択画面へ遷移し、戻るボタンで個別選択モード画面に戻れる', async ({
   page,
 }) => {
   await page.goto('/')
+  await page.getByRole('button', { name: /個別選択モード/ }).click()
   await page.getByRole('button', { name: /ことばモード/ }).click()
 
   await expect(
@@ -15,12 +16,13 @@ test('ことばモード: レベル選択画面へ遷移し、戻るボタンで
 
   await page.getByRole('button', { name: '← モード選択' }).click()
   await expect(
-    page.getByRole('heading', { name: 'ワーキングメモリトレーニング' }),
+    page.getByRole('heading', { name: 'モードを選ぶ' }),
   ).toBeVisible()
 })
 
 test('すうじモード（逆から入力）: カードから直接レベル選択に遷移できる', async ({ page }) => {
   await page.goto('/')
+  await page.getByRole('button', { name: /個別選択モード/ }).click()
   await page.getByRole('button', { name: /すうじモード（逆から入力）/ }).click()
 
   await expect(
@@ -33,6 +35,7 @@ test('すうじモード（逆から入力）: カードから直接レベル選
 
 test('Nバックモード: レベル選択画面へ遷移できる', async ({ page }) => {
   await page.goto('/')
+  await page.getByRole('button', { name: /個別選択モード/ }).click()
   await page.getByRole('button', { name: /^Nバックモード/ }).click()
 
   await expect(
@@ -45,6 +48,7 @@ test('Nバックモード: レベル選択画面へ遷移できる', async ({ pa
 
 test('空間モード: レベル選択画面へ遷移できる', async ({ page }) => {
   await page.goto('/')
+  await page.getByRole('button', { name: /個別選択モード/ }).click()
   await page.getByRole('button', { name: /空間モード/ }).click()
 
   await expect(
@@ -57,6 +61,7 @@ test('空間モード: レベル選択画面へ遷移できる', async ({ page }
 
 test('変化検出モード: レベル選択画面へ遷移できる', async ({ page }) => {
   await page.goto('/')
+  await page.getByRole('button', { name: /個別選択モード/ }).click()
   await page.getByRole('button', { name: /変化検出モード/ }).click()
 
   await expect(
@@ -69,6 +74,7 @@ test('変化検出モード: レベル選択画面へ遷移できる', async ({ 
 
 test('音・色モード: レベル選択画面へ遷移できる', async ({ page }) => {
   await page.goto('/')
+  await page.getByRole('button', { name: /個別選択モード/ }).click()
   await page.getByRole('button', { name: /音・色モード/ }).click()
 
   await expect(
@@ -79,13 +85,28 @@ test('音・色モード: レベル選択画面へ遷移できる', async ({ pag
   ).toBeVisible()
 })
 
-test('ブラウザバックでトップ画面に戻れる（History API連動）', async ({
+test('ランダムモード: ホーム画面から直接レベル選択に遷移できる', async ({ page }) => {
+  await page.goto('/')
+  await page.getByRole('button', { name: /ランダムモード/ }).click()
+
+  await expect(
+    page.getByRole('heading', { name: 'ランダムモード' }),
+  ).toBeVisible()
+})
+
+test('ブラウザバックでモード選択画面、さらに戻るとトップ画面に戻れる（History API連動）', async ({
   page,
 }) => {
   await page.goto('/')
+  await page.getByRole('button', { name: /個別選択モード/ }).click()
   await page.getByRole('button', { name: /すうじモード（逆から入力）/ }).click()
   await expect(
     page.getByRole('heading', { name: 'すうじモード（逆から入力）' }),
+  ).toBeVisible()
+
+  await page.goBack()
+  await expect(
+    page.getByRole('heading', { name: 'モードを選ぶ' }),
   ).toBeVisible()
 
   await page.goBack()

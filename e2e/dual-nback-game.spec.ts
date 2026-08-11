@@ -4,6 +4,7 @@ test('デュアルNバックモード: 出題が始まり位置/音の一致を�
   page,
 }) => {
   await page.goto('/')
+  await page.getByRole('button', { name: /個別選択モード/ }).click()
   await page.getByRole('button', { name: /デュアルNバックモード/ }).click()
   await page
     .getByRole('button', { name: /レベル1（1つ前と比較）/ })
@@ -25,6 +26,7 @@ test('デュアルNバックモード: アダプティブ難易度モードで�
   page,
 }) => {
   await page.goto('/')
+  await page.getByRole('button', { name: /個別選択モード/ }).click()
   await page.getByRole('button', { name: /デュアルNバックモード/ }).click()
 
   // 出題数を最小(10問)にしてテストを短時間で終わらせる
@@ -45,6 +47,7 @@ test('デュアルNバックモード: 結果画面の全試行内訳（10試行
 }) => {
   test.setTimeout(60_000)
   await page.goto('/')
+  await page.getByRole('button', { name: /個別選択モード/ }).click()
   await page.getByRole('button', { name: /デュアルNバックモード/ }).click()
   await page.getByRole('button', { name: '10問' }).click()
   await page.getByRole('button', { name: /レベル1（1つ前と比較）/ }).click()

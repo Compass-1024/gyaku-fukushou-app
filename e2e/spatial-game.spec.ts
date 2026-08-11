@@ -2,6 +2,7 @@ import { test, expect } from '@playwright/test'
 
 test('空間モード: 出題が始まりマスをタップして回答できる', async ({ page }) => {
   await page.goto('/')
+  await page.getByRole('button', { name: /個別選択モード/ }).click()
   await page.getByRole('button', { name: /空間モード/ }).click()
   await page.getByRole('button', { name: /レベル1（3×3・3マス）/ }).click()
 
@@ -20,6 +21,7 @@ test('空間モード: アダプティブ難易度モードで最後まで完走
   page,
 }) => {
   await page.goto('/')
+  await page.getByRole('button', { name: /個別選択モード/ }).click()
   await page.getByRole('button', { name: /空間モード/ }).click()
   await page.getByRole('checkbox', { name: 'アダプティブ（おすすめ）' }).check()
   await page.getByRole('button', { name: /レベル1（3×3・3マス）/ }).click()
@@ -51,6 +53,7 @@ test('空間モード: 回答フェーズを一時停止すると残り時間が
   page,
 }) => {
   await page.goto('/')
+  await page.getByRole('button', { name: /個別選択モード/ }).click()
   await page.getByRole('button', { name: /空間モード/ }).click()
   await page.getByRole('button', { name: /レベル1（3×3・3マス）/ }).click()
 

@@ -173,6 +173,30 @@ describe('achievements', () => {
       mastered.isUnlocked([...sevenModes, entry({ mode: 'random', level: 3 })]),
     ).toBe(true)
   })
+
+  it('score-80 unlocks once the overall training score reaches 80%', () => {
+    const achievement = findAchievement('score-80')
+    expect(achievement.isUnlocked([entry({ correct: 2, total: 3 })])).toBe(false)
+    expect(achievement.isUnlocked([entry({ correct: 4, total: 5 })])).toBe(true)
+  })
+
+  it('all-categories requires an attempt in each of the 3 categories (numeric/spatial/attention)', () => {
+    const achievement = findAchievement('all-categories')
+    expect(achievement.isUnlocked([entry({ mode: 'word' })])).toBe(false)
+    expect(
+      achievement.isUnlocked([
+        entry({ mode: 'word' }),
+        entry({ mode: 'spatial' }),
+      ]),
+    ).toBe(false)
+    expect(
+      achievement.isUnlocked([
+        entry({ mode: 'word' }),
+        entry({ mode: 'spatial' }),
+        entry({ mode: 'tone' }),
+      ]),
+    ).toBe(true)
+  })
 })
 
 describe('getNewlyUnlockedAchievements', () => {

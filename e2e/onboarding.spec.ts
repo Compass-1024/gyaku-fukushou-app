@@ -17,8 +17,8 @@ test('初回起動時にオンボーディングガイドが表示され、ス�
   await dialog.getByRole('button', { name: 'スキップ' }).click()
   await expect(dialog).not.toBeVisible()
 
-  // スキップ後はトップ画面のモード選択が操作できる
-  await expect(page.getByRole('button', { name: /ことばモード/ })).toBeVisible()
+  // スキップ後はトップ画面のボタンが操作できる
+  await expect(page.getByRole('button', { name: /個別選択モード/ })).toBeVisible()
 
   // 既読状態が保存され、再訪問では表示されない
   await page.reload()
