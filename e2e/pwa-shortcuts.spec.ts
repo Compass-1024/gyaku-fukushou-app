@@ -43,6 +43,6 @@ test('PWAショートカット: 不明な値の場合はトップ画面が表示
 }) => {
   await page.goto('/?shortcut=unknown')
   await expect(
-    page.getByRole('heading', { name: 'ワーキングメモリトレーニング' }),
+    page.getByRole('heading', { name: 'おぼえトレ' }),
   ).toBeVisible()
 })

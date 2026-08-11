@@ -60,7 +60,7 @@ function hasLevel3(history: HistoryEntry[], mode: Mode): boolean {
   return history.some((e) => e.mode === mode && e.level === 3)
 }
 
-// 「全モードマスター」実績が対象とする全8モード（Mode型の全種類）
+// 「全モードマスター」実績が対象とする全モード（Mode型の全種類）
 const ALL_MODES_FOR_MASTERY: readonly Mode[] = [
   'word',
   'digit',
@@ -70,6 +70,7 @@ const ALL_MODES_FOR_MASTERY: readonly Mode[] = [
   'pattern',
   'tone',
   'random',
+  'ops-span',
 ]
 
 export const ACHIEVEMENTS: Achievement[] = [
@@ -185,13 +186,14 @@ export const ACHIEVEMENTS: Achievement[] = [
       hasMode(h, 'spatial') &&
       hasMode(h, 'pattern') &&
       hasMode(h, 'tone') &&
-      hasMode(h, 'random'),
+      hasMode(h, 'random') &&
+      hasMode(h, 'ops-span'),
   },
   {
     id: 'all-modes-mastered',
     icon: '👑',
     requiresWordMode: true,
-    // 個々のlevel-3-*実績を横断し、全8モードでレベル3に挑戦履歴があれば解除する
+    // 個々のlevel-3-*実績を横断し、全モードでレベル3に挑戦履歴があれば解除する
     isUnlocked: (h) => ALL_MODES_FOR_MASTERY.every((mode) => hasLevel3(h, mode)),
   },
   {

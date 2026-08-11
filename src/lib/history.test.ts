@@ -12,8 +12,28 @@ import {
   getTodayBestSetAccuracy,
   getDailyAccuracyTrend,
   getActivityCalendar,
+  isValidHistoryEntry,
 } from './history'
-import type { HistoryEntry } from '../types'
+import type { HistoryEntry, Mode } from '../types'
+
+// Mode型の全バリアントを列挙する（オブジェクトリテラルがRecord<Mode, true>を
+// 満たすことをTypeScriptに強制させるため、Mode型に新しいモードが追加されると
+// ここへの追加漏れが型エラーとして検知される）。isValidHistoryEntryが各モードを
+// 正しく受理するかを検証し、モード追加時にhistory.ts側の検証定数への追加を
+// 忘れる同期漏れ（実際にops-spanモード追加時に発生し、履歴が画面遷移のたびに
+// 静かに消える不具合となった）を再発させないための回帰テスト
+const ALL_MODES_MAP: Record<Mode, true> = {
+  word: true,
+  digit: true,
+  nback: true,
+  'dual-nback': true,
+  spatial: true,
+  pattern: true,
+  tone: true,
+  random: true,
+  'ops-span': true,
+}
+const ALL_MODES: readonly Mode[] = Object.keys(ALL_MODES_MAP) as Mode[]
 
 function createMemoryStorage(): Storage {
   let store: Record<string, string> = {}
@@ -55,6 +75,38 @@ describe('loadHistory / appendHistoryEntry', () => {
       total: 3,
     })
     expect(typeof history[0].timestamp).toBe('string')
+  })
+})
+
+describe('isValidHistoryEntry', () => {
+  it.each(ALL_MODES)('accepts every Mode variant (%s)', (mode) => {
+    const entry: HistoryEntry = {
+      mode,
+      level: 1,
+      correct: 1,
+      total: 1,
+      timestamp: new Date().toISOString(),
+    }
+    expect(isValidHistoryEntry(entry)).toBe(true)
+  })
+
+  it('rejects an entry whose mode is not a known Mode', () => {
+    const entry = {
+      mode: 'not-a-real-mode',
+      level: 1,
+      correct: 1,
+      total: 1,
+      timestamp: new Date().toISOString(),
+    }
+    expect(isValidHistoryEntry(entry)).toBe(false)
+  })
+})
+
+describe('loadHistory does not silently drop entries for any Mode', () => {
+  it.each(ALL_MODES)('round-trips an entry for mode %s through save/load', (mode) => {
+    appendHistoryEntry({ mode, level: 1, correct: 1, total: 1 })
+    const history = loadHistory()
+    expect(history.some((e) => e.mode === mode)).toBe(true)
   })
 })
 

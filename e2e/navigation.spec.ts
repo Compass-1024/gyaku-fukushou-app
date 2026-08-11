@@ -111,6 +111,6 @@ test('ブラウザバックでモード選択画面、さらに戻るとトッ�
 
   await page.goBack()
   await expect(
-    page.getByRole('heading', { name: 'ワーキングメモリトレーニング' }),
+    page.getByRole('heading', { name: 'おぼえトレ' }),
   ).toBeVisible()
 })

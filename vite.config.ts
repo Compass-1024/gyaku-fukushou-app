@@ -24,7 +24,7 @@ export default defineConfig({
       manifest: {
         name: 'おぼえトレ',
         short_name: 'おぼえトレ',
-        description: '9種類のゲームでワーキングメモリを鍛えるトレーニングアプリ',
+        description: '10種類のゲームでワーキングメモリを鍛えるトレーニングアプリ',
         lang: 'ja',
         theme_color: '#0ea5e9',
         background_color: '#ffffff',

@@ -18,7 +18,7 @@ test.describe('英語UI（language: en）', () => {
     await page.goto('/')
 
     await expect(
-      page.getByRole('heading', { name: 'Working Memory Training' }),
+      page.getByRole('heading', { name: 'Oboe-Tore' }),
     ).toBeVisible()
 
     await page.getByRole('button', { name: /Choose a Mode/ }).click()
@@ -61,7 +61,7 @@ test.describe('英語UI（language: en）', () => {
     await page.goto('/?shortcut=word')
 
     await expect(
-      page.getByRole('heading', { name: 'Working Memory Training' }),
+      page.getByRole('heading', { name: 'Oboe-Tore' }),
     ).toBeVisible()
   })
 })
@@ -85,7 +85,7 @@ test('設定画面から言語を英語に切り替えると、ことばモー�
 
   await page.getByRole('button', { name: '← Back' }).click()
   await expect(
-    page.getByRole('heading', { name: 'Working Memory Training' }),
+    page.getByRole('heading', { name: 'Oboe-Tore' }),
   ).toBeVisible()
 
   await page.getByRole('button', { name: /Choose a Mode/ }).click()

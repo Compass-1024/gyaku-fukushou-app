@@ -6,7 +6,7 @@ test('トップ画面が表示され、3ボタン（ランダム/個別選択/�
   await page.goto('/')
 
   await expect(
-    page.getByRole('heading', { name: 'ワーキングメモリトレーニング' }),
+    page.getByRole('heading', { name: 'おぼえトレ' }),
   ).toBeVisible()
   await expect(page.getByRole('button', { name: /ランダムモード/ })).toBeVisible()
   await expect(page.getByRole('button', { name: /個別選択モード/ })).toBeVisible()
@@ -48,7 +48,7 @@ test('個別選択モード画面: 10モードのうちランダムモードを�
 
   await page.getByRole('button', { name: '← ホーム' }).click()
   await expect(
-    page.getByRole('heading', { name: 'ワーキングメモリトレーニング' }),
+    page.getByRole('heading', { name: 'おぼえトレ' }),
   ).toBeVisible()
 })
 

@@ -56,7 +56,7 @@ export const en: Translations = {
     },
   },
   top: {
-    heading: 'Working Memory Training',
+    heading: 'Oboe-Tore',
     subtitle: 'Train your working memory with 10 brain-training modes.',
     offlineBanner: "📶 You're offline. Your training history is still being recorded.",
     streakDays: (days) => `🔥 ${days}-day streak`,
@@ -465,11 +465,11 @@ export const en: Translations = {
     'all-eight-modes': {
       label: 'Completionist',
       description:
-        'Tried all eight modes, including Dual N-Back and Random',
+        'Tried all nine modes, including Dual N-Back, Random, and Operation Span',
     },
     'all-modes-mastered': {
       label: 'Master of All',
-      description: 'Reached Level 3 in all eight modes',
+      description: 'Reached Level 3 in all nine modes',
     },
     'player-level-5': {
       label: 'Rookie Trainer',

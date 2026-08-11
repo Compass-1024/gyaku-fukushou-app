@@ -56,7 +56,7 @@ export const ja: Translations = {
     },
   },
   top: {
-    heading: 'ワーキングメモリトレーニング',
+    heading: 'おぼえトレ',
     subtitle: '10種類のトレーニングで、ワーキングメモリを鍛えましょう',
     offlineBanner: '📶 オフラインです。学習履歴はこのまま記録できます',
     streakDays: (days) => `🔥 ${days}日連続`,
@@ -348,7 +348,7 @@ export const ja: Translations = {
     steps: [
       {
         title: 'ようこそ！',
-        body: 'おぼえトレは、9種類のミニゲームでワーキングメモリ（作業記憶）を鍛えるアプリです。',
+        body: 'おぼえトレは、10種類のミニゲームでワーキングメモリ（作業記憶）を鍛えるアプリです。',
       },
       {
         title: '遊び方はシンプル',
@@ -443,11 +443,11 @@ export const ja: Translations = {
     },
     'all-eight-modes': {
       label: 'コンプリート',
-      description: 'デュアルNバック・ランダムを含む全8モードに挑戦した',
+      description: 'デュアルNバック・ランダム・処理記憶を含む全9モードに挑戦した',
     },
     'all-modes-mastered': {
       label: '全モードマスター',
-      description: '全8モードでレベル3に挑戦した',
+      description: '全9モードでレベル3に挑戦した',
     },
     'player-level-5': {
       label: '駆け出しトレーナー',

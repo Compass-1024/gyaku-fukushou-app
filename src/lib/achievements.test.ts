@@ -163,14 +163,43 @@ describe('achievements', () => {
     expect(achievement.isUnlocked([], 105)).toBe(true)
   })
 
-  it('all-modes-mastered requires level 3 in all eight modes', () => {
+  it('all-modes-mastered requires level 3 in all nine modes', () => {
     const mastered = findAchievement('all-modes-mastered')
-    const sevenModes = (
-      ['word', 'digit', 'nback', 'dual-nback', 'spatial', 'pattern', 'tone'] as const
+    const eightModes = (
+      [
+        'word',
+        'digit',
+        'nback',
+        'dual-nback',
+        'spatial',
+        'pattern',
+        'tone',
+        'random',
+      ] as const
     ).map((mode) => entry({ mode, level: 3 }))
-    expect(mastered.isUnlocked(sevenModes)).toBe(false)
+    expect(mastered.isUnlocked(eightModes)).toBe(false)
     expect(
-      mastered.isUnlocked([...sevenModes, entry({ mode: 'random', level: 3 })]),
+      mastered.isUnlocked([...eightModes, entry({ mode: 'ops-span', level: 3 })]),
+    ).toBe(true)
+  })
+
+  it('all-eight-modes requires an attempt in all nine modes, including ops-span', () => {
+    const achievement = findAchievement('all-eight-modes')
+    const eightModes = (
+      [
+        'word',
+        'digit',
+        'nback',
+        'dual-nback',
+        'spatial',
+        'pattern',
+        'tone',
+        'random',
+      ] as const
+    ).map((mode) => entry({ mode }))
+    expect(achievement.isUnlocked(eightModes)).toBe(false)
+    expect(
+      achievement.isUnlocked([...eightModes, entry({ mode: 'ops-span' })]),
     ).toBe(true)
   })
 

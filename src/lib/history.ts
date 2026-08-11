@@ -3,16 +3,22 @@ import type { DigitGameType, HistoryEntry, Level, Mode } from '../types'
 const STORAGE_KEY = 'gyaku-fukushou:history'
 const MAX_ENTRIES = 200
 
-const VALID_MODES: readonly Mode[] = [
-  'word',
-  'digit',
-  'nback',
-  'dual-nback',
-  'spatial',
-  'pattern',
-  'tone',
-  'random',
-]
+// Mode型に新しいモードを追加した際、このオブジェクトへの追加漏れがあると
+// TypeScriptの型エラーで検知できる（オブジェクトリテラルはRecord<Mode, true>を
+// 満たす全キーの列挙を要求するため）。実際にops-spanモード追加時、配列決め打ちの
+// 旧実装ではこのチェックが効かず、該当モードの履歴が静かに除外される不具合が発生した。
+const VALID_MODES_MAP: Record<Mode, true> = {
+  word: true,
+  digit: true,
+  nback: true,
+  'dual-nback': true,
+  spatial: true,
+  pattern: true,
+  tone: true,
+  random: true,
+  'ops-span': true,
+}
+const VALID_MODES: readonly Mode[] = Object.keys(VALID_MODES_MAP) as Mode[]
 const VALID_GAME_TYPES: readonly DigitGameType[] = ['reverse', 'sum']
 const VALID_LEVELS: readonly Level[] = [1, 2, 3]
 
