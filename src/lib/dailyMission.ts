@@ -32,6 +32,7 @@ const VALID_MODES: readonly Mode[] = [
   'pattern',
   'tone',
   'random',
+  'ops-span',
 ]
 
 function isValidStoredTarget(value: unknown): value is StoredTarget {

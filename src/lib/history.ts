@@ -197,6 +197,7 @@ const ALL_AREAS: ReadonlyArray<{ mode: Mode; gameType?: DigitGameType }> = [
   { mode: 'spatial' },
   { mode: 'pattern' },
   { mode: 'tone' },
+  { mode: 'ops-span' },
 ]
 const ALL_LEVELS: readonly Level[] = [1, 2, 3]
 

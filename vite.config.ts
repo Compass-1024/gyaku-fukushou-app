@@ -104,6 +104,11 @@ export default defineConfig({
             url: '/?shortcut=random',
             icons: [{ src: '/icon-192.png', sizes: '192x192' }],
           },
+          {
+            name: '処理記憶モード',
+            url: '/?shortcut=ops-span',
+            icons: [{ src: '/icon-192.png', sizes: '192x192' }],
+          },
         ],
       },
     }),

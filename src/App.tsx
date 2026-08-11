@@ -10,6 +10,7 @@ import { DualNBackLevelSelect } from './components/DualNBackLevelSelect'
 import { SpatialLevelSelect } from './components/SpatialLevelSelect'
 import { PatternLevelSelect } from './components/PatternLevelSelect'
 import { ToneLevelSelect } from './components/ToneLevelSelect'
+import { OpsSpanLevelSelect } from './components/OpsSpanLevelSelect'
 import { RandomLevelSelect } from './components/RandomLevelSelect'
 import { PrivacyScreen } from './components/PrivacyScreen'
 import { useSpeechRecognition } from './hooks/useSpeechRecognition'
@@ -67,6 +68,11 @@ const RandomGameScreen = lazy(() =>
     default: m.RandomGameScreen,
   })),
 )
+const OpsSpanGameScreen = lazy(() =>
+  import('./components/OpsSpanGameScreen').then((m) => ({
+    default: m.OpsSpanGameScreen,
+  })),
+)
 // Android実装（低スペック端末・低速回線）を見据え、初回表示（トップ画面）に
 // 不要な統計・設定画面も遅延読み込みにする
 const SettingsScreen = lazy(() =>
@@ -101,6 +107,8 @@ type View =
   | { screen: 'pattern-game'; level: Level; adaptive?: boolean }
   | { screen: 'tone-level' }
   | { screen: 'tone-game'; level: Level; adaptive?: boolean }
+  | { screen: 'ops-span-level' }
+  | { screen: 'ops-span-game'; level: Level }
   | { screen: 'random-level' }
   | {
       screen: 'random-game'
@@ -178,6 +186,8 @@ function getShortcutView(): View | null {
       return { screen: 'pattern-level' }
     case 'tone':
       return { screen: 'tone-level' }
+    case 'ops-span':
+      return { screen: 'ops-span-level' }
     case 'random':
       return { screen: 'random-level' }
     default:
@@ -270,6 +280,7 @@ function App() {
       next.screen === 'spatial-level' ||
       next.screen === 'pattern-level' ||
       next.screen === 'tone-level' ||
+      next.screen === 'ops-span-level' ||
       next.screen === 'random-level' ||
       next.screen === 'stats'
     ) {
@@ -304,6 +315,8 @@ function App() {
       goTo({ screen: 'pattern-game', level: target.level })
     } else if (target.mode === 'tone') {
       goTo({ screen: 'tone-game', level: target.level })
+    } else if (target.mode === 'ops-span') {
+      goTo({ screen: 'ops-span-game', level: target.level })
     }
   }
 
@@ -336,6 +349,7 @@ function App() {
             else if (mode === 'spatial') goTo({ screen: 'spatial-level' })
             else if (mode === 'pattern') goTo({ screen: 'pattern-level' })
             else if (mode === 'tone') goTo({ screen: 'tone-level' })
+            else if (mode === 'ops-span') goTo({ screen: 'ops-span-level' })
           }}
           onBack={() => goTo({ screen: 'top' })}
         />
@@ -515,6 +529,25 @@ function App() {
           adaptive={view.adaptive}
           onExit={() => goTo({ screen: 'tone-level' })}
           onSelectLevel={(level) => goTo({ screen: 'tone-game', level, adaptive: view.adaptive })}
+        />
+      )
+      break
+    case 'ops-span-level':
+      content = (
+        <OpsSpanLevelSelect
+          history={history}
+          onSelect={(level) => goTo({ screen: 'ops-span-game', level })}
+          onBack={() => goTo({ screen: 'mode-select' })}
+        />
+      )
+      break
+    case 'ops-span-game':
+      content = (
+        <OpsSpanGameScreen
+          key={view.level}
+          level={view.level}
+          onExit={() => goTo({ screen: 'ops-span-level' })}
+          onSelectLevel={(level) => goTo({ screen: 'ops-span-game', level })}
         />
       )
       break

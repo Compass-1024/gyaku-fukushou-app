@@ -54,10 +54,19 @@ export interface Translations {
       pattern: string
       tone: string
       random: string
+      'ops-span': string
     }
     // gameTypeを区別しないモード単位のラベル（④-4のサマリー画像で使用）
     modeLabels: Record<
-      'word' | 'digit' | 'nback' | 'dual-nback' | 'spatial' | 'pattern' | 'tone' | 'random',
+      | 'word'
+      | 'digit'
+      | 'nback'
+      | 'dual-nback'
+      | 'spatial'
+      | 'pattern'
+      | 'tone'
+      | 'random'
+      | 'ops-span',
       string
     >
   }
@@ -114,6 +123,7 @@ export interface Translations {
       pattern: ModeCopy
       tone: ModeCopy
       random: ModeCopy
+      opsSpan: ModeCopy
     }
     playerLevel: (level: number) => string
     xpToNextLevel: (xp: number) => string
@@ -436,5 +446,18 @@ export interface Translations {
     adaptiveLabel: string
     adaptiveDescription: string
     maxLevelReachedLabel: (level: 1 | 2 | 3) => string
+  }
+  opsSpan: {
+    title: string
+    subtitle: string
+    levelLabel: (level: 1 | 2 | 3) => string
+    judgePrompt: string
+    judgeExpression: (a: number, b: number, shownSum: number) => string
+    judgeTrueButton: string
+    judgeFalseButton: string
+    answerPrompt: string
+    noInput: string
+    questionLabel: string
+    judgedAccuracyLabel: (correct: number, total: number) => string
   }
 }

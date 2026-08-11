@@ -42,6 +42,8 @@ function levelLabelFor(t: Translations, target: DailyMissionTarget): string {
       return t.tone.levelLabel(target.level)
     case 'random':
       return t.random.levelLabel(target.level)
+    case 'ops-span':
+      return t.opsSpan.levelLabel(target.level)
   }
 }
 

@@ -21,7 +21,7 @@ test('トップ画面が表示され、3ボタン（ランダム/個別選択/�
   await expect(page.getByRole('button', { name: '🗓️ 7日間チャレンジ' })).toHaveCount(0)
 })
 
-test('個別選択モード画面: 9モードのうちランダムモードを除く8モードのカードが見える', async ({
+test('個別選択モード画面: 10モードのうちランダムモードを除く9モードのカードが見える', async ({
   page,
 }) => {
   await page.goto('/')
@@ -42,6 +42,7 @@ test('個別選択モード画面: 9モードのうちランダムモードを�
   await expect(page.getByRole('button', { name: /空間モード/ })).toBeVisible()
   await expect(page.getByRole('button', { name: /変化検出モード/ })).toBeVisible()
   await expect(page.getByRole('button', { name: /音・色モード/ })).toBeVisible()
+  await expect(page.getByRole('button', { name: /処理記憶モード/ })).toBeVisible()
   // ランダムモードはホーム画面に専用ボタンがあるため、ここには表示しない
   await expect(page.getByRole('button', { name: /ランダムモード/ })).toHaveCount(0)
 

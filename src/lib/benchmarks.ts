@@ -25,6 +25,7 @@ export interface Benchmark {
     | 'random'
     | 'word'
     | 'tone'
+    | 'ops-span'
   // 直近期間の正答率（%）
   value: number
   // それ以前の期間の正答率（%）。valueとの比較でbandが決まる
@@ -135,6 +136,11 @@ export function getToneBenchmark(history: HistoryEntry[]): Benchmark | null {
   return buildSelfBenchmark(history, 'tone', 'tone')
 }
 
+// 処理記憶モード: 過去の前半/後半で正答率を比較する
+export function getOpsSpanBenchmark(history: HistoryEntry[]): Benchmark | null {
+  return buildSelfBenchmark(history, 'ops-span', 'ops-span')
+}
+
 export function getAllBenchmarks(history: HistoryEntry[]): Benchmark[] {
   return [
     getDigitSpanBenchmark(history),
@@ -146,5 +152,6 @@ export function getAllBenchmarks(history: HistoryEntry[]): Benchmark[] {
     getRandomBenchmark(history),
     getWordBenchmark(history),
     getToneBenchmark(history),
+    getOpsSpanBenchmark(history),
   ].filter((b): b is Benchmark => b !== null)
 }

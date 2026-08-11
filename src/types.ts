@@ -18,6 +18,7 @@ export type Mode =
   | 'pattern'
   | 'tone'
   | 'random'
+  | 'ops-span'
 export type DigitGameType = 'reverse' | 'sum'
 export type ThemeMode = 'system' | 'light' | 'dark'
 export type Language = 'ja' | 'en'
@@ -135,13 +136,43 @@ export interface ToneQuestionResult {
   correct: boolean
 }
 
-// ランダムモード: 単発質問→回答型の5ラウンド(すうじ・逆から入力/すうじ・合計を入力/
-// 空間/変化検出/音・色)から1問ずつ集めて出題する。各ラウンドは元モードのQuestion型を
-// そのまま内包する
+// 処理記憶モード(ops-span): 簡単な暗算の正誤判定(処理課題)と、1桁の数字の
+// 記憶(記憶課題)を交互に繰り返し、最後に記憶した数字を提示順に入力する
+// 二重課題ワーキングメモリ課題(Operation Span Taskを参考)
+export interface OpsSpanTrial {
+  a: number
+  b: number
+  shownSum: number
+  judgmentCorrect: boolean
+  memoryDigit: number
+}
+
+export interface OpsSpanQuestion {
+  id: string
+  trials: OpsSpanTrial[]
+}
+
+export type OpsSpanPhase = 'ready' | 'showing' | 'answering' | 'result'
+
+export interface OpsSpanQuestionResult {
+  question: OpsSpanQuestion
+  expectedAnswer: string
+  typed: string
+  correct: boolean
+  // 記憶課題の正誤（correct）とは別に、処理課題（暗算の正誤判定）に
+  // 正しく答えられた試行数を結果画面の補足情報として保持する
+  judgedCorrectCount: number
+}
+
+// ランダムモード: 単発質問→回答型のラウンド(すうじ・逆から入力/すうじ・合計を入力/
+// 空間/変化検出/音・色/処理記憶/ことば)から1問ずつ集めて出題する。各ラウンドは
+// 元モードのQuestion型をそのまま内包する
 export type RandomRound =
   | { mode: 'digit'; gameType: DigitGameType; question: DigitQuestion }
   | { mode: 'spatial'; question: SpatialQuestion }
   | { mode: 'pattern'; question: PatternQuestion }
   | { mode: 'tone'; question: ToneQuestion }
+  | { mode: 'ops-span'; question: OpsSpanQuestion }
+  | { mode: 'word'; question: Phrase }
 
 export type RandomQuestionPhase = 'ready' | 'showing' | 'answering' | 'result'

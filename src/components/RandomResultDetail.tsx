@@ -72,6 +72,10 @@ export function RandomResultDetail({ round, typed, tapped }: RandomResultDetailP
     )
   }
 
+  // ops-span/wordラウンドは専用コンポーネント(RandomOpsSpanRound/
+  // RandomWordRound)が自前の結果画面を表示するため、ここには到達しない
+  if (round.mode === 'ops-span' || round.mode === 'word') return null
+
   // pattern: 正解のマス(緑)・誤選択(赤)・選び漏れ(黄)を色分け表示する
   // （PatternGameScreen.tsxの結果表示と同じ配色ロジック）
   const cellCount = round.question.gridSize * round.question.gridSize

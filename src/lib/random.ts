@@ -2,6 +2,9 @@ import { pickDigitQuestion } from './digits'
 import { pickSpatialQuestion } from './spatial'
 import { pickPatternQuestion } from './pattern'
 import { pickToneQuestion } from './tone'
+import { pickOpsSpanQuestion } from './opsSpan'
+import { pickQuestionSet } from './phrases'
+import { loadPhraseStats } from './phraseStats'
 import { getLevelStats } from './history'
 import type { DigitGameType, HistoryEntry, Level, Mode, RandomRound } from '../types'
 
@@ -22,6 +25,8 @@ export const ALL_ROUND_TYPES = [
   'spatial',
   'pattern',
   'tone',
+  'ops-span',
+  'word',
 ] as const
 export type RandomRoundType = (typeof ALL_ROUND_TYPES)[number]
 
@@ -64,6 +69,8 @@ export interface RandomRoundExcludeSets {
   spatial?: number[][]
   pattern?: number[][]
   tone?: number[][]
+  opsSpan?: number[][]
+  word?: string[]
 }
 
 function shuffled<T>(items: readonly T[]): T[] {
@@ -108,6 +115,14 @@ function buildRoundGenerators(
       question: pickPatternQuestion(levelFor('pattern'), 0, exclude?.pattern),
     }),
     tone: () => ({ mode: 'tone', question: pickToneQuestion(levelFor('tone'), 0, exclude?.tone) }),
+    'ops-span': () => ({
+      mode: 'ops-span',
+      question: pickOpsSpanQuestion(levelFor('ops-span'), 0, exclude?.opsSpan),
+    }),
+    word: () => ({
+      mode: 'word',
+      question: pickQuestionSet(levelFor('word'), loadPhraseStats(), exclude?.word, 1)[0],
+    }),
   }
 
   // 空配列（すべて選択解除）が渡された場合は、出題不能になるのを避けるため

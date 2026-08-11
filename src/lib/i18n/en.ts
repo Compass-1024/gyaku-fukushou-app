@@ -41,6 +41,7 @@ export const en: Translations = {
       pattern: 'Change Detection',
       tone: 'Tone & Color',
       random: 'Random',
+      'ops-span': 'Ops Span',
     },
     modeLabels: {
       word: 'Word',
@@ -51,11 +52,12 @@ export const en: Translations = {
       pattern: 'Change Detection',
       tone: 'Tone & Color',
       random: 'Random',
+      'ops-span': 'Ops Span',
     },
   },
   top: {
     heading: 'Working Memory Training',
-    subtitle: 'Train your working memory with 9 brain-training modes.',
+    subtitle: 'Train your working memory with 10 brain-training modes.',
     offlineBanner: "📶 You're offline. Your training history is still being recorded.",
     streakDays: (days) => `🔥 ${days}-day streak`,
     todayCount: (count) => `${count} session${count === 1 ? '' : 's'} today`,
@@ -110,6 +112,10 @@ export const en: Translations = {
       random: {
         title: 'Random Mode',
         description: '5-mode mixed workout',
+      },
+      opsSpan: {
+        title: 'Ops Span Mode',
+        description: 'Do mental math while remembering digits',
       },
     },
     playerLevel: (level) => `Player Lv.${level}`,
@@ -614,7 +620,7 @@ export const en: Translations = {
   random: {
     title: 'Random Mode',
     subtitle:
-      'Digit (reverse/sum), Spatial, Change Detection, and Tone & Color, in a random order.',
+      'Digit (reverse/sum), Spatial, Change Detection, Tone & Color, and Ops Span, in a random order.',
     levelLabel: (level) =>
       ({ 1: 'Level 1', 2: 'Level 2', 3: 'Level 3' })[level],
     roundProgress: (current, total) => `Round ${current} / ${total}`,
@@ -642,5 +648,22 @@ export const en: Translations = {
     adaptiveLabel: 'Adaptive (recommended)',
     adaptiveDescription: 'The level rises automatically after correct answers and drops after mistakes',
     maxLevelReachedLabel: (level) => `Highest level reached: ${level}`,
+  },
+  opsSpan: {
+    title: 'Ops Span Mode',
+    subtitle:
+      'Alternate between checking a simple math problem and remembering a digit, then recall the digits in the order shown — a dual-task working memory challenge.',
+    levelLabel: (level) =>
+      ({ 1: 'Level 1 (3 trials)', 2: 'Level 2 (4 trials)', 3: 'Level 3 (5 trials)' })[
+        level
+      ],
+    judgePrompt: 'Is this correct?',
+    judgeExpression: (a, b, shownSum) => `${a} + ${b} = ${shownSum}`,
+    judgeTrueButton: '⭕ Correct',
+    judgeFalseButton: '❌ Incorrect',
+    answerPrompt: 'Enter the digits you remembered, in order',
+    noInput: '(no input)',
+    questionLabel: 'Remembered digits: ',
+    judgedAccuracyLabel: (correct, total) => `Math check accuracy: ${correct} / ${total}`,
   },
 }

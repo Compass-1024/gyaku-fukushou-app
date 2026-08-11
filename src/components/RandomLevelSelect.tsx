@@ -1,10 +1,10 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { getLevelStats } from '../lib/history'
 import { LEVEL_STYLES } from '../lib/levelStyles'
 import { ROUND_COUNT_OPTIONS, DEFAULT_ROUND_COUNT, ALL_ROUND_TYPES } from '../lib/random'
 import type { RoundCount, RandomRoundType } from '../lib/random'
 import { LevelPicker } from './LevelPicker'
-import { useTranslation } from '../contexts/LanguageContext'
+import { useLanguage, useTranslation } from '../contexts/LanguageContext'
 import type { HistoryEntry, Level } from '../types'
 
 interface RandomLevelSelectProps {
@@ -24,12 +24,19 @@ export function RandomLevelSelect({
   onBack,
 }: RandomLevelSelectProps) {
   const t = useTranslation()
+  const { language } = useLanguage()
+  // ことばモードは日本語の音韻に依存するため、英語版では候補から除外する
+  // （TopScreen/App.tsxの他のことばモード用言語ガードと同じ考え方）
+  const availableTypes = useMemo(
+    () => (language === 'ja' ? ALL_ROUND_TYPES : ALL_ROUND_TYPES.filter((t2) => t2 !== 'word')),
+    [language],
+  )
   // ④-2: オンにすると各ラウンドのレベルを一律ではなくモードごとの弱点レベルへ
   // 自動で合わせる（インターリーブ練習を弱点分野に集中させるオプション）
   const [weakPointFocus, setWeakPointFocus] = useState(false)
   const [roundCount, setRoundCount] = useState<RoundCount>(DEFAULT_ROUND_COUNT)
   // 出題するモードの選択。既定は全種類（従来どおりの挙動）
-  const [enabledTypes, setEnabledTypes] = useState<RandomRoundType[]>([...ALL_ROUND_TYPES])
+  const [enabledTypes, setEnabledTypes] = useState<RandomRoundType[]>([...availableTypes])
 
   function toggleType(type: RandomRoundType) {
     setEnabledTypes((prev) => {
@@ -89,7 +96,7 @@ export function RandomLevelSelect({
           {t.random.roundTypeTitle}
         </p>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-          {ALL_ROUND_TYPES.map((type) => {
+          {availableTypes.map((type) => {
             const checked = enabledTypes.includes(type)
             return (
               <button

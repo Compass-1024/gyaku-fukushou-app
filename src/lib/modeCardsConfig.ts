@@ -81,5 +81,12 @@ export function getModeCards(t: Translations): ModeCardConfig[] {
       title: t.top.modes.random.title,
       description: t.top.modes.random.description,
     },
+    {
+      mode: 'ops-span',
+      icon: '🧮',
+      gradient: 'from-lime-500 to-emerald-500',
+      title: t.top.modes.opsSpan.title,
+      description: t.top.modes.opsSpan.description,
+    },
   ]
 }

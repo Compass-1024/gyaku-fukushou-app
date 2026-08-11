@@ -56,6 +56,8 @@ import { RandomSpatialGrid } from './RandomSpatialGrid'
 import { RandomPatternGrid } from './RandomPatternGrid'
 import { RandomToneGrid } from './RandomToneGrid'
 import { RandomResultDetail } from './RandomResultDetail'
+import { RandomWordRound } from './RandomWordRound'
+import { RandomOpsSpanRound } from './RandomOpsSpanRound'
 import { useTranslation } from '../contexts/LanguageContext'
 import type { Translations } from '../lib/i18n'
 import type {
@@ -110,6 +112,7 @@ function saveShownRoundsForExclusion(rounds: RandomRound[]): void {
     list.push(shape)
     grouped.set(key, list)
   }
+  const wordIds = new Map<string, string[]>()
   for (const round of rounds) {
     switch (round.mode) {
       case 'digit':
@@ -124,9 +127,26 @@ function saveShownRoundsForExclusion(rounds: RandomRound[]): void {
       case 'tone':
         add('tone', round.question.id, round.question.sequence)
         break
+      case 'ops-span':
+        add(
+          'ops-span',
+          round.question.id,
+          round.question.trials.map((t) => t.memoryDigit),
+        )
+        break
+      case 'word': {
+        // フレーズのidは`${level}-${index}`形式（levelFromQuestionIdと同じ
+        // 先頭セグメント）のため、数字列モードと同じキー構成で扱える
+        const key = `word:${levelFromQuestionId(round.question.id)}`
+        const list = wordIds.get(key) ?? []
+        list.push(round.question.id)
+        wordIds.set(key, list)
+        break
+      }
     }
   }
   for (const [key, items] of grouped) saveRecentQuestions(key, items)
+  for (const [key, items] of wordIds) saveRecentQuestions(key, items)
 }
 
 // 新しいセットを組み立てる前に、モードごと（レベル問わず、弱点重視モードで
@@ -134,11 +154,15 @@ function saveShownRoundsForExclusion(rounds: RandomRound[]): void {
 function consumeRandomExcludeSets(): RandomRoundExcludeSets {
   const merge = (mode: string): number[][] =>
     ([1, 2, 3] as const).flatMap((lvl) => consumeRecentQuestions<number[]>(`${mode}:${lvl}`))
+  const mergeWord = (): string[] =>
+    ([1, 2, 3] as const).flatMap((lvl) => consumeRecentQuestions<string>(`word:${lvl}`))
   return {
     digit: merge('digit'),
     spatial: merge('spatial'),
     pattern: merge('pattern'),
     tone: merge('tone'),
+    opsSpan: merge('ops-span'),
+    word: mergeWord(),
   }
 }
 
@@ -165,6 +189,12 @@ function getStepConfig(round: RandomRound) {
       return { itemCount: 1, shownMs: PATTERN_SHOWN_MS, gapMs: PATTERN_BLANK_MS }
     case 'tone':
       return { itemCount: round.question.sequence.length, shownMs: TONE_SHOWN_MS, gapMs: TONE_GAP_MS }
+    // ops-span/wordは自己完結した専用コンポーネント(RandomOpsSpanRound/
+    // RandomWordRound)が独自にタイミングを管理するため、共通のuseStepReveal
+    // 経路は使わない（isIsolatedRoundでactive=falseにして無効化している）
+    case 'ops-span':
+    case 'word':
+      return { itemCount: 0, shownMs: 0, gapMs: 0 }
   }
 }
 
@@ -190,6 +220,11 @@ function getRoundAnswerTimeoutMs(round: RandomRound): number {
       return getPatternAnswerTimeoutMs(round.question.filledCells.length)
     case 'tone':
       return getToneAnswerTimeoutMs(round.question.sequence.length)
+    // ops-span/wordは自己完結したコンポーネントが独自にタイムアウトを
+    // 管理するため未使用（isIsolatedRoundでactive=falseにしている）
+    case 'ops-span':
+    case 'word':
+      return 0
   }
 }
 
@@ -211,6 +246,10 @@ function roundAnswerPrompt(t: Translations, round: RandomRound): string {
       return t.pattern.selectPrompt
     case 'tone':
       return t.tone.answerPrompt
+    case 'ops-span':
+      return t.opsSpan.answerPrompt
+    case 'word':
+      return ''
   }
 }
 
@@ -252,6 +291,10 @@ export function RandomGameScreen({
   const [finished, setFinished] = useState(false)
 
   const currentRound = rounds[currentIndex]
+  // ops-span/wordラウンドは自己完結した専用コンポーネントが出題演出・回答・
+  // 採点をすべて自前で行うため、以下の共通の状態機（phase/useStepReveal/
+  // useCountdown/finalizeAnswer）を無効化する
+  const isIsolatedRound = currentRound.mode === 'ops-span' || currentRound.mode === 'word'
 
   useEffect(() => {
     if (finished) {
@@ -277,7 +320,7 @@ export function RandomGameScreen({
 
   const stepConfig = getStepConfig(currentRound)
   const { index: stepIndex, isGap } = useStepReveal({
-    active: phase === 'showing',
+    active: phase === 'showing' && !isIsolatedRound,
     itemCount: stepConfig.itemCount,
     shownMs: stepConfig.shownMs,
     gapMs: stepConfig.gapMs,
@@ -293,7 +336,7 @@ export function RandomGameScreen({
   const { paused, pause, resume } = usePauseState(currentRound)
 
   const answerRemaining = useCountdown(
-    phase === 'answering',
+    phase === 'answering' && !isIsolatedRound,
     getRoundAnswerTimeoutMs(currentRound),
     () => finalizeAnswer(),
     paused,
@@ -451,6 +494,19 @@ export function RandomGameScreen({
     }
   }
 
+  // ops-span/wordラウンドは専用コンポーネントが自前の「結果→次へ」画面を
+  // 表示済みのため、ここでは結果の記録とラウンド送りだけを行う
+  // （音・ハプティクスの再生も専用コンポーネント側で既に行っている）
+  function advanceIsolatedRound(outcome: { correct: boolean; typed: string; tapped: number[] }) {
+    const updated = [...results, { round: currentRound, ...outcome }]
+    setResults(updated)
+    if (currentIndex + 1 >= rounds.length) {
+      setFinished(true)
+    } else {
+      setCurrentIndex((i) => i + 1)
+    }
+  }
+
   function handleRetry() {
     setRounds(buildRounds(level, weakPointFocus, roundCount, undefined, enabledTypes))
     setCurrentIndex(0)
@@ -522,7 +578,28 @@ export function RandomGameScreen({
         aria-atomic="true"
         className="flex min-h-56 flex-col items-center justify-center gap-4 rounded-2xl border border-gray-200 bg-white px-4 py-8 text-center shadow-sm sm:min-h-64 sm:px-6 sm:py-10 dark:border-gray-700 dark:bg-gray-800"
       >
-        {(phase === 'ready' || phase === 'showing') && (
+        {currentRound.mode === 'word' && (
+          <RandomWordRound
+            phrase={currentRound.question}
+            level={levelFromQuestionId(currentRound.question.id)}
+            isLastRound={currentIndex + 1 >= rounds.length}
+            onFinish={(outcome) =>
+              advanceIsolatedRound({ correct: outcome.correct, typed: outcome.heard, tapped: [] })
+            }
+          />
+        )}
+
+        {currentRound.mode === 'ops-span' && (
+          <RandomOpsSpanRound
+            question={currentRound.question}
+            isLastRound={currentIndex + 1 >= rounds.length}
+            onFinish={(outcome) =>
+              advanceIsolatedRound({ correct: outcome.correct, typed: outcome.typed, tapped: [] })
+            }
+          />
+        )}
+
+        {!isIsolatedRound && (phase === 'ready' || phase === 'showing') && (
           <p className="text-lg font-medium text-gray-800 dark:text-gray-100">
             {t.common.rememberPrompt}
           </p>

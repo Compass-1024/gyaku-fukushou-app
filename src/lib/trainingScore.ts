@@ -18,6 +18,7 @@ const CATEGORY_MEMBERS: Record<Exclude<ScoreCategory, 'overall'>, CategoryMember
     { mode: 'word' },
     { mode: 'digit', gameType: 'reverse' },
     { mode: 'digit', gameType: 'sum' },
+    { mode: 'ops-span' },
   ],
   spatial: [{ mode: 'spatial' }, { mode: 'pattern' }, { mode: 'nback' }],
   attention: [{ mode: 'dual-nback' }, { mode: 'tone' }, { mode: 'random' }],

@@ -214,11 +214,12 @@ export function pickQuestionSet(
   level: Level,
   phraseStats: PhraseStats = {},
   excludeIds: string[] = [],
+  count: number = QUESTIONS_PER_SET,
 ): Phrase[] {
   const filtered = PHRASES[level].filter((p) => !excludeIds.includes(p.id))
   const pool = filtered.length > 0 ? [...filtered] : [...PHRASES[level]]
   const picked: Phrase[] = []
-  for (let i = 0; i < QUESTIONS_PER_SET && pool.length > 0; i++) {
+  for (let i = 0; i < count && pool.length > 0; i++) {
     const weights = pool.map((p) => getPhraseWeight(phraseStats, p.id))
     const totalWeight = weights.reduce((sum, w) => sum + w, 0)
     let r = Math.random() * totalWeight

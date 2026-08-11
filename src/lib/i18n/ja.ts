@@ -41,6 +41,7 @@ export const ja: Translations = {
       pattern: '変化検出',
       tone: '音・色の順番',
       random: 'ランダム',
+      'ops-span': '処理記憶',
     },
     modeLabels: {
       word: 'ことば',
@@ -51,11 +52,12 @@ export const ja: Translations = {
       pattern: '変化検出',
       tone: '音・色',
       random: 'ランダム',
+      'ops-span': '処理記憶',
     },
   },
   top: {
     heading: 'ワーキングメモリトレーニング',
-    subtitle: '9種類のトレーニングで、ワーキングメモリを鍛えましょう',
+    subtitle: '10種類のトレーニングで、ワーキングメモリを鍛えましょう',
     offlineBanner: '📶 オフラインです。学習履歴はこのまま記録できます',
     streakDays: (days) => `🔥 ${days}日連続`,
     todayCount: (count) => `今日 ${count}回挑戦`,
@@ -110,6 +112,10 @@ export const ja: Translations = {
       random: {
         title: 'ランダムモード',
         description: '5モードを一気に',
+      },
+      opsSpan: {
+        title: '処理記憶モード',
+        description: '暗算しながら数字を記憶',
       },
     },
     playerLevel: (level) => `プレイヤーLv.${level}`,
@@ -586,7 +592,7 @@ export const ja: Translations = {
   random: {
     title: 'ランダムモード',
     subtitle:
-      'すうじ（逆から/合計）・空間・変化検出・音/色の中から、ランダムな順番で出題されます。',
+      'すうじ（逆から/合計）・空間・変化検出・音/色・処理記憶・ことばの中から、ランダムな順番で出題されます。',
     levelLabel: (level) =>
       ({ 1: 'レベル1', 2: 'レベル2', 3: 'レベル3' })[level],
     roundProgress: (current, total) => `問題 ${current} / ${total}`,
@@ -612,5 +618,20 @@ export const ja: Translations = {
     adaptiveLabel: 'アダプティブ（おすすめ）',
     adaptiveDescription: '正解が続くとレベルが自動で上がり、間違いが続くと下がります',
     maxLevelReachedLabel: (level) => `到達した最大レベル: ${level}`,
+  },
+  opsSpan: {
+    title: '処理記憶モード',
+    subtitle:
+      '簡単な暗算の正誤判定と数字の記憶を交互に繰り返し、最後に覚えた数字を順番に入力する二重課題トレーニングです。',
+    levelLabel: (level) =>
+      ({ 1: 'レベル1（3試行）', 2: 'レベル2（4試行）', 3: 'レベル3（5試行）' })[level],
+    judgePrompt: 'この式は合っている？',
+    judgeExpression: (a, b, shownSum) => `${a} + ${b} = ${shownSum}`,
+    judgeTrueButton: '⭕ 合っている',
+    judgeFalseButton: '❌ 間違っている',
+    answerPrompt: '覚えた数字を順番のまま入力してください',
+    noInput: '（未入力）',
+    questionLabel: '記憶した数字: ',
+    judgedAccuracyLabel: (correct, total) => `暗算の正誤判定: ${correct} / ${total}問正解`,
   },
 }

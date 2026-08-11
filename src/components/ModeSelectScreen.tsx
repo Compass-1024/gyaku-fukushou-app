@@ -19,6 +19,7 @@ const BENCHMARK_MODE_TO_CARD_MODE: Record<Benchmark['mode'], TopModeSelection> =
   random: 'random',
   word: 'word',
   tone: 'tone',
+  'ops-span': 'ops-span',
 }
 
 interface ModeSelectScreenProps {
@@ -27,9 +28,10 @@ interface ModeSelectScreenProps {
   onBack: () => void
 }
 
-// ホーム画面の「個別選択モード」ボタンから入る、9モードカードグリッド。
-// 旧TopScreen.tsxの3×3グリッドをそのまま切り出したもの（ランダムモードは
-// ホーム画面に専用ボタンがあるため、ここでは対象外にする）
+// ホーム画面の「個別選択モード」ボタンから入る、9モードカードグリッド
+// （ランダムモードを除く全10モード中の9モード）。旧TopScreen.tsxの
+// 3×3グリッドをそのまま切り出したもの（ランダムモードはホーム画面に
+// 専用ボタンがあるため、ここでは対象外にする）
 export function ModeSelectScreen({ history, onSelect, onBack }: ModeSelectScreenProps) {
   const t = useTranslation()
   const { language } = useLanguage()

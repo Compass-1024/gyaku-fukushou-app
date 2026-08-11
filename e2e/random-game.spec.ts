@@ -6,6 +6,10 @@ test('ランダムモード: 5ラウンド完了までの一連の流れ', async
   test.setTimeout(120_000)
   await page.goto('/')
   await page.getByRole('button', { name: /ランダムモード/ }).click()
+  // ops-span/wordラウンドは音声認識・二重課題フローの自動化がPlaywright上で
+  // 困難なため、汎用スモークテストでは対象から除外する（専用のe2eを別途用意）
+  await page.getByRole('button', { name: '処理記憶', exact: true }).click()
+  await page.getByRole('button', { name: 'ことば', exact: true }).click()
   await page.getByRole('button', { name: /レベル1/ }).click()
 
   // 正誤は問わないスモークテスト。5ラウンド分、出現するUIに応じて
@@ -42,6 +46,10 @@ test('ランダムモード: 出題するモードを選ぶと、選んだモー
   await page.getByRole('button', { name: 'すうじ（合計）', exact: true }).click()
   await page.getByRole('button', { name: '変化検出', exact: true }).click()
 
+  // ops-span/wordラウンドは音声認識・二重課題フローの自動化がPlaywright上で
+  // 困難なため、汎用スモークテストでは対象から除外する（専用のe2eを別途用意）
+  await page.getByRole('button', { name: '処理記憶', exact: true }).click()
+  await page.getByRole('button', { name: 'ことば', exact: true }).click()
   await page.getByRole('button', { name: /レベル1/ }).click()
 
   for (let round = 1; round <= 3; round++) {
@@ -65,6 +73,10 @@ test('ランダムモード: 出題数を3問に変更すると3ラウンドで�
   await page.goto('/')
   await page.getByRole('button', { name: /ランダムモード/ }).click()
   await page.getByRole('button', { name: '3問', exact: true }).click()
+  // ops-span/wordラウンドは音声認識・二重課題フローの自動化がPlaywright上で
+  // 困難なため、汎用スモークテストでは対象から除外する（専用のe2eを別途用意）
+  await page.getByRole('button', { name: '処理記憶', exact: true }).click()
+  await page.getByRole('button', { name: 'ことば', exact: true }).click()
   await page.getByRole('button', { name: /レベル1/ }).click()
 
   for (let round = 1; round <= 3; round++) {
@@ -86,6 +98,10 @@ test('ランダムモード: 出題数を7問に変更すると7ラウンドで�
   await page.goto('/')
   await page.getByRole('button', { name: /ランダムモード/ }).click()
   await page.getByRole('button', { name: '7問', exact: true }).click()
+  // ops-span/wordラウンドは音声認識・二重課題フローの自動化がPlaywright上で
+  // 困難なため、汎用スモークテストでは対象から除外する（専用のe2eを別途用意）
+  await page.getByRole('button', { name: '処理記憶', exact: true }).click()
+  await page.getByRole('button', { name: 'ことば', exact: true }).click()
   await page.getByRole('button', { name: /レベル1/ }).click()
 
   for (let round = 1; round <= 7; round++) {
@@ -106,6 +122,10 @@ test('ランダムモード: 結果フェーズに単体モード画面と同じ
   test.setTimeout(90_000)
   await page.goto('/')
   await page.getByRole('button', { name: /ランダムモード/ }).click()
+  // ops-span/wordラウンドは音声認識・二重課題フローの自動化がPlaywright上で
+  // 困難なため、汎用スモークテストでは対象から除外する（専用のe2eを別途用意）
+  await page.getByRole('button', { name: '処理記憶', exact: true }).click()
+  await page.getByRole('button', { name: 'ことば', exact: true }).click()
   await page.getByRole('button', { name: /レベル1/ }).click()
 
   for (let round = 1; round <= 5; round++) {
@@ -133,6 +153,10 @@ test('ランダムモード: 音・色ラウンドのパッドが単体モード
   test.setTimeout(60_000)
   await page.goto('/')
   await page.getByRole('button', { name: /ランダムモード/ }).click()
+  // ops-span/wordラウンドは音声認識・二重課題フローの自動化がPlaywright上で
+  // 困難なため、汎用スモークテストでは対象から除外する（専用のe2eを別途用意）
+  await page.getByRole('button', { name: '処理記憶', exact: true }).click()
+  await page.getByRole('button', { name: 'ことば', exact: true }).click()
   await page.getByRole('button', { name: /レベル1/ }).click()
 
   for (let round = 1; round <= 5; round++) {
@@ -163,6 +187,10 @@ test('ランダムモード: すうじ（合計）ラウンドは桁数分入力
   test.setTimeout(90_000)
   await page.goto('/')
   await page.getByRole('button', { name: /ランダムモード/ }).click()
+  // ops-span/wordラウンドは音声認識・二重課題フローの自動化がPlaywright上で
+  // 困難なため、汎用スモークテストでは対象から除外する（専用のe2eを別途用意）
+  await page.getByRole('button', { name: '処理記憶', exact: true }).click()
+  await page.getByRole('button', { name: 'ことば', exact: true }).click()
   await page.getByRole('button', { name: /レベル1/ }).click()
 
   for (let round = 1; round <= 5; round++) {
@@ -201,6 +229,10 @@ test('ランダムモード: 音・色ラウンドで表示された順にすべ
   test.setTimeout(90_000)
   await page.goto('/')
   await page.getByRole('button', { name: /ランダムモード/ }).click()
+  // ops-span/wordラウンドは音声認識・二重課題フローの自動化がPlaywright上で
+  // 困難なため、汎用スモークテストでは対象から除外する（専用のe2eを別途用意）
+  await page.getByRole('button', { name: '処理記憶', exact: true }).click()
+  await page.getByRole('button', { name: 'ことば', exact: true }).click()
   await page.getByRole('button', { name: /レベル1/ }).click()
 
   for (let round = 1; round <= 5; round++) {
@@ -284,6 +316,10 @@ test('ランダムモード: モードを途中でやめて再挑戦すると、
   test.setTimeout(60_000)
   await page.goto('/')
   await page.getByRole('button', { name: /ランダムモード/ }).click()
+  // ops-span/wordラウンドは音声認識・二重課題フローの自動化がPlaywright上で
+  // 困難なため、汎用スモークテストでは対象から除外する（専用のe2eを別途用意）
+  await page.getByRole('button', { name: '処理記憶', exact: true }).click()
+  await page.getByRole('button', { name: 'ことば', exact: true }).click()
   await page.getByRole('button', { name: /レベル1/ }).click()
 
   await expect(page.getByText('問題 1 / 5')).toBeVisible({ timeout: 15_000 })
@@ -316,6 +352,10 @@ test('ランダムモード: モードを途中でやめて再挑戦すると、
   expect(excluded).not.toBeNull()
 
   // 再挑戦すると、除外リストが消費されて空になる（一度きりの除外のため）
+  // ops-span/wordラウンドは音声認識・二重課題フローの自動化がPlaywright上で
+  // 困難なため、汎用スモークテストでは対象から除外する（専用のe2eを別途用意）
+  await page.getByRole('button', { name: '処理記憶', exact: true }).click()
+  await page.getByRole('button', { name: 'ことば', exact: true }).click()
   await page.getByRole('button', { name: /レベル1/ }).click()
   await expect(page.getByText('問題 1 / 5')).toBeVisible({ timeout: 15_000 })
   const excludedAfterRetry = await page.evaluate(
@@ -331,6 +371,10 @@ test('ランダムモード: すうじラウンドの回答フェーズで物理
   test.setTimeout(60_000)
   await page.goto('/')
   await page.getByRole('button', { name: /ランダムモード/ }).click()
+  // ops-span/wordラウンドは音声認識・二重課題フローの自動化がPlaywright上で
+  // 困難なため、汎用スモークテストでは対象から除外する（専用のe2eを別途用意）
+  await page.getByRole('button', { name: '処理記憶', exact: true }).click()
+  await page.getByRole('button', { name: 'ことば', exact: true }).click()
   await page.getByRole('button', { name: /レベル1/ }).click()
 
   for (let round = 1; round <= 5; round++) {
@@ -364,6 +408,10 @@ test('ランダムモード: セット途中でページを再読み込みして
   await page.goto('/')
   await page.getByRole('button', { name: /ランダムモード/ }).click()
   await page.getByRole('button', { name: '3問', exact: true }).click()
+  // ops-span/wordラウンドは音声認識・二重課題フローの自動化がPlaywright上で
+  // 困難なため、汎用スモークテストでは対象から除外する（専用のe2eを別途用意）
+  await page.getByRole('button', { name: '処理記憶', exact: true }).click()
+  await page.getByRole('button', { name: 'ことば', exact: true }).click()
   await page.getByRole('button', { name: /レベル1/ }).click()
 
   await expect(page.getByText('問題 1 / 3')).toBeVisible({ timeout: 15_000 })
@@ -383,6 +431,10 @@ test('ランダムモード: すうじラウンドで「よく覚えてくださ
   test.setTimeout(60_000)
   await page.goto('/')
   await page.getByRole('button', { name: /ランダムモード/ }).click()
+  // ops-span/wordラウンドは音声認識・二重課題フローの自動化がPlaywright上で
+  // 困難なため、汎用スモークテストでは対象から除外する（専用のe2eを別途用意）
+  await page.getByRole('button', { name: '処理記憶', exact: true }).click()
+  await page.getByRole('button', { name: 'ことば', exact: true }).click()
   await page.getByRole('button', { name: /レベル1/ }).click()
 
   for (let round = 1; round <= 5; round++) {
