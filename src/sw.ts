@@ -18,7 +18,7 @@ self.addEventListener('push', (event) => {
     /* ペイロードがJSONでない場合は既定文言にフォールバック */
   }
   event.waitUntil(
-    self.registration.showNotification(data.title ?? '逆復唱トレーニング', {
+    self.registration.showNotification(data.title ?? 'おぼえトレ', {
       body: data.body ?? '',
       icon: '/icon-192.png',
       // Android通知シェードのバッジはOSが単色にティントするため、

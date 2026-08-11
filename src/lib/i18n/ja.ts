@@ -54,7 +54,7 @@ export const ja: Translations = {
   },
   top: {
     heading: 'ワーキングメモリトレーニング',
-    subtitle: '9種類のトレーニングで、脳のワーキングメモリを鍛えましょう',
+    subtitle: '9種類のトレーニングで、ワーキングメモリを鍛えましょう',
     offlineBanner: '📶 オフラインです。学習履歴はこのまま記録できます',
     streakDays: (days) => `🔥 ${days}日連続`,
     todayCount: (count) => `今日 ${count}回挑戦`,
@@ -282,7 +282,7 @@ export const ja: Translations = {
       periodMonth: '月間',
       downloadButton: '画像を保存',
       noDataMessage: 'この期間の記録がありません',
-      appTitle: '逆復唱トレーニング',
+      appTitle: 'おぼえトレ',
       dateRangeLabel: (rangeLabel) => rangeLabel,
       setsLabel: (sets) => `挑戦セット数: ${sets}`,
       accuracyLabel: (accuracyPercent) => `正答率: ${accuracyPercent}%`,
@@ -314,7 +314,7 @@ export const ja: Translations = {
     steps: [
       {
         title: 'ようこそ！',
-        body: '逆復唱トレーニングは、9種類のミニゲームでワーキングメモリ（作業記憶）を鍛えるアプリです。',
+        body: 'おぼえトレは、9種類のミニゲームでワーキングメモリ（作業記憶）を鍛えるアプリです。',
       },
       {
         title: '遊び方はシンプル',

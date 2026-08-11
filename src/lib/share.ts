@@ -1,4 +1,4 @@
-const APP_URL = 'https://gyaku-fukushou-app.vercel.app/'
+const APP_URL = 'https://oboetore.vercel.app/'
 
 export interface ShareStats {
   correctCount: number
@@ -18,8 +18,7 @@ export interface ShareTemplates {
 
 // 日本語版の文言。i18n辞書（src/lib/i18n/ja.ts）からも同じものを参照する
 export const JA_SHARE_TEMPLATES: ShareTemplates = {
-  resultLine: (correct, total) =>
-    `逆復唱トレーニングで${correct}/${total}問正解しました！`,
+  resultLine: (correct, total) => `おぼえトレで${correct}/${total}問正解しました！`,
   streakLine: (days) => `🔥 ${days}日連続で挑戦中`,
   achievementsLine: (labels) => `🎉 新しい実績: ${labels.join('、')}`,
   newBestLine: '🏅 自己ベストを更新しました！',

@@ -109,7 +109,7 @@ test('設定画面: 履歴をCSVで書き出せる（④-3）', async ({ page })
   const downloadPromise = page.waitForEvent('download')
   await page.getByRole('button', { name: '📊 履歴をCSVで書き出す' }).click()
   const download = await downloadPromise
-  expect(download.suggestedFilename()).toMatch(/^gyaku-fukushou-history-\d{8}\.csv$/)
+  expect(download.suggestedFilename()).toMatch(/^oboetore-history-\d{8}\.csv$/)
 })
 
 test('設定画面: リマインド通知セクションが表示される', async ({ page }) => {
@@ -245,11 +245,11 @@ test('統計画面: 週間/月間の学習サマリーを画像で保存でき�
   const downloadPromise = page.waitForEvent('download')
   await page.getByRole('button', { name: '画像を保存' }).click()
   const download = await downloadPromise
-  expect(download.suggestedFilename()).toMatch(/^gyaku-fukushou-summary-week-\d{8}\.png$/)
+  expect(download.suggestedFilename()).toMatch(/^oboetore-summary-week-\d{8}\.png$/)
 
   await page.getByRole('button', { name: '月間' }).click()
   const monthDownloadPromise = page.waitForEvent('download')
   await page.getByRole('button', { name: '画像を保存' }).click()
   const monthDownload = await monthDownloadPromise
-  expect(monthDownload.suggestedFilename()).toMatch(/^gyaku-fukushou-summary-month-\d{8}\.png$/)
+  expect(monthDownload.suggestedFilename()).toMatch(/^oboetore-summary-month-\d{8}\.png$/)
 })

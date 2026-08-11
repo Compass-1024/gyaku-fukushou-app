@@ -36,9 +36,9 @@ describe('buildHistoryCsv', () => {
 })
 
 describe('historyCsvFileName', () => {
-  it('formats as gyaku-fukushou-history-YYYYMMDD.csv', () => {
+  it('formats as oboetore-history-YYYYMMDD.csv', () => {
     expect(historyCsvFileName(new Date(2026, 7, 1))).toBe(
-      'gyaku-fukushou-history-20260801.csv',
+      'oboetore-history-20260801.csv',
     )
   })
 })

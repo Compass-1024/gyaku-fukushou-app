@@ -22,10 +22,9 @@ export default defineConfig({
         globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
       },
       manifest: {
-        name: '逆復唱トレーニング',
-        short_name: '逆復唱',
-        description:
-          '言葉や数字を聞いたり見たりして、逆から答えるワーキングメモリトレーニング',
+        name: 'おぼえトレ',
+        short_name: 'おぼえトレ',
+        description: '9種類のゲームでワーキングメモリを鍛えるトレーニングアプリ',
         lang: 'ja',
         theme_color: '#0ea5e9',
         background_color: '#ffffff',

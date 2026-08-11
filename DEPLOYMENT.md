@@ -1,6 +1,6 @@
 # デプロイ手順書
 
-本アプリはVercel上にデプロイされている（本番URL: https://gyaku-fukushou-app.vercel.app/ ）。
+本アプリはVercel上にデプロイされている（本番URL: https://oboetore.vercel.app/ ）。
 
 ## 前提
 
@@ -19,6 +19,8 @@
 | Node.js Version | 24.x を推奨（[CI](.github/workflows/ci.yml)と揃える） |
 
 ## 現在の運用状況
+
+2026-08-11付けで、アプリ名を「逆復唱トレーニング」から「おぼえトレ」にリブランディングし、Vercelプロジェクト名（＝本番URL）を`gyaku-fukushou-app`から`oboetore`に変更した（`vercel project rename gyaku-fukushou-app oboetore`）。GitHubリポジトリ名は変更していない（クローンURL・git remoteへの影響を避けるため）。localStorageのキー接頭辞（`gyaku-fukushou:`）・npmパッケージ名も、既存ユーザーのデータ互換性維持のため変更していない。
 
 2026-08-01付けでVercelプロジェクトとGitHubリポジトリ [Compass-1024/gyaku-fukushou-app](https://github.com/Compass-1024/gyaku-fukushou-app) のGit連携（`vercel git connect`）が完了した。以降は**方法A（`master`へのpushで自動デプロイ）が既定の運用**となる。設定に至るまでの経緯は以下の通り。
 
@@ -62,7 +64,7 @@ npx vercel --prod
 4. ローカル開発でも通知トグルを試したい場合は、`.env.local`（gitignore対象）に`VITE_VAPID_PUBLIC_KEY`を追加する。ただし`api/`配下はVercel Functionsとして動くため、`npm run dev`（Vite単体）では購読・送信までは確認できない（`vercel dev`を使うか、実際にデプロイして確認する）。
 5. コードをpushして再デプロイし、`vercel.json`のCron設定が反映されたことをVercelダッシュボードの「Cron Jobs」で確認する。
 6. 実機でアプリを開き、「設定」→「リマインド通知」をオンにして通知許可を承認する。
-7. 動作確認は次のいずれかで行う: (a) 次のCron発火を待つ、(b) `CRON_SECRET`をBearerトークンとして手動で`/api/cron/reminder`を呼び出す（`curl -X POST -H "Authorization: Bearer <CRON_SECRET>" https://gyaku-fukushou-app.vercel.app/api/cron/reminder`）。
+7. 動作確認は次のいずれかで行う: (a) 次のCron発火を待つ、(b) `CRON_SECRET`をBearerトークンとして手動で`/api/cron/reminder`を呼び出す（`curl -X POST -H "Authorization: Bearer <CRON_SECRET>" https://oboetore.vercel.app/api/cron/reminder`）。
 
 ### トラブルシューティング: 通知の許可後も「通知の設定に失敗しました」と表示される
 
@@ -113,7 +115,7 @@ Vercelダッシュボードの「Deployments」タブから過去のデプロイ
 1. Node.js環境に`@bubblewrap/cli`をインストールする（`npm i -g @bubblewrap/cli`、初回はAndroid SDK/JDKの自動セットアップが走る）。
 2. プロジェクトルート以外の作業ディレクトリで初期化する（本リポジトリには含めない、Androidプロジェクトは別リポジトリ管理を推奨）。
    ```bash
-   bubblewrap init --manifest=https://gyaku-fukushou-app.vercel.app/manifest.webmanifest
+   bubblewrap init --manifest=https://oboetore.vercel.app/manifest.webmanifest
    ```
 3. 対話形式でパッケージ名（例: `app.vercel.gyaku_fukushou_app.twa`）・署名鍵を設定する。署名鍵（`.keystore`ファイル）は**絶対にリポジトリにコミットしない**。パスワードともに安全な場所（パスワードマネージャー等）で管理する。
 4. ビルドする。
@@ -131,14 +133,14 @@ TWAはDigital Asset Linksによる検証に成功しないと、URLバー付き�
    keytool -list -v -keystore <keystoreファイル> -alias <alias名>
    ```
 2. [public/.well-known/assetlinks.json](public/.well-known/assetlinks.json)の`package_name`と`sha256_cert_fingerprints`を実際の値に置き換える（このファイルは雛形として`REPLACE_WITH_...`のプレースホルダーが入っている）。
-3. コミット・pushして本番反映し、`https://gyaku-fukushou-app.vercel.app/.well-known/assetlinks.json`が正しいJSONで配信されることを確認する。
+3. コミット・pushして本番反映し、`https://oboetore.vercel.app/.well-known/assetlinks.json`が正しいJSONで配信されることを確認する。
 4. [Statement List Generator and Tester](https://developers.google.com/digital-asset-links/tools/generator)で検証する。
 5. Google Play Consoleで公開する場合、Play App Signingが有効だとアップロード時の署名鍵と配布時の署名鍵が異なることがある（Play Consoleの「App integrity」→「App signing」に表示される配布用SHA-256フィンガープリントを使って`assetlinks.json`を更新する必要がある）。
 
 ### Play Console提出時の留意点
 
 - 「データセーフティ」セクションの申告内容は[PRIVACY.md](PRIVACY.md)の「Google Play向けデータセーフティ申告の対応表」と整合させること。
-- プライバシーポリシーURLには`https://gyaku-fukushou-app.vercel.app/privacy.html`（日本語）を指定する。
+- プライバシーポリシーURLには`https://oboetore.vercel.app/privacy.html`（日本語）を指定する。
 
 ## 関連ファイル
 

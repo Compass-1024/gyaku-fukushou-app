@@ -10,7 +10,7 @@ describe('buildResultShareText', () => {
       achievementLabels: [],
     })
     expect(text).toContain('2/3問正解')
-    expect(text).toContain('https://gyaku-fukushou-app.vercel.app/')
+    expect(text).toContain('https://oboetore.vercel.app/')
     expect(text).not.toContain('連続')
     expect(text).not.toContain('実績')
   })

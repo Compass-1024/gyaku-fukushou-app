@@ -124,8 +124,7 @@ export const en: Translations = {
     chipLabel: 'Mission',
   },
   share: {
-    resultLine: (correct, total) =>
-      `I scored ${correct}/${total} on Reverse Recall Training!`,
+    resultLine: (correct, total) => `I scored ${correct}/${total} on Oboe-Tore!`,
     streakLine: (days) => `🔥 On a ${days}-day streak`,
     achievementsLine: (labels) =>
       `🎉 New achievement${labels.length === 1 ? '' : 's'}: ${labels.join(', ')}`,
@@ -290,7 +289,7 @@ export const en: Translations = {
       periodMonth: 'Monthly',
       downloadButton: 'Save image',
       noDataMessage: 'No records for this period',
-      appTitle: 'Reverse Recall Training',
+      appTitle: 'Oboe-Tore',
       dateRangeLabel: (rangeLabel) => rangeLabel,
       setsLabel: (sets) => `Sets completed: ${sets}`,
       accuracyLabel: (accuracyPercent) => `Accuracy: ${accuracyPercent}%`,
@@ -322,7 +321,7 @@ export const en: Translations = {
     steps: [
       {
         title: 'Welcome!',
-        body: 'Working Memory Training is a set of 9 mini-games designed to train your working memory.',
+        body: 'Oboe-Tore is a set of 9 mini-games designed to train your working memory.',
       },
       {
         title: 'How it works',

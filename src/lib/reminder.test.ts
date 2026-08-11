@@ -65,18 +65,18 @@ describe('shouldSendReminder', () => {
 describe('buildReminderMessage', () => {
   it('defaults to Japanese when no language is given', () => {
     const message = buildReminderMessage()
-    expect(message.title).toBe('逆復唱トレーニング')
+    expect(message.title).toBe('おぼえトレ')
     expect(message.body.length).toBeGreaterThan(0)
   })
 
   it('returns an English message for language "en"', () => {
     const message = buildReminderMessage('en')
-    expect(message.title).toBe('Working Memory Training')
+    expect(message.title).toBe('Oboe-Tore')
     expect(message.body.length).toBeGreaterThan(0)
   })
 
   it('returns a Japanese message for language "ja"', () => {
     const message = buildReminderMessage('ja')
-    expect(message.title).toBe('逆復唱トレーニング')
+    expect(message.title).toBe('おぼえトレ')
   })
 })

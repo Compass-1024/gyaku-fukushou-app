@@ -82,7 +82,7 @@ export function drawSummaryImage(
   // フッター
   ctx.fillStyle = '#b45309'
   ctx.font = '18px sans-serif'
-  ctx.fillText('gyaku-fukushou-app.vercel.app', WIDTH / 2, HEIGHT - 40)
+  ctx.fillText('oboetore.vercel.app', WIDTH / 2, HEIGHT - 40)
 }
 
 function roundRect(
@@ -106,7 +106,7 @@ export function summaryImageFileName(period: 'week' | 'month', date = new Date()
   const y = date.getFullYear()
   const m = String(date.getMonth() + 1).padStart(2, '0')
   const d = String(date.getDate()).padStart(2, '0')
-  return `gyaku-fukushou-summary-${period}-${y}${m}${d}.png`
+  return `oboetore-summary-${period}-${y}${m}${d}.png`
 }
 
 export function downloadCanvasAsPng(canvas: HTMLCanvasElement, fileName: string): void {

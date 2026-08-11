@@ -41,11 +41,11 @@ export type ReminderLanguage = 'ja' | 'en'
 
 const REMINDER_MESSAGES: Record<ReminderLanguage, ReminderMessage> = {
   ja: {
-    title: '逆復唱トレーニング',
+    title: 'おぼえトレ',
     body: '今日のトレーニングをまだ済ませていません。1セットだけでも挑戦しましょう！',
   },
   en: {
-    title: 'Working Memory Training',
+    title: 'Oboe-Tore',
     body: "You haven't trained today yet. Try just one set!",
   },
 }
