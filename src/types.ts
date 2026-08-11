@@ -73,8 +73,6 @@ export interface AppSettings {
   notificationsEnabled: boolean
   // ④-6: 回答中の背景装飾を非表示にする集中モード
   focusModeEnabled: boolean
-  // ④-7: ホーム画面表示時に自動展開するチップ（'none'は自動展開しない）
-  autoExpandChip: 'none' | 'mission' | 'challenge' | 'program'
   // Android実装を見据えたハプティックフィードバック（既定オフ）
   hapticsEnabled: boolean
 }

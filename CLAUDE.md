@@ -127,7 +127,7 @@ flowchart TD
 - 各レベル選択・ゲーム画面には「← 戻る」ボタンがある。個別選択モード配下の各モードのレベル選択画面は「← モード選択」で`mode-select`画面へ、ランダムモードのレベル選択画面と`mode-select`/`daily-mission`画面自体は「← ホーム」で`top`へ戻る。
 - 回答途中で離脱しようとすると`confirmExit`（`window.confirm`）で「回答中のセットが破棄されます。よろしいですか？」の確認ダイアログを表示する。
 - 履歴を表示する画面（top / mode-select / daily-mission / word-level / digit-level / nback-level / dual-nback-level / spatial-level / pattern-level / tone-level / random-level / stats）に遷移するたびにlocalStorageの履歴を再読み込みする。
-- `src/components/TopEngagementChips.tsx`（旧ミッション/デイリーチャレンジ/プログラムのカードをまとめて表示していたコンポーネント。内部で`DailyChallengeCard.tsx`を使用）は、ホーム画面の3ボタン化に伴い`TopScreen.tsx`から呼び出されなくなり、現在はどこからもimportされていない（コードは削除せず残置。[今日のミッション旧版](#今日のミッション旧版srclibmissionsts-ui非表示)と同じ「非表示化のみ、コードは残す」方針による）。
+- 旧ミッション/デイリーチャレンジ/プログラムのカードをまとめて表示していた`TopEngagementChips.tsx`（ホーム画面の3ボタン化で`TopScreen.tsx`から呼び出されなくなっていた）と、その専用UIだった`DailyChallengeCard.tsx`・設定画面のチップ自動展開設定（`AppSettings.autoExpandChip`、`SettingsAutoExpandChipSection.tsx`）・チップ専用の進捗計算`src/lib/program.ts`は、いずれもどこからも参照されなくなった時点で削除した（ユーザー指示による）。`missions.ts`（[今日のミッション旧版](#今日のミッション旧版srclibmissionsts-ui非表示)）はXP付与ロジックが今も動いているため区別して残置している。
 
 ## Feature requirements
 
@@ -477,12 +477,11 @@ interface AppSettings {
   dailyGoal: number
   notificationsEnabled: boolean
   focusModeEnabled: boolean // 回答中の背景装飾を非表示にする集中モード
-  autoExpandChip: 'none' | 'mission' | 'challenge' | 'program' // ホーム画面表示時に自動展開するチップ
   hapticsEnabled: boolean // Android実装を見据えたハプティックフィードバック（既定オフ）
 }
 ```
 
-デフォルト設定: `{ themeMode: 'system', language: 'ja', speechRate: 0.95, voiceURI: null, soundEnabled: true, sfxVolume: 80, bgmEnabled: false, bgmVolume: 50, dailyGoal: 3, notificationsEnabled: false, focusModeEnabled: false, autoExpandChip: 'none', hapticsEnabled: false }`
+デフォルト設定: `{ themeMode: 'system', language: 'ja', speechRate: 0.95, voiceURI: null, soundEnabled: true, sfxVolume: 80, bgmEnabled: false, bgmVolume: 50, dailyGoal: 3, notificationsEnabled: false, focusModeEnabled: false, hapticsEnabled: false }`
 
 読み込み・保存とも`try/catch`でlocalStorage利用不可（プライベートモード等）を許容し、失敗時はデフォルト値やno-opにフォールバックする。
 

@@ -14,7 +14,6 @@ export const DEFAULT_SETTINGS: AppSettings = {
   dailyGoal: 3,
   notificationsEnabled: false,
   focusModeEnabled: false,
-  autoExpandChip: 'none',
   hapticsEnabled: false,
 }
 

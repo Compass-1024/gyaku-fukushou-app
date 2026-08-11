@@ -45,10 +45,10 @@ function ActivityHeatmap({
   onSelectDay: (dateKey: string) => void
 }) {
   const weeks = calendar.length / 7
-  const gap = 2
-  const cellSize = 12
-  const weekdayLabelWidth = 16
-  const monthLabelHeight = 12
+  const gap = 5
+  const cellSize = 30
+  const weekdayLabelWidth = 20
+  const monthLabelHeight = 16
   const gridWidth = weeks * cellSize + (weeks - 1) * gap
   const gridHeight = 7 * cellSize + 6 * gap
   const width = gridWidth + weekdayLabelWidth
@@ -74,7 +74,7 @@ function ActivityHeatmap({
       <p className="text-xs text-gray-500 dark:text-gray-400">
         {t.stats.calendarCaption}
       </p>
-      <div className="overflow-x-auto">
+      <div className="flex justify-center overflow-x-auto">
         <svg
           viewBox={`0 0 ${width} ${height}`}
           width={width}
@@ -87,7 +87,7 @@ function ActivityHeatmap({
               key={col}
               x={weekdayLabelWidth + col * (cellSize + gap)}
               y={monthLabelHeight - 3}
-              fontSize={8}
+              fontSize={10}
               className="fill-gray-500 dark:fill-gray-400"
             >
               {label}
@@ -98,7 +98,7 @@ function ActivityHeatmap({
               key={row}
               x={0}
               y={monthLabelHeight + row * (cellSize + gap) + cellSize - 2}
-              fontSize={8}
+              fontSize={10}
               className="fill-gray-500 dark:fill-gray-400"
             >
               {t.stats.weekdayLabels[row]}

@@ -169,10 +169,6 @@ export interface Translations {
     // ④-6: 集中モード（没入UIテーマ）
     focusModeTitle: string
     focusModeDescription: string
-    // ④-7: ホーム画面のチップ自動展開設定
-    autoExpandChipTitle: string
-    autoExpandChipDescription: string
-    autoExpandChipNone: string
     // Android実装を見据えたハプティックフィードバック設定
     hapticsTitle: string
     hapticsDescription: string

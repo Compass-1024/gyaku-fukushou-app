@@ -7,7 +7,6 @@ import { SettingsDailyGoalSection } from './SettingsDailyGoalSection'
 import { SettingsSoundSection } from './SettingsSoundSection'
 import { SettingsBgmSection } from './SettingsBgmSection'
 import { SettingsFocusModeSection } from './SettingsFocusModeSection'
-import { SettingsAutoExpandChipSection } from './SettingsAutoExpandChipSection'
 import { SettingsHapticsSection } from './SettingsHapticsSection'
 import { SettingsNotificationSection } from './SettingsNotificationSection'
 import { SettingsDataSection } from './SettingsDataSection'
@@ -115,11 +114,6 @@ export function SettingsScreen({
       <SettingsFocusModeSection
         focusModeEnabled={focusModeEnabled}
         onToggle={() => onChangeFocusModeEnabled(!focusModeEnabled)}
-      />
-
-      <SettingsAutoExpandChipSection
-        autoExpandChip={settings.autoExpandChip}
-        onChange={(autoExpandChip) => updateSettings({ autoExpandChip })}
       />
 
       <SettingsHapticsSection

@@ -195,10 +195,6 @@ export const ja: Translations = {
     focusModeTitle: '🎯 集中モード',
     focusModeDescription:
       '回答中の背景装飾（カラフルなグラデーション・ぼかし円）を非表示にし、気を散らさず集中しやすくします',
-    autoExpandChipTitle: 'チップの自動展開',
-    autoExpandChipDescription:
-      'ホーム画面を開いたときに、選んだ項目の詳細を自動的に開いた状態で表示します',
-    autoExpandChipNone: 'なし',
     hapticsTitle: '📳 バイブレーション',
     hapticsDescription:
       '正解/不正解や実績解除のタイミングで端末を短く振動させます（対応端末・環境のみ）',

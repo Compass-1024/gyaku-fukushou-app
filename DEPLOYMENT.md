@@ -20,9 +20,11 @@
 
 ## 現在の運用状況
 
-2026-08-11付けで、アプリ名を「逆復唱トレーニング」から「おぼえトレ」にリブランディングし、Vercelプロジェクト名（＝本番URL）を`gyaku-fukushou-app`から`oboetore`に変更した（`vercel project rename gyaku-fukushou-app oboetore`）。GitHubリポジトリ名は変更していない（クローンURL・git remoteへの影響を避けるため）。localStorageのキー接頭辞（`gyaku-fukushou:`）・npmパッケージ名も、既存ユーザーのデータ互換性維持のため変更していない。
+2026-08-11付けで、アプリ名を「逆復唱トレーニング」から「おぼえトレ」にリブランディングし、Vercelプロジェクト名（＝本番URL）を`gyaku-fukushou-app`から`oboetore`に変更した（`vercel project rename gyaku-fukushou-app oboetore`）。localStorageのキー接頭辞（`gyaku-fukushou:`）・npmパッケージ名は、既存ユーザーのデータ互換性維持のため変更していない。
 
-2026-08-01付けでVercelプロジェクトとGitHubリポジトリ [Compass-1024/gyaku-fukushou-app](https://github.com/Compass-1024/gyaku-fukushou-app) のGit連携（`vercel git connect`）が完了した。以降は**方法A（`master`へのpushで自動デプロイ）が既定の運用**となる。設定に至るまでの経緯は以下の通り。
+2026-08-11付けで、GitHubリポジトリ名も`gyaku-fukushou-app`から[Compass-1024/oboetore](https://github.com/Compass-1024/oboetore)へリネームした（`gh repo rename oboetore`＋`git remote set-url origin`）。GitHubはリネーム後も旧URL（`.../gyaku-fukushou-app`）へのアクセスを新リポジトリへ自動リダイレクトするため、既存のクローン・Vercelとのgit連携（リポジトリIDで紐付くためリネームの影響を受けない）とも互換性が保たれる。
+
+2026-08-01付けでVercelプロジェクトとGitHubリポジトリ [Compass-1024/oboetore](https://github.com/Compass-1024/oboetore)（当時の名称は`gyaku-fukushou-app`）のGit連携（`vercel git connect`）が完了した。以降は**方法A（`master`へのpushで自動デプロイ）が既定の運用**となる。設定に至るまでの経緯は以下の通り。
 
 1. `vercel git connect`実行時、最初は「Vercelアカウントに対するGitHubログイン連携が必要」エラーが発生 → [Account Settings → Login Connections](https://vercel.com/account/login-connections) でGitHubログイン連携を追加して解消。
 2. 次に「リポジトリへのアクセス権がない」エラーが発生 → [https://github.com/apps/vercel](https://github.com/apps/vercel) からVercelのGitHub Appをインストールし、対象リポジトリへのアクセスを許可して解消（ログイン連携とGitHub Appのインストールは別物であることに注意）。

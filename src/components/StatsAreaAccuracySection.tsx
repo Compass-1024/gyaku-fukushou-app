@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { getWeakestBucket, loadBucketStats } from '../lib/questionWeighting'
 import { useTranslation } from '../contexts/LanguageContext'
 import type { AreaStats } from '../lib/history'
@@ -30,6 +30,11 @@ export function StatsAreaAccuracySection({
   weakestKeys,
 }: StatsAreaAccuracySectionProps) {
   const t = useTranslation()
+  // モード数が多く縦に長くなるため、常時全件表示せずプルダウンで選んだ
+  // 1モード分だけを表示する形に格納する
+  const [selectedGroupKey, setSelectedGroupKey] = useState(
+    () => areaGroups[0]?.[0] ?? '',
+  )
 
   const weaknessByGroup = useMemo(() => {
     const result = new Map<string, ReturnType<typeof getWeakestBucket>>()
@@ -42,24 +47,37 @@ export function StatsAreaAccuracySection({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [areaGroups])
 
+  const selected = areaGroups.find(([groupKey]) => groupKey === selectedGroupKey)
+
   return (
     <section className="flex flex-col gap-2">
       <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400">
         {t.stats.areaAccuracyTitle}
       </h2>
-      <ul className="flex flex-col gap-1.5">
-        {areaGroups.map(([groupKey, levels]) => {
+      <select
+        value={selectedGroupKey}
+        onChange={(e) => setSelectedGroupKey(e.target.value)}
+        className="touch-manipulation rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200"
+      >
+        {areaGroups.map(([groupKey]) => (
+          <option key={groupKey} value={groupKey}>
+            {t.common.areaLabels[groupKey as keyof typeof t.common.areaLabels]}
+          </option>
+        ))}
+      </select>
+      {selected &&
+        (() => {
+          const [groupKey, levels] = selected
           const label =
             t.common.areaLabels[groupKey as keyof typeof t.common.areaLabels]
           const weakness = weaknessByGroup.get(groupKey)
           const weaknessLabel = weakness
-            ? t.stats.bucketWeaknessLabels[`${GROUP_TO_QUESTION_STATS_MODE[groupKey]}:${weakness.bucket}`]
+            ? t.stats.bucketWeaknessLabels[
+                `${GROUP_TO_QUESTION_STATS_MODE[groupKey]}:${weakness.bucket}`
+              ]
             : undefined
           return (
-            <li
-              key={groupKey}
-              className="flex flex-col gap-1 rounded-lg border border-gray-200 px-3 py-2 text-sm dark:border-gray-700"
-            >
+            <div className="flex flex-col gap-1 rounded-lg border border-gray-200 px-3 py-2 text-sm dark:border-gray-700">
               <div className="flex items-center justify-between gap-2">
                 <span className="text-gray-700 dark:text-gray-200">{label}</span>
                 <span className="flex gap-1.5">
@@ -91,10 +109,9 @@ export function StatsAreaAccuracySection({
                   {t.stats.bucketWeaknessSummary(weaknessLabel, weakness.accuracyPercent)}
                 </p>
               )}
-            </li>
+            </div>
           )
-        })}
-      </ul>
+        })()}
     </section>
   )
 }
